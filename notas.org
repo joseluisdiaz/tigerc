@@ -21,8 +21,9 @@ Gramática:
 
 Reglas de producción:
 
-1- \alpha : e /* vacío */
-2- \alpha : ( \alpha ) 
+- \alpha : e //* vacío *//
+- \alpha : ( \alpha ) 
+
 
 Funciona? 
 
