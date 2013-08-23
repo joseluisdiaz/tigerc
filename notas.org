@@ -63,14 +63,19 @@ expr + expr  + expr
  
 Tenemos dos formas de reducir.
 
+#+BEGIN_EXAMPLE
+
        +             +              
       / \           / \     
      +   4    ó    2   +    
     / \               / \       
    2   3             3   4       
 
+
 Asociativo: 
 Izquierda           Derecha
+
+#+END_EXAMPLE
 
 
 **** Shift Reduce
@@ -92,13 +97,15 @@ Ahora, nuestra glc es:
 
 El orden establece precedencia, de menor a mayor. 
 
-#+BEGIN_SRC
+
+#+BEGIN_EXAMPLE
 - expr : NRO 
   | expr + expr
   | expr * expr
   | ( expr )   
-              
-#+END_SRC  
+
+#+END_EXAMPLE
+
 
 **** Cuándo usamos %right en C?
 
