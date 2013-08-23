@@ -345,10 +345,12 @@ args : expr COMA args
 L_value : id
        \| L_value PTO id                     
        \| L_value CI expr CD
-
+       
        
 * <2013-08-22 Tue>
 ** Los constructores de AST
+
+#+BEGIN_SRC ocaml
 
    structure tigaerabs =
 
@@ -356,21 +358,23 @@ L_value : id
       type symbol = string
       type pos = int
       datatype var = SimpleVar of symbol
-                  \| FieldVar of var *symbol
-                  \| SuscriptVar of var *exp
+                   | FieldVar of var *symbol
+                   | SuscriptVar of var *exp
       and
                exp = VarExp of var *pos
-                  \| UnitExp of pos 
-                  \| NilExp of pos
-                  \| IntExp of int *pos
-                  \| StringExp of string *pos
-                  \| CallExp of {func: symcol, args:explist}*pos
-                  \| OpExp of {left:exp, oper:oper, right:exp}*pos
-                  \| RecordExp of { fields: symbol*exp list, ytp:symbol}*pos
-                  \| SeqExpOf of explist*pos
-                  \| AssignExpOf { var:var, exp:exp}*pos
-                  \| IfExpOf { test:exp, then':exp, else':exp option }*pos
-                  \| WhileExpOf { test:exp, body: exp}*pos
+                   | UnitExp of pos 
+                   | NilExp of pos
+                   | IntExp of int *pos
+                   | StringExp of string *pos
+                   | CallExp of {func: symcol, args:explist}*pos
+                   | OpExp of {left:exp, oper:oper, right:exp}*pos
+                   | RecordExp of { fields: symbol*exp list, ytp:symbol}*pos
+                   | SeqExpOf of explist*pos
+                   | AssignExpOf { var:var, exp:exp}*pos
+                   | IfExpOf { test:exp, then':exp, else':exp option }*pos
+                   | WhileExpOf { test:exp, body: exp}*pos
+
+#+END_SRC
                   
 Viene un problema fuera de fase: el for.
 Un for DEFINE implícitamente su índice (Como ada). Así que podemos hacer:
