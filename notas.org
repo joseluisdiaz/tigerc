@@ -27,7 +27,7 @@ Reglas de producción:
 
 Funciona? 
 
-((())) \rightarrow^1 (((\alpha))) \rightarrow^2 ((α)) \rightarrow^2 (α) \rightarrow^2 α(start)
+((())) \rightarrow^1 (((\alpha))) \rightarrow^2 ((\alpha)) \rightarrow^2 (\alpha) \rightarrow^2 \alpha(start)
 
 
 **** Ejemplo 2: Una calculadora.
@@ -87,13 +87,18 @@ En particular usaremos:
 
 Ahora, nuestra glc es:
 
-%left +  | <--- precedencia de menor a mayor
-%left *  | 
+%left + 
+%left *  
 
+El orden establece precedencia, de menor a mayor. 
+
+#+BEGIN_SRC
 - expr : NRO 
   | expr + expr
   | expr * expr
-  | ( expr )
+  | ( expr )   
+              
+#+END_SRC  
 
 **** Cuándo usamos %right en C?
 
