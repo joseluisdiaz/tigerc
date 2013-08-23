@@ -1,0 +1,473 @@
+Compiladores
+
+* <2013-08-21 Wed>
+
+Pasemos a discribir la gramática de tiger. Usaremos gramáticas líbres de contexto. 
+
+- Un conjunto finito de símbolos terminales T (Tokens).
+- Un conjunto finito de símbolos no terminales NT ; T \cap NT = \emptyset
+- Un símbolo start \in NT.
+- Un conjunto finito de reglas de producción.
+
+  \alpha : secuencia de 0 o mas \beta_i, \beta_i \inc NT \union T
+
+**** Ejemplo 1: Una gramatica que balancee paréntesis.
+
+Gramática:
+
+  T = { ( , ) }
+  NT = { \alpha }
+  start = \alpha
+
+Reglas de producción:
+
+1- \alpha : e /* vacío */
+2- \alpha : ( \alpha ) 
+
+Funciona? 
+
+((())) \rightarrow^1 (((\alpha))) \rightarrow^2 ((α)) \rightarrow^2 (α) \rightarrow^2 α(start)
+
+
+**** Ejemplo 2: Una calculadora.
+
+T = { +, *, NRO, (, ) } 
+NT = { expr }
+
+start = expr
+
+Reglas de produción:
+
+- expr : NRO 
+  | expr + expr
+  | expr * expr
+  | ( expr )
+
+Acá aparecen problemas:
+
+  2  +  3    + 4
+NRO  + NRO   + NRO
+expr + expr  + expr
+-----------    ----
+    |           |
+    +--- expr + expr -> expr
+
+
+  2  +  3    + 4
+NRO  + NRO   + NRO
+expr + expr  + expr
+----   ------------
+    |           |
+    +--- expr + expr -> expr
+ 
+Tenemos dos formas de reducir.
+
+       +             +              
+      / \           / \     
+     +   4    ó    2   +    
+    / \               / \       
+   2   3             3   4       
+
+Asociativo: 
+Izquierda           Derecha
+
+
+**** Shift Reduce
+Este conflicto se conoce como "problema shift-reduce" y no es grave. 
+Se puede eliminar de vairas maneras.
+
+a) Reescribir la grámatica agregando más NT, para forzar un shift ó un reduce.
+b) Agregar directivas para indicar cómo resolver las ambigüedad.
+
+En particular usaremos:
+   %left (asocia a izquierda)
+   %right (asocia a derecha)
+   %noasoc (no asociativo)
+
+Ahora, nuestra glc es:
+
+%left +  | <--- precedencia de menor a mayor
+%left *  | 
+
+- expr : NRO 
+  | expr + expr
+  | expr * expr
+  | ( expr )
+
+**** Cuándo usamos %right en C?
+
+a = b = c == (a = (b = c))
+
+--- a == (-(-(-a)))
+
+**** Operaciones no asociativas en C?
+
+a < b < c --> a < b && b < c
+
+**** No asociativo 
+
+De hecho bison tiene uan directiva 
+
+  %expect n 
+
+Espere n conflictos shift-reduce, para tranquilizar al programador. 
+Uno de estos conflictos se conoce como el dangling else, y aparece en 
+los lenguajes derivados de ALGOL, que introdujo nocion de sentencia 
+compuesta.
+
+Usado en C y Pascal
+
+  sent: if ( cond ) sent
+  sent: { sentencias } /* sentencias compuestas */
+
+Otra opcion es usar una construccion (Fortran, Ada, etc) donde una 
+construccion se cierra por otra palabra clave:
+
+Ej. (ada)
+
+sent: if conf then sentencia end if
+
+El dangling else:
+
+en C
+
+ if (cond_1)
+   if (cond_2)
+      sent_1
+   else      |
+      sent_1 | -> a que if pertenece?
+
+Por convención el else paretence al if mas próximo. En ADA no ocurre.
+
+
+if cond_1 then
+   if cond_2 then
+      sent_1
+   else
+      sent_2
+   end if
+end if
+
+
+Hay problemas mas graves (de hecho fatales) llamados reduce-reduce. 
+Estos aparecen cuando tenemos reglas de produccion:
+
+  \alpha : sentencia
+  \alpha : sentencia
+
+
+La glc para C, que aparece en un apendice del K&R tiene un conflicto
+reduce-reduce. 
+
+ decl     : id_tipo -> id_var
+ id_var  : id
+ id_tipo : id
+
+a) Agregar cosas para que el scanner lo diferencie. Haskell resuelve este problema diferenciando los tipos
+ de las vars, utilizando  mayusculas y minusculas respectivamente.
+
+b) LLevar la cuenta de las definiciones concretas.
+
+c) El algortimo del avestruz. Patear el problema y resolverlo más adelante.
+
+LALR(n)-> Look ahead left recursive - nivel n
+
+El formato de la especificación de la GLC es
+
+%{
+        Código ML
+
+%}
+
+Directivas y definiciones de tokens.
+
+%%
+
+Reglas de prod y acciones semanticas.
+
+%%
+
+Más codigo ML
+
+*** Gramáticas libres de contexto.
+    
+*** Gramatica de tiger
+
+%token EOF
+%token ARRAY OF VAR FUNCTION
+%token LET IN END IF THEN ELSE WHILE DO FOR TO BREAK
+%token PTO DOSP DOSPIG COMA PCOMA IGUAL PI PD CI CD LI LD
+%token AMPER PIPE MENOR MENIG MATOR MAGIG DIST 
+%token MAS MENOS POR DIV NIL
+
+Appel por simplicidad reconoces los numeros negativos en el parser con una regla como
+
+expr MENOS NEG
+
+
+Pero hay un problema no podemos escribir el entero minimo va de -2^w a 2^w-1
+
+Pero lo podemos arreglar así:
+  En el scanner reconocemos el |entero mínimo|
+  2^32   {ABS MIN INT}
+
+  %token ABS MININT
+
+Hasta ahora hemos tratado con tokens generados de manera única.
+
+| entrada | token |
++---------+-------+
+| "while" | WHILE |
+
+
+Ahora debemos tratar con tokes no únicos, nro, Strings, ids, etc.
+
+%token<int> NRO
+%token<string> LITERAL ID
+
+Dejamos esto y veamos las reglas de producción:
+
+%start prog
+
+%%
+prog: expr EOF
+expr: NRO
+ \| MENOS ABSMININT               
+ \| PI PD /* unit */              
+ \| NIL                           
+ \| LITERAL                       
+ \| BREAK                         
+ \| L\_value /* valor izquierdo */ 
+ \| L\_value DOSPIG expr           
+ \| PI expr PCOMA explist PD      
+ \| expr PIPE expr                
+ \| expr AMPR expr                 
+ \| expr IGUAL expr               
+ \| expr DIST expr                
+ \|                               
+ \| expr DIST expr                
+ \| expr MAS expr                 
+ \|                               
+ \| expr DIV expr                 
+ \|                               
+
+%left PIPE
+%left AMPER
+%nonasoc IGUAL MENOR ... DIST /* comparaciones */
+%left MAS MENOS
+%left POR DIV
+
+Y ahora tenemos el problema del uso del menos. Para indicar que el opuesto tiene mas presedencia que la resta
+No podemos hacer esto:
+
+%left MAS MENOS |
+...             |--- Mismo token
+%right MENOS    |
+
+Para esto generamos un token trucho (nunca sera generador por el scanner) lo usamos para la asociatividad y precedencia del opuesto.
+
+%right UMENOS
+
+y en las reglas de produccion 
+
+expr: MENOS expr %prec UMENOS
+
+Seguimos
+  \| PI expr PD
+  \| id PI args PD /* llamada a función */
+  \| IF expr THEN expr
+  \| IF expr THEN expr ELSE
+  \| WHILE expr DO expr 
+  \| FOR id DOSPIG expr TO expr DO expr
+  \| LET decs IN END /* let unit */
+  \| LET desc IN expr END
+  \| LET desc IN expr PCOMA exprlist END
+  \| L_value CI expr CD
+  \| id LI rec_field LD
+
+Seguimos con los NT Usados.
+
+exprlist : expr PCOMA explist
+  \| expr
+;
+
+rec_fields : id IGUAL expr COMA rec_fields
+          \| id IGUAL expr
+          \| /* nada */
+           ;
+
+decs : dec decs
+     |
+     ;
+
+dec : TYPE id IGUAL ty
+   \| vardec
+   \| fundec
+
+ty: id 
+ \| LI tyfld LD
+ \| ARRAY of id
+
+id: ID
+       
+tyflds : tyfields COMMA tyflds
+       |
+       ;
+
+tyfield: id DOSP id [fn:1]
+
+vardec: VAR id DOSPIG expr
+     \| VAR id DOSP id DOSPIG expr
+
+fundec: FUNCTION id PI args PD
+        IGUAL expr
+     \| FUNCTION id PI args PD DOSP id 
+     \| IGUAL expr
+
+args : expr COMA args
+    \| expr
+    \| expr
+     ;
+
+L_value : id
+       \| L_value PTO id                     
+       \| L_value CI expr CD
+
+       
+* <2013-08-22 Tue>
+** Los constructores de AST
+
+   structure tigaerabs =
+
+   struct 
+      type symbol = string
+      type pos = int
+      datatype var = SimpleVar of symbol
+                  \| FieldVar of var *symbol
+                  \| SuscriptVar of var *exp
+      and
+               exp = VarExp of var *pos
+                  \| UnitExp of pos 
+                  \| NilExp of pos
+                  \| IntExp of int *pos
+                  \| StringExp of string *pos
+                  \| CallExp of {func: symcol, args:explist}*pos
+                  \| OpExp of {left:exp, oper:oper, right:exp}*pos
+                  \| RecordExp of { fields: symbol*exp list, ytp:symbol}*pos
+                  \| SeqExpOf of explist*pos
+                  \| AssignExpOf { var:var, exp:exp}*pos
+                  \| IfExpOf { test:exp, then':exp, else':exp option }*pos
+                  \| WhileExpOf { test:exp, body: exp}*pos
+                  
+Viene un problema fuera de fase: el for.
+Un for DEFINE implícitamente su índice (Como ada). Así que podemos hacer:
+
+                  \| ForExp of { var:symbol, escapa: bool ref, lo:exp, hi: exp, body: exp}
+
+Debemos saber si el índice es por una función definida dentro del for.
+
+  for i:=1 to 10 do 
+    ( 
+      let function f():int=i
+      in f() + 1 end;
+      ()
+    )
+                 \| LetExp of { desc: des list, body: exp } * pos
+                 \| BreakExp of pos
+                 \| ArrayExp of { type: symbol, size: exp, init: exp} * pos
+                 \| 
+      and
+               dec = FunctionDec of ( name:symbol,
+                                      parms: field list,
+                                      result: symbol option,
+                                      body: exp} * pos ) list
+                  \| VarDec of { name: symbol,
+                                 escape: bool ref,
+                                 typ: symbol option, init: exp} * pos
+      and
+               ty = NameTy of symbol
+                 \| RecordTy of field list
+                 \| ArrayTy of symbol
+      
+      and
+             oper = PlusOp | MinusOp | TimesOp | DivideOp 
+                 \|  EqOp  | Neqop   | LtOp    | LeOp 
+                 \| GtOp   | GeOp 
+      withtype field = { name: symbol, escape: bool ref, typ: ty }
+
+
+** Acciones semanticas y atributos de terminal y no terminales.
+
+En 1969 D.E.Knuth definió las gramáticas con atributos, es decir, GLC donde los 
+terminales y no terminales podrían "arrastrar" valores de un cierto tipo (atributos)
+de uno de ellos en base a los atributos existentes.
+
+   expr = expr + expr  { $$ = $1 + $3; } \leftarrow  
+    $$     $1     $3
+
+Usemos esto. Declaramos los tipos de los atributos en las directivas.
+
+%type<tigerabs.exp> prog expr 
+%type<tigerabs.ty>  ty
+
+
+%type<string>       id
+
+id : ID  { $1}
+
+%type<tigerabs.var> L\_value
+
+Y con esto rellenamos las acciones semanticas.
+
+Necesitamos tambien la posicion para esto, declaramos en tigernlin.sm
+
+   var nlin = ref 1
+
+En el codigo ml del parser
+
+fun P() = !tigerlin.nlin
+
+expr: NRO                  { IntExp($1, P()) }
+   \| MENOS ABSMININT      { IntExp( valOf Int.minInt, P()) }
+   \| PI PD                { UnitExp(P()) }
+   \| NIL                  { NilExp(P()) }
+   \| LITERAL              { StringExp($1, P())
+   \| L\_value             { VarExp( $1, PC ) }
+   \| L\_value DOSPIG expr { AssignExp({ var=$1, exp=$3 }, P())}
+
+Habrán notado que no tenamos and, or o not, en el AST. De hecho, Tiger no tiene booleanos.
+Tiger hace como C: Cualquier expresión entera que evalúe a cero es falase, distinto de cero true.
+
+Así:
+
+ \| expr PIPE expr
+ \| expr AMPER expr
+
+a | b == if a then 1 else b
+a & b == if a then b else 0
+
+ \| expr PIPE expr { IfExp({test=$1, then'=IntVal(1, P()), else'=Some($3)} P()) }
+ \| expr AMPER expr { IfExp({test=$1, then'=$3 else'=IntVal(1, P()) } P()) }
+
+...
+ \| expr MENOR expr { OpExp({left = $1, oper = LtOp, right= $3}, P()) }
+ \| MENOS expr %prec UMENOS { OpExp({left = IntExp(0, P()), oper = MinusOp, right= $2}, P()) }
+
+ \| PI expr PD { $2 }
+
+ \| IF expr THEN expr           { IfExp({test=$2, then'=$4, else'=NONE } P()) }
+ \| IF expr THEN expr ELSE expr { IfExp({test=$2, then'=$4, else'=Some($6)} P()) }
+
+Para evitar el dangling else usamos
+
+/* menor precedencia */
+
+%nonassoc THEN
+%left     ELSE
+%nonassoc DOSPIG
+
+
+
+* Footnotes
+
+[fn:1] El segundo id debe ser un nombre de tipo, pero no podemos saberlo, lo chequeamos mas adelante.
