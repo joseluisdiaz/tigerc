@@ -1,6 +1,9 @@
-Compiladores
+Compiladores 
+============
 
-* <2013-08-21 Wed>
+Bajar: dcc.fceia.unr.edu.ar/lcc/T-521-Compiladores/Public/entrega1 && /test.tgz
+
+* [2013-08-21 Wed]
 
 Pasemos a discribir la gramática de tiger. Usaremos gramáticas líbres de contexto. 
 
@@ -347,7 +350,8 @@ L_value : id
        \| L_value CI expr CD
        
        
-* <2013-08-22 Tue>
+* [2013-08-22 Tue]
+
 ** Los constructores de AST
 
 #+BEGIN_SRC ocaml
@@ -451,7 +455,7 @@ expr: NRO                  { IntExp($1, P()) }
    \| LITERAL              { StringExp($1, P())
    \| L\_value             { VarExp( $1, PC ) }
    \| L\_value DOSPIG expr { AssignExp({ var=$1, exp=$3 }, P())}
-
+   
 Habrán notado que no tenamos and, or o not, en el AST. De hecho, Tiger no tiene booleanos.
 Tiger hace como C: Cualquier expresión entera que evalúe a cero es falase, distinto de cero true.
 
@@ -484,6 +488,438 @@ Para evitar el dangling else usamos
 %nonassoc DOSPIG
 
 
+
+* [2013-08-26 Mon]
+  
+** Empecemos a unir los pedazos.
+
+El main de TIGER, en tigermain tendremos
+
+#+BEGIN_SRC ocaml
+
+<include tigermain.ml>
+
+#+END_SRC
+
+Ya es claro que tener un compilador operativo implica unas cuantas operaciones (generción del parser etc) 
+Para facilitar esto usaremos make.
+
+
+#+BEGIN_SRC makefile
+
+<include makefile de tiger>
+
+#+END_SRC
+
+
+** Variables escapadas
+
+Tiger permite funciones anidadas. Las reglas de scope establecen que las variables definidas en las funciones y 
+lets anidantes son visibles en las anidadas. En el caso de las funciones esto es un problema.
+Las variables se definen en:
+  - Lets, que no crean marcos de activación
+
+#+BEGIN_SRC tiger
+  let var x := let var y := let var z := 0 in z end in y end in x end //TODO: revisar 
+#+END_SRC
+  x,y,z comaprten el marco de activación.
+
+  - For, su indice tambien comparte el marco de activacion.
+
+  - Definicion de función, los argumentos crean un nuevo marco.
+
+Una variable es escapada si se crea un nuevo marco de activación, pero es accedida desde otro.
+
+#+BEGIN_SRC tiger
+
+let var x:=10
+  function f(y:int)=
+     (for i:=1 to 10 do
+       let function g():int x + y + i
+       in end)
+in
+  x end
+
+/* x, y, i son escapadas. */
+
+#+END_SRC
+
+Supongamos una función recursiva con una anidada
+
+#+BEGIN_SRC tiger 
+
+let function f(i:int) =
+  let function g():int = i
+  in
+    if i > 1 then f(i-1)
+    else g()
+  end
+in f(1000);0 end
+
+#+END_SRC
+Necesitaremos (más adelante) un mecanismo para que g acceda a la última i de f. Esto se facilita 
+si las escapadas se alojan en, memoria dentro del marco de activación de su definición. 
+
+Pero para esto, debemos delimtar las escapadas, recorriendo el AST. Ir llevando cuenta de qué variables fueron
+definidas y en que marcos de activación. Para esto viene comodo una tabla hash, en general las tablas se pueden 
+implementar de dos maneras.
+
+Ej.
+
+#+BEGIN_SRC 
+  let var x:=1
+       function f(i:int)
+          let var z := 2
+       in end
+  in x end
+
+/* 
+{x}     dentro del let mas grande
+{x,i,z} dentro de la definicion de funcion.
+*/
+#+END_SRC 
+Las tablas crecen al entrar a un scope y se achican al salir de él.
+
+- Una forma de hacer esto es la manera imperativa: Se lleva la cuenta de qué
+ variables se han definido el último scope, y al abandonarlo se sacan esas variables. 
+ Hay que llevarla cuenta de qué variables fueron ocultadas y despues restaurarlo.  
+
+- manera funcional: Cada vez que se ingrasa a un scope se crea una nueva tabla a parir de las vigente, y se descarta al abandonar ese scope.
+
+Nota: los compiladores se pueden clasificar en:
+
+- Narrow: apenas tiene una porción de AST suficiente, aplica todas las etapas hasta la emisión de código. 
+          Usa mejor la memoria, la sincronización es una pesadilla
+
+- Borad: procesa todo el AST en cada operación. Usa mal la memoria, pero es mas sencillo.
+
+Tiger será broad, excepto en la etapa semantica, y de generción de código intermedio que será narrow.
+
+Es conveniente definir un modulo para diccionario que oculte la implementación. Para propósitos de debug, tendrá bastante ventajas.
+
+#+BEGIN_SRC 
+
+incluir<tigertab.sig>  
+
+#+END_SRC
+
+Una posible implementacion es usar el modulo Hash (Standard) o, cin mosml, Polyhash (no standard).
+
+
+* [2013-08-28 Wed]
+
+** Tablas y cálculo de escapes.
+
+Un poco de la implementación de las tablas hash.
+
+#+BEGIN_SRC ocaml 
+
+insert <tigertb.sml>
+
+structure tigertab :> tigertab =
+struct
+  open Polyhash
+  type (''a, 'b) Tabla = (''a, 'b) hash_table
+
+  fun name x = x
+
+#+END_SRC
+
+#+BEGIN_SRC ocaml 
+
+insert <tigerescp.sml>
+
+#+END_SRC  
+
+El cálculo de escapes se hace luego del parsing. 
+
+
+** Pretty-printing: está para ver el AST.
+
+Basado en unos combiadores hechos por J.Hughes, 
+
+#+BEGIN_SRC ocaml
+
+insert <tigerpp.sig>
+
+insert <tigerpp.sml>
+
+#+END_SRC
+
+
+
+* [2013-08-29 Thu]
+
+Terminado el cálculo de escapes viene la etapa de análisis semantico que incluye 
+verificar el tipado del AST y que genera código intermedio. Es lo suficientemente dura
+como para perder la calma. El modulo debe ttomar un AST con los escapes y devoler un 
+nuevo record
+   
+   {exp, ty}
+- exp: código intermedio
+- ty: tipo del programa
+
+Para el momento, exp será un tipo trucho para no mezclar las dos cosas
+
+datatype exp = SCAF (* de scafolding *)
+
+Para ty definiremos los tipos que manejamos.
+
+En tigertips.sml definimos
+
+#+BEGIN_SRC ml
+
+*include tigertips*
+
+#+END_SRC
+
+Es más, 
+
+#+BEGIN_SRC m
+
+let 
+  type A = array of int
+  var a := A[10] of 0
+  type b = array of int
+  var b := B[10] of 1
+end
+
+#+END_SRC
+
+Si a y b TIENEN distinto tipo, para poder discrinar estos dos tipos se agrega a la signatura /unique/
+
+Cuantos espacios de nombres tiene Tiger?
+Tres Tipos de espacios:
+
+1) Espacios de nombre de tipos.
+2) Espacios de nombre de funciones y variables.
+3) Los nombres de miembros de records. (uno por cada record)
+
+#+BEGIN_SRC 
+ let type i = {i:int}
+     var i : i:= {i=1}
+ in
+     i.i
+ end
+#+END_SRC
+
+Debido a esto usaremos dos diccionarios: *1* (tenv) y para *2* (venv)
+
+#+BEGIN_SRC ml
+
+datatype EnvEntry = 
+   VIntro (* int RO *) of {access: tigertrans.access, level: int}
+ | Var of {access: tigertrans.access, level: int}
+ | Fuct {ty: Tipo:, level: tigertemp.label, formals: Tipo list, extern:bool} 
+
+#+END_SRC
+
+El módulo tigertrans es el que produce el código intermedio. Acá lo definimos.
+
+#+BEGIN_SRC ml
+
+<include tigertrans.sml>
+
+#+END_SRC
+
+Por supuesto, en tigertemp definimos
+
+#+BEGIN_SRC ml
+
+<include tigertemp.sig>
+
+#+END_SRC
+
+La implementación
+
+#+BEGIN_SRC 
+
+<include tigertemp.sml>
+
+#+END_SRC
+
+Ahora sí modulo tigerseman 
+
+#+BEGIN_SRC ml
+
+signature tiegersman =
+sig
+    type venv = (string, EnvEntry) tigertab.Tabla
+    type tenv = (string Tipo) tigertab.Tabla
+
+    type expty (* codigo intermedio) 
+
+    val tab_vars: venv
+    val tab_tenv: tenv
+    val transExp: venv * tenv * tigerabs.exp -> expty
+    val transDec: venv * tenv * tigerabs.dec -> (tenv*tenv)
+    val transTy: tenv * tigerabs.ty -> Tipo
+    val transProg: tigerabs.exp -> tigertrans.frag list
+end
+
+#+END_SRC
+
+
+* [2013-09-02 Mon]
+
+** Volvamos a los tipos internos de Tiger.
+
+#+BEGIN_SRC 
+
+tigerty.sml?
+
+#+END_SRC
+
+** Asuntos a tener en cuenta.
+
+Inicialmente tendremos
+
+("int", TInteger, RW)
+("string", TString)
+
+Durante todo el análisis semántico necesitaremos comprar los tipos. 
+Esto no es elemental, y lo haremos con una función checkTipos,
+que tendrá esta pinta.
+
+#+BEGIN_SRC ml
+
+fun checkTipos t1 t2 =
+  case (t1, t2) of
+  (TInteger _, TInteger _) => true
+  // Tstring, Tunit => true
+  | TRecord(_, u1), TRecord(_, u2) => u1 = u2
+  | TRecord _, TNil => true                
+  | TNil, TRecord _ => true                
+  | TNil, TNil => false (* nil = nil *)                    
+  | TArray(_, u1), TArray(_, u2) => u1 = u2
+  | etc..                                       
+
+#+END_SRC 
+
+Lo mejor es que estas declaraciones den origen a estos tipos (asumimos que tenemos int/string).
+
+#+BEGIN_EXAMPLE
+("I", TTipo("int", SOME(TInteger RW)))
+("S", TTipo("string", SOME(String)))
+#+END_EXAMPLE
+
+Dos tipos iguales
+
+#+BEGIN_SRC tiger
+
+type A = B
+type B = A /* Ciclo */
+
+#+END_SRC
+
+Por qué razón son ilegales? Los dos dependen mutuamente, y pueden dar lugar a estos tipos internos:
+
+#+BEGIN_EXAMPLE
+("A", TTipo("B", NONE))
+("B", TTipo("A", NONE))
+#+END_EXAMPLE
+
+Que pasa acá
+
+#+BEGIN_SRC tiger
+
+type A = int
+var x := 1
+type A = B
+type B = A
+
+#+END_SRC
+
+a) Podemos tomar que sea el primer A. (Esto es legal)
+b) Podemos tomar el último A (Estos es ilegal)
+
+
+Elegimos el segundo por el ppio de mínimo asombro.
+
+Lo mismo podemos hacer con arreglos
+
+#+BEGIN_SRC tiger
+
+type A = array of B
+type B = array of A
+
+#+END_SRC
+
+Con los records no tenemos este problema gracias al nil. Por eso tiger pide que se detecten 
+clicos en un batch de types, y se marquen como errores.
+Si esto no se hace, no ocurre nada terriblemente grave (último ejercicio del libro de appel)
+La razon es que _no_ podemos construir ningun valor de ese tipo (conseguimos un tipo sin valores)
+
+De hecho, en ML es correcto:
+
+#+BEGIN_SRC ml
+
+datatype Void = Void of Void
+
+#+END_SRC
+
+Como detectar ciclos en forma útil (que podemos reemplazar todos los NONE en TTipo, por SOME)?
+
+Depende de qué dependencias tengamos entre los tipos del batch. Notemos estas dependencias de esta manera
+
+#+BEGIN_EXAMPLE
+   (pred, succ)
+#+END_EXAMPLE
+
+
+| Construccion        | Genera |
+| type A = B          | (B,A)  |
+| type A = Array of B | (B,A)  |
+
+Una vez conseguidos los pares pred/succ de batch, los ordenamos mediante un sort topológico.
+
+#+BEGIN_SRC ml
+
+tigerseman.ml (<tab_vars>)
+
+#+END_SRC
+
+Otro problema fuera de fase:
+
+Si emitimos assembler y ensablador debemos linkear nuestro código con el runtime, la libc y el startup (arranca crt*.o). 
+Este último se ocupa de disponer el escenario para la ejecución (argumentos, enviroment, señales, etc) y llama a la función main.
+Debemos ver como enganchar nuestro código Tiger con el startup. La manera que elegimos es:
+
+ - Un main en el runtime y desde allí llamar a una función _tigermain (el '_' está para que no haya colisión con otros símbolos Tiger)
+ - Embeber nuestro código tiger en una función trucha llamada _tigermain.
+
+#+BEGIN_SRC ml
+
+tigerseman.ml (<transProg>)
+
+#+END_SRC
+
+
+
+
+* [2013-09-05 Thu]
+
+** Seguimos con el frame estático.
+
+#+BEGIN_SRC ml
+
+<tigerframe.sig>
+
+#+END_SRC
+
+Dos implementaciones de sort topológico.
+
+Problema: Un conjunto A, a; \in A. Un conjunto de restricciones de tipo pred/succ
+   (a_i, a_j) a_i; precede a a_j
+
+Se busca una ssecuencia de olos a_i quee no viole estas restricciones. Normalmente esta secuencia, si existe no es única.
+Si hay ciclos es imposible. Una implementación (scada de Haskel)
+
+#+BEGIN_SRC ml
+
+---
+
+#+END_SRC
 
 * Footnotes
 
