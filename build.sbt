@@ -8,3 +8,9 @@ libraryDependencies ++= Seq (
                     "org.scala-sbt" % "command" % "0.12.0",
                     "com.github.nikita-volkov" % "sext" % "0.2.3"
 )
+
+unmanagedSourceDirectories in Compile <++= baseDirectory { base =>
+  Seq(
+    base / "/src/main/parser"
+  )
+}

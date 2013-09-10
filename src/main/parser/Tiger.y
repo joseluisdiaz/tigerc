@@ -126,9 +126,9 @@ fundec : FUNCTION id PI tyflds PD IGUAL exp         { $$ = FunctionDecs(List(Fun
 tyfield : id DOSP id		{ $$ = Field($1, false, NameTy($3)); }
 	;
 
-args : exp COMA args		{ $1 :: $3; }
-     | exp			{ List($1); }
-     |				{ List(); }
+args : exp COMA args		{ $$ = $1 :: $3; }
+     | exp			{ $$ = List($1); }
+     |				{ $$ = List(); }
      ;
 
 l_value : id				{ $$ = SimpleVar($1); }

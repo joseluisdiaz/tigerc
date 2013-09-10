@@ -18,23 +18,19 @@ JFLEX=lib/jflex-1.5.0-SNAPSHOT.jar
 BISON=bison -v
 JAVA=java
 RM=rm -f
-SCALA_SRC=../scala/tiger/parser
 
 OBJS=TigerParser.scala TigerTokens.scala TigerScanner.scala
 
-
 all: $(OBJS)
-	mkdir -p ${SCALA_SRC}
-	cp ${OBJS} ${SCALA_SRC} 
 
 TigerScanner.scala : Tiger.lex
-	$(JAVA) -jar ${JFLEX} --scala Tiger.lex
+    $(JAVA) -jar ${JFLEX} --scala Tiger.lex
 
 TigerParser.scala TigerTokens.scala : Tiger.y
-	$(BISON) Tiger.y
-	$(RM) Tiger.tab.c	
-	$(SCALA) -cp ${SCALA-BISON} -howtorun:object edu.uwm.cs.scalabison.RunGenerator -v Tiger.y
-	$(RM) Tiger.output
+    $(BISON) Tiger.y
+    $(RM) Tiger.tab.c
+    $(SCALA) -cp ${SCALA-BISON} -howtorun:object edu.uwm.cs.scalabison.RunGenerator -v Tiger.y
+    $(RM) Tiger.output
 
 clean :
-	rm -f *.class *Parser.scala *Tokens.scala *Scanner.scala *~ *.output *.lcoutput *.tab.c
+    rm -f *.class *Parser.scala *Tokens.scala *Scanner.scala *~ *.output *.lcoutput *.tab.c
