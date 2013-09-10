@@ -921,6 +921,129 @@ Si hay ciclos es imposible. Una implementación (scada de Haskel)
 
 #+END_SRC
 
+
+* [2013-09-09 Mon]
+
+** Vemos cómo tipar funciones
+
+Procedemos por partes:
+
+1) Introducimos el tipo de función, en EnvV. esto es necesario si queremos que la función puede ser recursiva. 
+Antes del examen de su body. 
+
+#+BEGIN_SRC 
+
+fun decFunc( {name, params, body, result}, nl ) (tenv, venv) = 
+ let 
+    val formals = map (fn x => transTy(tenv v1#2 x)) params
+    val tipfun => case
+#+END_SRC
+
+#+BEGIN_SRC 
+
+  val name = case name of 
+       | "_tigermain" => "tigermain"
+       | name => "." ^ name ^ makestring(nl) ^ "_" ^ newlabel() 
+
+#+END_SRC
+
+
+** Tenemos est problema: Como acceder desde un marco de activacion a otro marco de activacion.
+
+1) solución lambda lifting (Functional programming, de harrison)
+
+#+BEGIN_EXAMPLE 
+  
+  \x.\y.\z = ( x + y + z )
+ (completar el ejemplo)
+
+#+END_EXAMPLE
+
+La ventaja de esta solucion, e que funciona y es conceptualmente sencilla.
+Desventajas: puede consumir mucho stack
+
+2) solución: tabla display ( Dijkstra )
+
+Toda función construye un arreglo con todos los frames pointers de los ultimos marcos de activación de las funciones anidantes. 
+
+3)  Volvamos al esquema de \-lifting. El sigt programa Oberon.
+
+#+BEGIN_EXAMPLE
+
+< Ejemplo de lambda lifting en C >
+
+#+END_EXAMPLE
+
+3) Static link
+Una mejora para el \-lifting es juntar las variables escapadas en estructura y pasar sólo el puntero a esas estructuras.
+
+La otra cosa que se puede hacer es pasar sólo un puntero, y rescatar los recorriendo los m. de a. como difernecias una lista enlazada.
+
+Ventajas: creación muy rapida y constante.
+Desventaja: Acceso lineal.
+
+La expriencia indica que SL es la mejor alternativa. 
+Ahora hay que buscar cómo gestionar el SL en llamados a funciones.
+
+Llamamos P_llamante y P_llamada a las profundidades de las anidantes de las funciones llamadas y llamantes.
+
+Resp
+
+1^er caso
+
+P_llamante = P_llamda
+
+#+BEGIN_EXAMPLE
+
+f() 
+{
+
+}
+
+g() 
+{
+
+}
+
+#+END_EXAMPLE
+
+2^do caso
+
+P_llamante < P_llamada
+
+Por scope, debe ser
+
+P_llamada = P_llamante + 1
+
+
+3^er caso
+
+P_llamante > P_llamada
+
+No hay restricciones.
+# 
+
+R \letfarrow SL_llamante
+R \leftarrow *R
+
+P_llamante - P_llamada } veces
+
+R \leftarrow *R
+
+SL_llamante \leftarrow R  
+
+** Lenguaje intermedio (IL o IR representacion)
+
+Este leguaje se defini para acercarse al assembler. Su diseño varía según
+qué optimizaciones se quieran hacer y existen lenguajes intermedios de alto, medio y bajo nivel. El lenguaje intermedio para tiger se llama Tree.
+
+#+BEGIN_SRC ml
+
+<TigerTree.sml>
+
+#+END_SRC
+
+
 * Footnotes
 
 [fn:1] El segundo id debe ser un nombre de tipo, pero no podemos saberlo, lo chequeamos mas adelante.
