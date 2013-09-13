@@ -1044,6 +1044,98 @@ qué optimizaciones se quieran hacer y existen lenguajes intermedios de alto, me
 #+END_SRC
 
 
+* [2013-09-11 Wed]
+
+Empesemos a esbozar la traducción de código intermedio. Es una etpa angosta: se tipa el programa al
+ mismo tiempo que generamos código.
+
+#+BEGIN_EXAMPLE
+ 
+     | --- exp -->  |
+sema |              |  translate
+     | <-- tree --  |
+
+#+END_EXAMPLE
+
+Se puede ver como una especie de semántica denotacional. Presenta algunos problemas en el sentido
+ que nos faltará contexto para saber cómo deberá usarse un código Ej:
+
+#+BEGIN_SRC 
+  a > b
+#+END_SRC
+
+Si se usa en :
+
+#+BEGIN_EXAMPLE
+  if (a > b) then ... deberá manejar un salto
+#+END_EXAMPLE
+ó
+
+#+BEGIN_EXAMPLE
+   c: = a > b ... deberá devolver 0 ó 1
+#+END_EXAMPLE
+
+
+Otro problemas es empaquetar y desepmaquetar el código:
+
+#+BEGIN_EXAMPLE
+
+ tigertrans exp Ex, Nx, Cx
+
+Number, Condition, Expr.
+
+fun seq()
+
+fun unEx()
+
+
+#+END_EXAMPLE
+
+Ahora, desempaquetaremos una sentencia
+
+#+BEGIN_EXAMPLE
+fun unNx
+#+END_EXAMPLE
+
+
+El tercer desempaquetador 
+
+#+BEGIN_EXAMPLE
+fun unCx
+#+END_EXAMPLE
+
+
+Veamos cómo se pueden integrar seman y translate.
+
+En seman:
+
+#+BEGIN_SRC 
+
+  trexp(BreakExp, nl) = { exp = SCAF, ty = TUnit } 
+
+Cambiamos esto a 
+
+  trexp(BreakExp, nl) = { exp = breakExp(), ty = TUnit } 
+
+fun breakExp() = 
+  Nx(JUMP(hd (!salida), [hd (!salida)]))
+
+#+END_SRC
+
+Salida es una pila de labels que se marcan dónde terminan la iteración. Son generadas y
+ sacadas por funciones en translate.
+
+#+BEGIN_EXAMPLE
+ def preForWhile() =
+    salida := newLabel() :: (!salida)
+
+ def postForWhile() =
+    salida := tt(!salida)
+
+#+END_EXAMPLE
+
+
+
 * Footnotes
 
-[fn:1] El segundo id debe ser un nombre de tipo, pero no podemos saberlo, lo chequeamos mas adelante.
+[fn:1] El segundo id debe ser un nombre de tipo, pero no podemos saberlo, lo chequeamos mas adelante. 
