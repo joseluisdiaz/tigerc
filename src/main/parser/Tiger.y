@@ -3,7 +3,7 @@
  */
 %{
 package tiger.parser
-import tiger.Tree._
+import tiger.Abs._
 
 %}
 

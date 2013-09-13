@@ -9,9 +9,15 @@ object Tiger {
 
     val cp = new TigerParser()
     
-    cp.createScanner(System.in);
+    cp.createScanner(System.in)
+    val prog = cp.parse_prog()
 
-    println(cp.parse_prog().treeString)
+    println(prog.treeString)
+    Escapes.findEscapes(prog)
+    println("----")
+    println(prog.treeString)
+
+
 
   }
 
