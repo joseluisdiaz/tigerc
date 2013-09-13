@@ -1,0 +1,6 @@
+/* correcto, aunque no termina... (creo) */
+let
+	function f():int = g()
+	function g():int = f()
+in 0 end
+

@@ -1,0 +1,6 @@
+let
+	type A = array of int
+	var a:=A[10] of 0
+in
+	a[a[1]-a[2]]:=a[a[a[5]+a[3]]+a[4]]
+end

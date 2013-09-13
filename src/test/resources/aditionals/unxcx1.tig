@@ -1,0 +1,3 @@
+let
+	function mayor(x:int, y:int):int=x>y
+in 0 end

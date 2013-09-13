@@ -1,0 +1,8 @@
+let
+	function f(x:int, y:int, z:int)=()
+	var i:=10
+	var j:=11
+	var k:=12
+in
+	f(i+j, i+j+k, j+k)
+end

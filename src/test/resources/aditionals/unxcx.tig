@@ -1,0 +1,6 @@
+let
+	function f():int=(print("uno!\n"); 0)
+	function g():int=(print("dos!\n"); 0)
+in
+	f()<g(); print("chau!\n"); 0
+end

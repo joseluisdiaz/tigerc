@@ -1,0 +1,4 @@
+let
+	var x:=101
+	var y:=10/x
+in 0 end

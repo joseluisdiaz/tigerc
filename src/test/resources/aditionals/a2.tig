@@ -1,0 +1,9 @@
+let
+	type vector = array of int
+	type matriz = array of vector
+	var a:=matriz [10] of vector [10] of 5
+	var i:=10
+	var j:=11
+in
+	i:=a[3][4]
+end

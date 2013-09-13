@@ -1,0 +1,11 @@
+let
+	type R1={r: R2}
+	type R2={r: R3}
+	type R3={r: R4}
+	type R4={r: R5}
+	type R5={r: int}
+	var r:R1:=nil
+	var i:=0
+in
+	i:=r.r.r.r.r.r
+end

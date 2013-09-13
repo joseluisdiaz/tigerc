@@ -1,0 +1,6 @@
+let
+	function f():int = 10
+	function g(i:int):int =
+		(print(chr(i+1)); 11)
+	var i:=0
+in	i:=f(); i:=g(1) end

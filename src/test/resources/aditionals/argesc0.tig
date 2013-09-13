@@ -1,0 +1,6 @@
+let
+	function f(a:int, b:int, c:int):int=
+	let
+		function g(): int=b
+	in g()+a+a end
+in f(0, 1, 2) end

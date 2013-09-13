@@ -1,0 +1,6 @@
+/* correcto */
+(
+	let var x:=0 in end;
+	let var true:=1 in while true do () end;
+	0
+)

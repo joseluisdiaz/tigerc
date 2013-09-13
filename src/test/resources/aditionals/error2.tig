@@ -1,0 +1,9 @@
+let
+	type s=string
+	type string=int
+	var x:s:="hola"
+	var y:string:=10
+	type R1 = {i:s, j:string}
+	type R2=R1
+	var r1:=R1{i="hola", j=15}
+in 0 end

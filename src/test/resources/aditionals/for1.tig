@@ -1,0 +1,7 @@
+let
+	var i:="a"
+in
+	for i:=0 to ord(i) do
+		print(chr(i));
+	print(i)
+end

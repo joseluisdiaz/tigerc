@@ -1,0 +1,4 @@
+let
+	type R={r:R}
+	var r:=R{r=R{r=nil}}
+in 0 end

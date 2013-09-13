@@ -1,0 +1,5 @@
+let
+	type t = int
+	type int = string
+	type string = t
+in 0 end

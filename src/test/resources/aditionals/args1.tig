@@ -1,0 +1,5 @@
+let
+	function f(i:string, j:string, k:string)=()
+in
+	f("hola","que","tal")
+end

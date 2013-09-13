@@ -1,0 +1,6 @@
+let
+	type s=string
+	type string=int
+	var x:s:="hola"
+	var y:string:=10
+in 0 end

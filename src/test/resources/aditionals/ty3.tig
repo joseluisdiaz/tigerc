@@ -1,0 +1,10 @@
+let
+	type a=int
+	type b=string
+	var a:a:=ord("h")
+	var b:b:="h"
+	type a=b
+	type b={next: a}
+	var a:a:=b{next=nil}
+	var b:b:=a{next=nil}
+in 0 end

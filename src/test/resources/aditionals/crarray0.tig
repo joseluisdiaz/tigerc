@@ -1,0 +1,11 @@
+let
+	type A = array of int
+	type B = array of A
+	type C = array of B
+	type D = array of C
+	type E = array of D
+	type F = array of E
+	type G = array of F
+	type H = array of G
+	var a := G[1] of F[1] of E[1] of D[1] of C[1] of B[1] of A[1] of 0
+in 0 end

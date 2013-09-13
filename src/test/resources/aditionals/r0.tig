@@ -1,0 +1,7 @@
+let
+	type rec = {i:int, r: rec}
+	var r:rec:=rec{i=10, r=nil}
+	var i:=0
+in
+	i:=r.i
+end

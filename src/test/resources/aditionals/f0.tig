@@ -1,0 +1,5 @@
+let
+	function f0(N:int): int =
+		N
+in
+end

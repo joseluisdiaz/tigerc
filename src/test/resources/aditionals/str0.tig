@@ -1,0 +1,11 @@
+let
+	var s1:="hola"
+	var s2:="chau"
+in
+	print(if s1<s2 then "si" else "no");
+	print(if s1<=s2 then "si" else "no");
+	print(if s1>s2 then "si" else "no");
+	print(if s1>=s2 then "si" else "no");
+	print(if s1=s2 then "si" else "no");
+	print(if s1<>s2 then "si" else "no")
+end

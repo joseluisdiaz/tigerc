@@ -1,0 +1,11 @@
+/*
+	overflow con cttes.
+	cociente.
+*/
+let
+	var x:=-1073741824
+in
+	x:=(-1)/-10;
+	x:=-1073741824/-1;
+	x:=x/0
+end

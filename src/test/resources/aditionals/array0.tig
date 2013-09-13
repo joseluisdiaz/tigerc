@@ -1,0 +1,10 @@
+let
+	type A = array of int
+	type B = array of A
+	var a:=A[10] of 1
+	var b:=B[10] of a
+	var i:=a[5]
+in
+	b[5][6]
+end
+

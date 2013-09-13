@@ -1,0 +1,8 @@
+let
+	function f():int =
+		let var x:=10
+		function g():int =
+			let var y:=11
+			in x+y end
+		in g() end
+in 0 end

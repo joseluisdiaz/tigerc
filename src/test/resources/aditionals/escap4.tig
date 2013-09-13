@@ -1,0 +1,8 @@
+let
+	type A=array of int
+	var i:=10
+	function f()=
+		let
+			var a:=A[i] of 0
+		in end
+in 0 end

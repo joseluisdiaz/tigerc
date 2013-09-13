@@ -1,0 +1,5 @@
+let
+	type A = array of int
+	type B = array of A
+	type C = array of B
+in 0 end

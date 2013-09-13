@@ -1,0 +1,8 @@
+let
+	function f(i:int, j:int, k: int)=()
+	function x():int=1
+	function y():int=2
+	function z():int=3
+in
+	f(x(),y(),z())
+end

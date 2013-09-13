@@ -1,0 +1,8 @@
+let
+	type i=int
+	type int=string
+	var i:i:=0
+	var h:int:="hola"
+	type int=i
+	var j:int:=11
+in 0 end

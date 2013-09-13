@@ -1,0 +1,16 @@
+/* records y arrays */
+let
+	type A=array of z
+	type a=b
+	type z=string
+	type b=c
+	type B=array of e
+	type x=y
+	type y=z
+	type C=array of B
+	type c=d
+	type d=e
+	type e=f
+	type f=int
+in
+end

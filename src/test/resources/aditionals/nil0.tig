@@ -1,0 +1,3 @@
+/* debe dar error */
+(if nil=nil then print("si") else print("no"))
+	

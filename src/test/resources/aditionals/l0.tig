@@ -1,0 +1,6 @@
+let
+	var i:=10
+	var j:=let var i:=11 in i end
+in
+	print(chr(i+j))
+end

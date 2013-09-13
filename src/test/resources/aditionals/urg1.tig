@@ -1,0 +1,5 @@
+let
+	type R = {i:int}
+	var r:R:= nil
+in 0 end
+

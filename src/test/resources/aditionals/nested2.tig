@@ -1,0 +1,6 @@
+let	function f()=
+		let	function g()=
+			let function h()= (f(); g())
+			in	g(); h() end
+		in	g() end
+in	f() end

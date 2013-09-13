@@ -1,0 +1,12 @@
+let
+	var i:=1
+	function f():int=
+		let	var tmp:=i
+		in	i:=i+1; tmp end
+	function g(i:int, j:int, k:int)=
+		(print("i="); print(chr(i));
+		print("j="); print(chr(j));
+		print("k="); print(chr(k)))
+in
+	g(f(), f(), f())
+end

@@ -1,0 +1,10 @@
+let
+	var i:=10
+in
+	while i>10 do
+		let
+			function f() = break
+		in
+			f()
+		end
+end	

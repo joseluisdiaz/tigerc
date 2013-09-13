@@ -1,0 +1,11 @@
+let
+	var x:=1
+	function f():int=
+		let
+			function f():int=
+				let	function f():int=(x:=10; x+f())
+			in x:=11; x+f() end
+		in x:=12; x+f() end
+	var y:=x+f()
+in 0 end
+

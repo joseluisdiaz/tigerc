@@ -1,0 +1,15 @@
+/* records y arrays */
+let
+	type A1 = array of string
+	type A2 = array of R1
+	type A3 = array of R2
+	type R1 = {i: int, a:A1}
+	type R2 = {a: A2}
+	function f(i:int): R2 =
+		R2{a=A2[3] of R1{i=i, a=A1[5] of "hola"}}
+	var rr:R2:=nil
+	var r:=""
+in
+	rr:=f(3);
+	r:=rr.a[1].a[3]
+end

@@ -1,0 +1,6 @@
+let
+	function f(a:int, b:int, c:int, d:int, e:int, f:int, g:int):int=
+	let
+		function gf(): int=b
+	in gf()+a+b+c+d+e+f+g end
+in f(0, 1, 2, 4, 5, 6, 7) end

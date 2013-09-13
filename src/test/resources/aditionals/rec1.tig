@@ -1,0 +1,4 @@
+let
+	type R = {h: int, i: int, j: string, k: R}
+	var r:=R{i=ord("A"), h=34, j="hola", k=nil}
+in 0 end

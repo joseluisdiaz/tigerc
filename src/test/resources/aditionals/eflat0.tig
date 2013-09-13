@@ -1,0 +1,9 @@
+/* debe aparecer B */
+let
+	var x:=0
+	function f():int=
+		(x:=x+1; 1)
+in
+	f()>1;
+	print(chr(x+ord("A")))
+end

@@ -1,0 +1,9 @@
+let
+	var x:=10
+	var y:=11
+	function f(i:int): int=
+		x+y*i
+in
+	f(4);
+	()
+end

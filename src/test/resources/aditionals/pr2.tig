@@ -1,0 +1,20 @@
+/* acceso a scopes anidantes */
+let
+	var kk:=0
+	function a(ia:int):int=
+	let	var va:=1
+		function b(ib:int):int=
+		let	var vb:=2
+			function c(ic:int):int=
+			let	var vc:=3
+				function e(ie:int):int=
+				let	var vea:=a(100)
+					var veb:=b(101)
+					var vec:=c(102)
+				in	ia+ib+ic+ie+va+vb+vc end
+				function d(id:int):int= e(id)
+			in	d(12) end
+		in	c(11) end
+	in	b(10) end
+in	kk:=a(9) end
+					

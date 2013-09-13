@@ -1,0 +1,8 @@
+/*
+	argumentos funcionales.
+*/
+let
+	function f(i: int):int=0
+in
+	print(chr(f(f(f(1)+f(1))+f(f(1)+f(1)))+f(f(f(1)+f(1))+f(f(1)+f(1)))))
+end

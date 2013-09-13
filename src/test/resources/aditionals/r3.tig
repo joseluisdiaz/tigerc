@@ -1,0 +1,7 @@
+let
+	type r={i: int}
+	type ar=array of r
+	var v:=ar [10] of r{i=0}
+in
+	print(chr(v[3].i))
+end

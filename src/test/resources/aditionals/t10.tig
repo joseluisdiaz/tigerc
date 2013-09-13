@@ -1,0 +1,8 @@
+let
+	type a=int
+	type b=string
+	type arr0 = array of a
+	type arr1 = array of b
+	type arr2 = array of arr0
+	type arr3 = array of arr1
+in 0 end

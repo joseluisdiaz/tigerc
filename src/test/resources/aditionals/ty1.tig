@@ -1,0 +1,9 @@
+let
+	type t1=int
+	type t2=t1
+	var i:t2:=10
+	type t1=string
+	var j:t1:="hola"
+	var k:t2:=10
+in 0 end
+

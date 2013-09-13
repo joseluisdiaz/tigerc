@@ -1,0 +1,4 @@
+let
+	type a = int type b = string
+	type rec = {i:a, j:b, k: rec}
+in 0 end

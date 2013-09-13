@@ -1,0 +1,67 @@
+let
+	type a=int
+	type int=string
+	type b=a
+	type c=b
+	type d=c
+	type e=d
+	type f=e
+	type g=f
+	type h=g
+	type i=h
+	type j=i
+	var x:a:=10
+	var y:b:=11
+	var w:c:=12
+	var z:h:=13
+in
+end
+/*
+Según vos el entorno tiene que quedar:
+("int",TString),("a",TInt),("b",TInt)
+
+Pero para mí debe quedar
+("int",TString),("a",TString),("b",TString)
+ya que están en el mismo batch de declaraciones, y por lo tanto el int
+en "type a=int" se refiere al que está definido después. Es decir que
+las definiciones en el batch tienen preferencias sobre las
+preexistentes.
+
+Me parece que es una interpretación menos ambigua ya que sino surgen
+casos como:
+1)
+	let type c=int in
+		...
+		let	
+			type a=c
+			type b=a
+			type c=b
+		in
+		 ...
+		end
+		...
+	in
+
+	?Esto no es un ciclo? ?Debo interpretar que el 1er c se 	refiere al
+previamente definido?
+
+2) otro caso ambiguo es el siguiente:
+	let
+		type rl=string
+	in
+	.
+	.
+	.
+		let
+			type r={key: int, children: rl }
+			type rl={hd: r, tl: rl}
+		in
+	...
+
+	?Cuál es el tipo de r?
+
+
+Decime qué te parece estas ideas (así veo cómo dejo el Tiger).
+
+Saludos
+*/

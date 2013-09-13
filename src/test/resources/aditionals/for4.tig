@@ -1,0 +1,6 @@
+let
+	function f(i:int) = i:=i+1
+in
+	for i:=1 to 2 do f(i);
+	0
+end

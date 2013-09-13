@@ -1,0 +1,6 @@
+let
+	type A = int
+	var x:=1
+	type A = array of A
+in 0 end
+

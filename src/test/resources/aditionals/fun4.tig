@@ -1,0 +1,9 @@
+let
+	function f(i:int)=print(chr(i))
+	function g(i:int):int=2*i
+	var i:=10
+in
+	i:=g(i);
+	f(i)
+end
+	

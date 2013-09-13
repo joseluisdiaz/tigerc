@@ -1,0 +1,9 @@
+let
+	function f(i:int, j:int, k:int):int=
+		let	var x:=1 var y:=2 var z:=3
+			function g():int=x+y+z
+		in	i+j+k+x+y+z end
+	var i:=0
+in
+	i:=f(10, 11, 12)
+end

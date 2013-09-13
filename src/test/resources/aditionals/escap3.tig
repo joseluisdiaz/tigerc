@@ -1,0 +1,8 @@
+let
+	type R={n: int}
+	var i:=10
+	function f()=
+		let
+			var r:=R{n=i}
+		in end
+in 0 end

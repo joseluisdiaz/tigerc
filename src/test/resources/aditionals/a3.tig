@@ -1,0 +1,10 @@
+let
+	type arr1 = array of int
+	type arr2 = array of int
+	var v1 := arr1[10] of 0
+	var v2 := arr1[10] of 0
+	var v3 := arr2[10] of 0
+in
+	v1:=v2;
+	v1:=v3
+end

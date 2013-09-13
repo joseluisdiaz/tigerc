@@ -1,0 +1,12 @@
+/* Debe compilar. */
+let
+	var x:=10
+	var y:=x+1
+	var x:="hola"
+in
+	for x:=0 to size(x) do
+		(print(chr(x));
+		let	var x:="chau"
+		in	print(x) end);
+	print(x)
+end

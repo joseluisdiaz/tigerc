@@ -1,0 +1,11 @@
+let
+	var i:=1
+	var j:=2
+	var k:=3
+	var l:=4
+	var m:=5
+	var n:=6
+in
+	print(chr(i+j+k));
+	print(chr(l+m+n))
+end

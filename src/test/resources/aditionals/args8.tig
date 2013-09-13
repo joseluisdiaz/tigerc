@@ -1,0 +1,13 @@
+/*
+	lets como argumentos
+*/
+let
+	type R = {i: int, prox: R}
+	type A = array of R
+	function f(i:int, j: int, k: A, l: R)=()
+in
+	f(let var i:=0 in for j:=1 to 10 do i:=i+1; i end,
+		let var k:=11 in for h:=1 to 5 do k:=k*2; k+1 end,
+		A[10] of R{i=1, prox=nil},
+		let var r:=R{i=2, prox=nil} in r.prox:=r; r end)
+end

@@ -1,0 +1,15 @@
+let
+	function f1(N:int): int =
+	let
+		var a:=10
+		function g1(H:int): int =
+		let
+			var b:=11
+		in
+			let var z:=1000 in N+H+a+b+z end
+		end
+	in
+		N>g1(a)
+	end
+in
+end

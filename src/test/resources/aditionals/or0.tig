@@ -1,0 +1,7 @@
+let
+	var x:=10
+	var y:=11
+	var k:=0
+in
+	k:=x | y
+end

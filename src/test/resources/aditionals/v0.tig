@@ -1,0 +1,8 @@
+/* Debe compilar. */
+let
+	var x:=10
+	var y:=x+1
+	var x:="hola"
+in
+	print(x)
+end

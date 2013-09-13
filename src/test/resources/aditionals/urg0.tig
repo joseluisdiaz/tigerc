@@ -1,0 +1,6 @@
+let
+	type p={v:v}
+	type v=array of p
+	var p := v[10] of nil
+	var q:=p[0].v
+in 0 end

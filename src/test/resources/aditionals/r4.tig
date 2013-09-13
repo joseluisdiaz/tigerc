@@ -1,0 +1,7 @@
+let
+	type r={i: int}
+	type rr={r: r}
+	var v:=rr{r=r{i=10}}
+in
+	print(chr(v.r.i))
+end

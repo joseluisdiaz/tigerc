@@ -1,0 +1,5 @@
+let
+	type rec ={i:int}
+	type a = b
+	type b = rec
+in 0 end

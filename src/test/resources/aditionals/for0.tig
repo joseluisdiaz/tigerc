@@ -1,0 +1,3 @@
+(for i:=0 to (break; 10) do
+	print("hola")
+)

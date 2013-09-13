@@ -1,0 +1,5 @@
+let
+	function f(i:int, j:int, k: int, l: int, m:int, n:int)=()
+in
+	f(1,2,3,4,5,6); 0
+end

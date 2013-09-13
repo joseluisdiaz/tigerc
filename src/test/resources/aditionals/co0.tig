@@ -1,0 +1,8 @@
+let 
+
+ var buffer := getchar()
+
+ function isdigit() : int = 
+		  ord(buffer)>=ord("0") & ord(buffer)<=ord("9")
+in 0 end
+

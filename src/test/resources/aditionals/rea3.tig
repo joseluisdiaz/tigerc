@@ -1,0 +1,11 @@
+let
+	type R={i: int, j: string}
+	type S={a:A}
+	type A=array of R
+	var a:=A[10] of R{i=10, j="hola"}
+	var s:=a[6].j
+	var r:S:=S{a=a}
+	var i:=0
+in
+	i:=r.a[i].i
+end

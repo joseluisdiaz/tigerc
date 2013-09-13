@@ -1,0 +1,5 @@
+let
+	var i:=0
+in
+	i:=i+1
+end

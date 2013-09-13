@@ -1,0 +1,12 @@
+let
+	function f(i:int) =
+	let
+		function g() = y()
+		function x() = g()
+		function y() = f(10)
+	in
+		g()
+	end
+in
+	f(14)
+end

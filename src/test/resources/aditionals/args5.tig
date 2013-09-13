@@ -1,0 +1,6 @@
+let
+	function f(i:int, j:int, k:int):int=i+j+k
+	var i:=0
+in
+	i:=f(10, 11, 12)
+end

@@ -1,0 +1,6 @@
+let
+	var i:=10
+in
+	print("hola");
+	print("chau")
+end

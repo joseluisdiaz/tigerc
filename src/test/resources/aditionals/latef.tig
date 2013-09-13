@@ -1,0 +1,10 @@
+/*
+	Efecto lateral en argumentos.
+	Debe mostrar 'A'
+*/
+let
+	var a:=ord("A")-1
+	function f(i:int, j:int)=print(chr(i+j))
+in
+	f(a, let function f()=a:=a+1 in f(); 0 end)
+end

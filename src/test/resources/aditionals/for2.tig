@@ -1,0 +1,4 @@
+/*
+	ERROR: el scope de i es el cuerpo del for.
+*/
+(for i:=1 to i+1 do print(i); i; 0)

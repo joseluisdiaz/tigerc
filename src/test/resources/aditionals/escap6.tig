@@ -1,0 +1,10 @@
+let
+	var i:=10
+	var j:=11
+	var k:=12
+	var l:=13
+	function f():int=
+		let
+			function g(i:int, j:int, k:int, l:int):int=i+j+k+l
+		in	g(i, j, k, l) end
+in f(); () end

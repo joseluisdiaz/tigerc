@@ -1,0 +1,9 @@
+/*
+	C\'alculo con cttes.
+	Desborde y div. x 0
+*/
+let
+	var x:=0
+in
+	x:=if x>0 then 1/0 else 1
+end

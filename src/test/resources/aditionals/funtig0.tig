@@ -1,0 +1,5 @@
+let
+	function f(a: int, b: string): string = "hola"
+	type fun= (int, string) -> string
+	/*var x:=f*/
+in 0 end

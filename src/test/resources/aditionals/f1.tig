@@ -1,0 +1,9 @@
+let
+	function f1(N:int): int =
+	let
+		var a:=10
+	in
+		N>a
+	end
+in
+end

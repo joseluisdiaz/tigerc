@@ -1,0 +1,3 @@
+let
+	var x:="\t\t\n\t\^A\^B\^C"
+in 0 end

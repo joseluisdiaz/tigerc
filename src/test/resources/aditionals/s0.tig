@@ -1,0 +1,6 @@
+let
+	var s1:="hola"
+	var s2:="chau"
+in
+	if s1>s2 then print("a") else print("b")
+end

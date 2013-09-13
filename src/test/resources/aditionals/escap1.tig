@@ -1,0 +1,14 @@
+let
+	var x:=0
+	var y:=0
+	function f(y:int) =
+		let	var z:=10
+			function g():int =
+				x+y+z
+		in end
+	function h(y:int) =
+		let	var z:=10
+			function g():int =
+				x+y+z
+		in end
+in 0 end

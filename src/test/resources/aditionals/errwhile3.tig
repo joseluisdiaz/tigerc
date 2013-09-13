@@ -1,0 +1,10 @@
+let
+	var i:=10
+in
+	while i>10 do
+		let
+			var j:=(break; 11)
+		in
+			i:=i-1
+		end
+end	

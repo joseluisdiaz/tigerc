@@ -1,0 +1,8 @@
+let
+	type A = array of R
+	type R = {a: A}
+	var z:=A[7] of nil
+	var r:=R{a=z}
+in
+	r.a[3]:=r
+end

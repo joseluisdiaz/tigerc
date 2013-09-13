@@ -1,0 +1,6 @@
+/*
+	Comparaciones entre cttes.
+*/
+((print(if 2>3 then "uno" else "dos");
+print(if 2<3 then "tres" else "cuatro"))
+)

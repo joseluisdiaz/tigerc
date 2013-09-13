@@ -1,0 +1,15 @@
+let
+	var u:=0
+	var v:=1
+	var w:=2
+	var x:=3
+	var y:=4
+	var z:=5
+in
+	u:=v+w;
+	v:=u+w;
+	w:=u+v;
+	x:=y+z;
+	y:=x+z;
+	z:=y+x
+end

@@ -1,0 +1,15 @@
+/*
+	break incorrecto!
+*/
+let
+	var i:=10
+in
+	while i>10 do (
+		if i<5 then break;
+		i:=i-1
+	);
+	while (break; i>10) do (
+		if i<5 then break;
+		i:=i-1
+	)
+end

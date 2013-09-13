@@ -1,0 +1,7 @@
+let
+	function f(i: int, j: string) = ()
+	function g(i: string, j: int) = ()
+in
+	f(1, "hola"); g("hola", 1)
+end
+	

@@ -1,0 +1,10 @@
+let
+	type arr = array of int
+	var a:=arr [10] of 0
+	var i:=10
+	var j:=11
+in
+	i:=a[3]
+	;
+	a:=arr [j] of 0
+end

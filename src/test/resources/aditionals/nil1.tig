@@ -1,0 +1,10 @@
+/* NO debe dar error */
+let	type R1 = {i:int}
+	type R2 = {i:string}
+	var r1:R1:=nil
+	var r2:R2:=nil
+in
+	print(if r1=nil then "si" else "no");
+	print(if r2=nil then "si" else "no")
+end
+	

@@ -1,0 +1,7 @@
+let
+	type r={r:rr}
+	type rr=rrr
+	type rrr={i: int, prox: rrr}
+	var x:rr:=nil
+	var y:rr:=rrr{i=10, prox=nil}
+in 0 end

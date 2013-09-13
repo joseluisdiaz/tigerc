@@ -1,0 +1,8 @@
+let
+	function f(i:int)=
+		let	var i:=10
+			function g():int=i
+		in
+			i:=g()
+		end
+in 0 end

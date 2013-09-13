@@ -1,0 +1,8 @@
+let
+	type r={i: int}
+	type rr={r: r}
+	type arv = array of rr
+	var v:=arv [10] of rr{r=r{i=10}}
+in
+	print(chr(v[5].r.i))
+end

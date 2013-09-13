@@ -1,0 +1,9 @@
+/*
+	overflow con cttes.
+	opuesto.
+*/
+let
+	var x:=0
+in
+	x:=-(-1073741824)
+end

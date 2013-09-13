@@ -1,0 +1,4 @@
+let
+	type R1 = {i:int, j:string}
+	var r1:=R1{i=15, j="hola"}
+in 0 end

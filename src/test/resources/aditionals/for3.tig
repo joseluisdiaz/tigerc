@@ -1,0 +1,11 @@
+/*
+	La primera i NO debe escapar; la segunda SI.
+*/
+let
+	var i:=10
+in
+	for i:=0 to i+1 do
+		let function f() = print(chr(64+i))
+		in end;
+	0
+end

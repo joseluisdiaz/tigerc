@@ -1,0 +1,10 @@
+let
+	function f(): int=
+	let
+		var i:=10
+		var j:=11
+	in
+		i; j
+	end
+in
+end

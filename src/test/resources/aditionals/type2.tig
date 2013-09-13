@@ -1,0 +1,4 @@
+let
+	type R1 = {i:int, next:R2}
+	type R2 = {next: R1}
+in 0 end

@@ -1,0 +1,11 @@
+let
+	var x:=1
+	function f():int=
+		let
+			function f():int=
+				let	function f():int= x+f()
+			in x+f() end
+		in x+f() end
+	var y:=x+f()
+in 0 end
+

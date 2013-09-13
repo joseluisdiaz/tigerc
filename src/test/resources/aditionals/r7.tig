@@ -1,0 +1,7 @@
+let
+	type A = array of int
+	type R = {a: A}
+	var r:=R{a=A[7] of 0}
+in
+	r.a[3]:=10
+end

@@ -1,0 +1,8 @@
+let
+	type a = int type b = string
+	type arr0 = array of b
+	type rec = {i:a, j:b, k: rec}
+	type arr1 = array of rec
+	type rec1 = {i:b, j:arr1}
+	type arr2 = array of arr1
+in 0 end

@@ -1,0 +1,5 @@
+let
+	type A=B
+	type B=C
+	type C=int
+in 0 end

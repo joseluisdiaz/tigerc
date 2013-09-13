@@ -1,0 +1,6 @@
+let
+	type t = int
+	var x:=10
+	type int = string
+	type string = t
+in 0 end

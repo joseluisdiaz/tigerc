@@ -1,0 +1,9 @@
+/*
+	overflow con cttes.
+*/
+let
+	var x:=10
+in
+	x:=1073741823+2;
+	x:=1073741823*2
+end

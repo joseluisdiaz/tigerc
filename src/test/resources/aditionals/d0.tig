@@ -1,0 +1,6 @@
+let
+	var i:=10
+	var j:=11
+in
+	j:=j/i
+end
