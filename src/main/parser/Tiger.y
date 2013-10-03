@@ -156,8 +156,8 @@ l_value : id				{ $$ = SimpleVar($1); }
 
   var scanner : TigerScanner = null
 
-  def createScanner(in: java.io.InputStream) = {
+  def parse(in: java.io.InputStream) = {
     scanner = new TigerScanner(in);
     yyreset(scanner);
+    parse_prog()
   }
-

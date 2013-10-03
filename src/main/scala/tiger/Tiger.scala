@@ -9,12 +9,11 @@ object Tiger {
 
     val cp = new TigerParser()
     
-    cp.createScanner(System.in)
-    val prog = cp.parse_prog()
+    val prog = cp.parse(System.in)
 
     println(prog.treeString)
-    Escapes.findEscapes(prog)
     println("----")
+    Escapes.findEscapes(prog)
     println(prog.treeString)
 
 

@@ -1,7 +1,7 @@
 package tiger
 
 object Abs {
-  type Pos = Integer
+  type Pos = Int
   type Symbol = String
 
   trait BooleanRef {
@@ -70,9 +70,7 @@ object Abs {
   case class RecordTy(fields: List[Field]) extends Ty
   case class ArrayTy(name: Symbol) extends Ty
 
-
   case class Field(name: Symbol, var escape: Boolean, typ: Ty) extends BooleanRef {
-
     def set(bool: Boolean) { escape = bool }
   }
 
