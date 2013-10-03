@@ -19,7 +19,7 @@ trait Escapes {
 
 }
 
-object Escapes {
+object Escapes extends Escapes {
 
   def findEscapes(prog: Exp) = {
     new DefaultEscapes().findEscapes(prog)
@@ -37,7 +37,7 @@ class DefaultEscapes extends Escapes {
       case None => throw new Error("Escape??" + id + "not exist!")
     }
 
-    case FieldVar(leftValue, id) => travVar(v, env, d)
+    case FieldVar(leftValue, id) => travVar(leftValue, env, d)
     case SubscriptVar(leftValue, exp) => travVar(leftValue, env, d); travExp(exp, env, d)
   }
 
@@ -46,12 +46,19 @@ class DefaultEscapes extends Escapes {
 
     case CallExp(func, args, position) => travExp(SeqExp(args, position), env, d)
 
-    case OpExp(left, oper, right, position) => travExp(left, env, d); travExp(right, env, d)
+    case OpExp(left, oper, right, position) => {
+      travExp(left, env, d)
+      travExp(right, env, d)
+    }
+
+    //case RecordExp( fields, typ, _) => fields map (travExp(_., env  d))
 
     case SeqExp(exps, _) => exps.map(travExp(_, env, d))
 
-    case AssignExp(variable, exp, position) =>
-      travVar(variable, env, d); travExp(exp, env, d)
+    case AssignExp(variable, exp, position) => {
+      travVar(variable, env, d)
+      travExp(exp, env, d)
+    }
 
     /* es mas claro separando de esta manera que utilizando un
       case para el Option que desarmandolo a este nivel.
@@ -76,11 +83,9 @@ class DefaultEscapes extends Escapes {
 
   }
 
-
   private def travDec(declaration: Dec, env: EscEnv, d: Depth): EscEnv ={
-
     def handleFuntionDec(dec:FunctionDec):Unit = {
-      val paramsEnv = dec.params.foldRight(env)((f:Field, e :EscEnv) => e + (f.name -> (d + 1, f) ))
+      val paramsEnv = dec.params.foldRight(env)((f:Field, e :EscEnv) => e + (f.name -> (d + 1, f)))
       travExp(dec.body, paramsEnv, d + 1)
     }
 
