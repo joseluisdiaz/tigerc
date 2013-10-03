@@ -648,11 +648,13 @@ insert <tigerpp.sml>
 
 
 
-* [2013-08-29 Thu]
 
+
+* [2013-08-29 Thu]
+  
 Terminado el cálculo de escapes viene la etapa de análisis semantico que incluye 
 verificar el tipado del AST y que genera código intermedio. Es lo suficientemente dura
-como para perder la calma. El modulo debe ttomar un AST con los escapes y devoler un 
+como para perder la calma. El modulo debe tomar un AST con los escapes y devoler un 
 nuevo record
    
    {exp, ty}
@@ -895,7 +897,7 @@ tigerseman.ml (<transProg>)
 #+END_SRC
 
 
-
+* [2013-09-04 Wed] (* Falta *)
 
 * [2013-09-05 Thu]
 
@@ -920,6 +922,7 @@ Si hay ciclos es imposible. Una implementación (scada de Haskel)
 ---
 
 #+END_SRC
+
 
 
 * [2013-09-09 Mon]
@@ -1136,6 +1139,203 @@ Salida es una pila de labels que se marcan dónde terminan la iteración. Son ge
 
 
 
+* [2013-09-12 Thu] (* Falta *)
+
+* [2013-09-16 Mon]
+
+** Generacion de records
+
+Corresponde a las expresiones del tipo:
+
+#+BEGIN_EXAMPLE
+
+  R{ m_1 = exp_1 ... m_n = exp_n}
+
+#+END_EXAMPLE
+
+Cosas a tener en cuenta:
+
+- A diferencia de las estrucutras de C, tiger no pide que la posición de los miembros siga la secuencia de declaración.
+
+Vamos a tomar la filosofía ML, que reordena (lexico-gráficamente los nombres). Así:
+
+#+BEGIN_EXAMPLE
+
+    {c = 10, b = 9, a = 8}
+
+| 8 | 9 | 10 |
+| a | b |  c |
+
+#+END_EXAMPLE
+
+Ademas, la ordenacion permite ver si hay nombres repetidos. Tambien permite que no se deba seguir la secuencia en la declaracion:
+
+#+BEGIN_EXAMPLE
+
+let type R = { next:R, i:int, j:string }
+
+var r:R = R{ j = "hola", next = nil, i = 15 }
+
+in 0 end
+
+#+END_EXAMPLE
+
+Por esto, cuando se analiza una declaracion de un record, se ordenan los nombres y se le agrega un entero que indica que 
+orden tiene la secuencia (empezando por 0)
+
+Al igual que los areglos, los records son dinámicos y la creacion la hacemos en el runtime, usando stdarg.h por razones obvias.
+
+En el rutime:
+
+#+BEGIN_SRC c
+
+#include <stdlib.h>
+#include <stdarg.h>
+
+long *makeRecord(long cts, ...) 
+{
+  long *p, *q;
+  va_list lst;
+  va_start(lst, ctos); 
+  p = q = malloc(ctos * sizeof(long))
+
+  while(ctos--)
+    *q++ = va_arg(lst, long);
+   
+  va_end(lst)
+  return p;
+
+}
+
+#+END_SRC
+
+Veamos el codigo intermedio para la creacion, debe evaluar las expreciones para los miembros y luego llamar a makeRecord.
+
+#+BEGIN_SRC ml
+
+insert <fun recordExp> ver foto (2013-09-16 15:31 + 2013-06-16 15:46)
+
+#+END_SRC
+
+** Código para invocar funciones
+
+El principal problema es ocuparse del STATIC LINK (SL) que va como primer argumento.
+
+#+BEGIN_SRC ml
+
+ fun callExp() { Mucho codigo }
+
+#+END_SRC
+
+Pasemos  una decisión importante:
+
+Qué debe hacer el compilador con expresiones como estas?
+
+#+BEGIN_EXAMPLE
+   2 + 3
+#+END_EXAMPLE  
+
+  Puede generar código para hacer esta suma en tiempo de ejcucion ó puede calcularla en tiempo de compilacición. Supongamos que elegimos 
+esta última. Debemos tener cuidad con cosas como:
+
+#+BEGIN_EXAMPLE
+  2 + x + 3
+#+END_EXAMPLE
+
+Tenemos que reconvertir, para evaluar en :
+
+#+BEGIN_EXAMPLE
+   1 + 2 + x == 3 + x
+#+END_EXAMPLE
+
+Por supuesto, estos reordenamientos valen si la operación es commutativa. 
+Podemos volver conmutativas la diferencia y el cociente, usando:
+
+#+BEGIN_EXAMPLE
+
+  a - b = a + (- b)
+
+y
+
+  a/b = a * b^-1
+
+#+END_EXAMPLE
+
+Esto y las leyes de distribución
+
+#+BEGIN_EXAMPLE
+
+ a ( b + c ) == a b + a c
+
+#+END_EXAMPLE
+
+Nos puede permitir ir desplazando todas las conastantes y evaluarlar en compilacion.
+
+Pero queda en cuestión de qué hacer si hay overflow.
+
+De hecho, hay que cuidar al reordenar :
+
+#+BEGIN_EXAMPLE
+  (INT_MAX - INT_MAX) + 1 /=
+  (INT MAX - (INT_MAX + 1))
+#+END_EXAMPLE
+
+Tambien está el problema de que /Tiger/ hace caso omiso de overflows (como C), pero ML sí los detecta.
+pero ML sí los detecta. Una posible solucion es, si hay overflow, el compilador no evalua, sino que genera 
+código para el cálculo en ejecución.
+
+
+* [2013-09-18 Wed]
+
+Declaraciones de Variables  
+
+#+BEGIN_EXAMPLE
+Ver fotos de las 2013-09-18 - 16:06
+#+END_EXAMPLE
+
+
+
+* [2013-09-23 Mon] (* Falta *) 
+
+* [2013-09-26 Thu] 
+
+** Canonización
+
+  El codigo intermedio, escrito en TREE, sigue siendo un árbol, y tenemos que tranformarlo 
+en una lista. Haremos esto usando un sistema de reescritura de términos (Term-Rewriting System). Nuestro TRS termina
+
+Def: Un árbol que está canonizado si:
+
+- No Tiene SEQ ni ESEQ.
+- El padre de todo CALL, ó EXP ó MOVE(TEMP T, ..) 
+
+
+** Reglas
+
+- Página 176 de Libro
+
+Una vez canonizado el árbol (esto es convertido en una lista), se divide en BLOQUES BASICOS. 
+
+Un BB es una secuencia de instrucciones que cumple estas reglas:
+
+- Tiene un solo LABEL, y es la primera instrucción
+- Tiene un solo CJUMP ó JUMP al final 
+
+Sabemos que todas las instrucciones de un bloque basico son ejecutadas. 
+Ademas un BB se puede cambiar de lugar sin prlboemas.
+Ayuda a identificar código muerto.
+
+#+BEGIN_EXAMPLE
+
+tigercanon.sig :
+
+ basicBlocks  
+ traceSchedule 
+
+#+END_EXAMPLE
+
+
 * Footnotes
 
 [fn:1] El segundo id debe ser un nombre de tipo, pero no podemos saberlo, lo chequeamos mas adelante. 
+
