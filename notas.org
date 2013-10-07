@@ -1,3 +1,4 @@
+
 Compiladores 
 ============
 
@@ -1333,6 +1334,35 @@ tigercanon.sig :
  traceSchedule 
 
 #+END_EXAMPLE
+
+
+* [2013-10-03 Thu] 
+
+#+BEGIN_EXAMPLE
+let
+  function f(iF:int, j:string):int =
+     function g(iG:int):int =
+        function h(iH:int):int = 
+           ( if (ih = 2) then f(10,"hola") else 0;
+           iF + iG + iH + size(j)
+        in h(iG + 1 ) end
+        var x := z(iF)
+     in g(x+1) end
+   function z(i:int) = 10 * i;
+  in f(10, "chau") end
+
+#+END_EXAMPLE
+
+#+BEGIN_SOURCE
+ 
+{ name = h.8.3, formals=[false], locals=[], actualLocal = 0, actualArg = 0, actualReg:[A,B,C,D] }
+{ name = g.9.2, formals=[true], locals=[], actualLocal = 0, actualArg = 2, actualReg:[A,B,C,D] }
+{ name = z.12.1, formals=[false], locals=[], actualLocal = 0, actualArg = 0, actualReg:[A,B,C,D] }
+{ name = f.11.0, formals=[true,true], locals=[], actualLocal = 0, actualArg = 2, actualReg:[A,B,C,D] }
+{ name = _tigermain, formals=[], locals=[], actualLocal = 0, actualArg = 0, actualReg:[A,B,C,D] }
+
+
+#+END_SOURCE
 
 
 * Footnotes
