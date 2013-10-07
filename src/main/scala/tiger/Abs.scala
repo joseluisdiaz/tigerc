@@ -14,10 +14,18 @@ object Abs {
   case class FieldVar(leftValue: Var, id:Symbol) extends Var
   case class SubscriptVar(leftValue: Var, exp: Exp) extends Var
 
-  /* Expresiones */
-  sealed abstract class Exp {
+
+  trait Position {
     def position: Pos
   }
+
+  trait NullPosition extends Position {
+    def position: Abs.Pos = 0
+  }
+
+
+  /* Expresiones */
+  sealed abstract class Exp extends Position
 
   case class VarExp(variable: Var, position: Pos) extends Exp
   case class UnitExp(position: Pos) extends Exp
@@ -49,7 +57,7 @@ object Abs {
   case class ArrayExp(typ: Symbol, size: Exp, init: Exp, position: Pos) extends Exp
 
   /* declaraciones */
-  sealed abstract class Dec
+  sealed abstract class Dec extends Position
 
   case class VarDec(name: Symbol, var escape: Boolean, typ: Option[Symbol],
                     init: Exp, position: Pos) extends Dec with BooleanRef{
@@ -58,11 +66,12 @@ object Abs {
   }
 
   case class TypeDec(name: Symbol, ty: Ty, position: Pos)
-  case class TypeDecs(decs: List[TypeDec]) extends Dec
+
+  case class TypeDecs(decs: List[TypeDec]) extends Dec with NullPosition
 
   case class FunctionDec(name: Symbol, params: List[Field], result: Option[Symbol], 
                          body: Exp, Position: Pos)
-  case class FunctionDecs(decs: List[FunctionDec]) extends Dec
+  case class FunctionDecs(decs: List[FunctionDec]) extends Dec with NullPosition
 
   /* tipos */
   sealed abstract class Ty
@@ -70,7 +79,7 @@ object Abs {
   case class RecordTy(fields: List[Field]) extends Ty
   case class ArrayTy(name: Symbol) extends Ty
 
-  case class Field(name: Symbol, var escape: Boolean, typ: Ty) extends BooleanRef {
+  case class Field(name: Symbol, var escape: Boolean, ty: Ty) extends BooleanRef {
     def set(bool: Boolean) { escape = bool }
   }
 

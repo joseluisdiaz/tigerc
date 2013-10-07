@@ -37,8 +37,8 @@ class TypesSpec extends PropSpec with TableDrivenPropertyChecks with ShouldMatch
       (INT(), ALIAS("a", Some(INT())) ),
 
       (ALIAS("a", Some(r1)), ALIAS("b", Some(r1)) ),
-      (f1,f2)
-
+      (f1,f2),
+      (INT(false), INT(true))
     )
 
   val FALSE =

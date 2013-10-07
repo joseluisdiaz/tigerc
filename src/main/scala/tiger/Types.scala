@@ -26,7 +26,7 @@ object Types {
     // TODO: Se podra usar una funcion parcial?
     override def equals(that: Any) = (this, that) match {
       case (NIL(), NIL()) => true
-      case (INT(), INT()) => true
+      case (INT(_), INT(_)) => true
       case (UNIT(), UNIT()) => true
       case (STRING(), STRING()) => true
 
@@ -48,7 +48,7 @@ object Types {
 
   case class UNIT() extends Ty
 
-  case class INT() extends Ty
+  case class INT(ro:Boolean) extends Ty
 
   case class STRING() extends Ty
 
@@ -60,7 +60,16 @@ object Types {
 
   case class FUNCTION(params: List[Ty], result: Ty) extends Ty
 
-  case class ALIAS(name: String, var ty: Option[Ty]) extends Ty
+  case class ALIAS(name: String, var ty: Option[Ty]) extends Ty {
+
+    override def toString = "ALIAS(" + name + ")"
+  }
+
+  object INT {
+    def apply():INT = INT(false)
+  }
+
+
 
 }
 
@@ -70,7 +79,6 @@ object Env {
 
   sealed abstract class EnvEntry
 
-  case class VIntro() extends EnvEntry
 
   /* int readonly */
   case class VarEntry(ty: Ty) extends EnvEntry
