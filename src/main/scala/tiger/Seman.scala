@@ -1,9 +1,7 @@
 package tiger
 
-import tiger.Abs._
 import tiger.Types._
 import tiger.Env._
-import scala.{Int, Error}
 import scala.Predef._
 import tiger.Abs._
 import scala.Some
@@ -21,24 +19,17 @@ import tiger.Types.STRING
  * Date: 9/18/13
  * Time: 1:16 PM
  */
+case class ExpTy(exp: Unit, ty: Types.Ty)
+
 trait Seman {
-
-  def transProg(prog: Exp): Unit
-
-  case class ExpTy(exp: Any, ty: Types.Ty)
-
-  type tenv = Map[String, Types.Ty]
-  type venv = Map[String, EnvEntry]
 
   def transVar(venv:venv, tenv:tenv, vr:Var): ExpTy
   def transExp(venv:venv, tenv:tenv, exp:Exp): ExpTy
   def transDec(venv:venv, tenv:tenv, dec:Dec): (venv,tenv)
-  def transTy(tenv:tenv, exp:Types.Ty): Types.Ty
 
 }
 
-object Seman extends Seman {
-
+class Trans(tabVars:venv, tabTypes:tenv) {
 
   def trVar(variable: Var): ExpTy = variable match {
 
@@ -83,16 +74,16 @@ object Seman extends Seman {
 
   }
 
-  def trDec(dec: Dec, venv:venv, tenv:tenv) = dec match {
+  def trDec(venv:venv, tenv:tenv, dec: Dec):(venv,tenv) = dec match {
 
     case VarDec(name, escape, None, init, position) => {
-      val initTy = transExp(venv, tenv, init)
+      val initTy = Seman.transExp(venv, tenv, init)
 
-      (venv + (name -> initTy.ty), tenv)
+      (venv, tenv + (name -> initTy.ty))
     }
 
     case VarDec(name, escape, Some(ty), init, position) => {
-      val initTy = transExp(venv, tenv, init)
+      val initTy = Seman.transExp(venv, tenv, init)
       val varDecTy = venv(ty)
 
       // RECORD == NIL is handled on Types equality declaration
@@ -100,11 +91,12 @@ object Seman extends Seman {
         error("type error: invalid declaration")
       }
 
-      (venv + (name -> initTy.ty), tenv)
+      (venv, tenv + (name -> initTy.ty))
     }
 
     case TypeDecs(decs) => {
 
+      //TODO: Check if the type exists in a previous enviroment; tab makes no sense now
       def transTy(tab: tenv,ty:Abs.Ty): Types.Ty = ty match {
         case RecordTy(fields) => {
 
@@ -153,34 +145,52 @@ object Seman extends Seman {
         case x => x
       }
 
-      val finalEnv = envKeyProcOrder.foldLeft(__tenv)( (acc:tenv, x:String) => acc + (x -> unpack(acc(x), acc) ))
+      val finalTypeEnv = envKeyProcOrder.foldLeft(__tenv)( (acc:tenv, x:String) => acc + (x -> unpack(acc(x), acc) ))
 
       def changeReferences(typ: Types.Ty, tab:tenv):Unit = typ match {
         case RECORD(records) => records.map( x => changeReferences( x._2, tab) )
         case ARRAY(tipo) => changeReferences(tipo,tab)
         case a@ALIAS(name, None) => a.ty = Some(tab(name))
-        case x => ()
+        case _ => ()
       }
 
-      val recordsKeySet = __tenv.keySet -- tenv.keySet -- envKeyProcOrder
+      val recordsKeySet = __tenv.keySet -- tenv.keySet //-- envKeyProcOrder
+      //TODO: revisit substract envKeyProcOrder impact
 
-      recordsKeySet.map( x => changeReferences(finalEnv(x), finalEnv) )
+      recordsKeySet.map( x => changeReferences(finalTypeEnv(x), finalTypeEnv) )
 
-      (venv, finalEnv)
+      (venv, finalTypeEnv)
     }
     case FunctionDecs(decs) => {
-      (venv, tenv)
+
+      def transTy(ty:Abs.Ty):Types.Ty = ty match {
+        case NameTy(name) => tenv(name)
+        case _ => error("type error: shouln't happend")
+      }
+
+      def functionTrans(f:FunctionDec) = {
+        val params = f.params.map( x => transTy(x.ty))
+        val result = f.result match {
+          case None => UNIT()
+          case Some(x) => tenv(x)
+        }
+        FuncEntry((), Temp.newLabel(), params, result, extern = false)
+      }
+
+      val finalVariableEnv = decs.foldLeft(venv)((x:venv, f:FunctionDec) =>  x + (f.name -> functionTrans(f)))
+
+      def paramEnv(params:List[Field]) =
+        params.foldLeft(tenv)((x:tenv, f:Field) =>  x + (f.name -> transTy(f.ty)))
+
+      decs.map( x => Seman.transExp(finalVariableEnv,paramEnv(x.params),x.body) )
+
+      (finalVariableEnv, tenv)
     }
 
   }
 
 
-  def trExp(exp: Exp):ExpTy = {
-    implicit val p = exp.position
-    trExp(exp, exp.position)
-  }
-
-  def trExp(exp: Exp, position:Pos): ExpTy = exp match {
+  def trExp(exp: Exp): ExpTy = exp match {
     case VarExp(variable, position) => trVar(variable)
 
     case UnitExp(position) => ExpTy((), UNIT())
@@ -265,9 +275,9 @@ object Seman extends Seman {
       ExpTy((), ty.last)
     }
 
-    case AssignExp(v, exp, position) => {
+    case AssignExp(v, e, position) => {
       val vTy = trVar(v)
-      val eTy = trExp(exp)
+      val eTy = trExp(e)
 
       vTy.ty match {
         case INT(true) => error("type error: found read only integer in assign")
@@ -313,7 +323,6 @@ object Seman extends Seman {
       if (testTy.ty != INT() || bodyTy.ty != UNIT() )
         error("type error: while")
 
-
       ExpTy((), UNIT())
 
     }
@@ -325,21 +334,38 @@ object Seman extends Seman {
       if (loTy.ty != INT()) error("type error: for: lo must be int")
       if (hiTy.ty != INT()) error("type error: for: hi must be int")
 
-      val bodyEnv = tabVars + (variable -> VarEntry(INT(true)))
+      val bodyEnv = tabVars + (variable -> VarEntry(INT(ro = true)))
 
-      val bodyTy = transExp(bodyEnv, tabTypes, body)
-
-
+      val _ = Seman.transExp(bodyEnv, tabTypes, body)
 
       ExpTy((), UNIT())
     }
-    case LetExp(decs, body, position) => {
 
-      ExpTy((), UNIT())
+    case LetExp(decs, body, position) => {
+      val (venv, tenv) = decs.foldLeft( (tabVars, tabTypes) ) (
+
+        (x:(venv,tenv), dec:Dec ) => {
+          val y = Seman.transDec(x._1, x._2, dec)
+
+          (x._1 ++ y._1, x._2 ++ y._2)
+        }
+
+      )
+      val letTy = Seman.transExp(venv, tenv, body)
+
+      ExpTy((), letTy.ty)
     }
 
     case BreakExp(position) => ExpTy((), UNIT())
-    //    case ArrayExp(typ, size, init, position) =>
+
+    case ArrayExp(typ, size, init, position) => {
+      val arrayTy = trExp(init)
+
+      if (tabTypes(typ) != arrayTy.ty)
+        error("type error: found" + arrayTy.ty + "required" + tabTypes(typ) )
+
+      ExpTy((), UNIT())
+    }
   }
 
   def notFound(key: String) = {
@@ -350,30 +376,41 @@ object Seman extends Seman {
     throw new Error(msg + " @line:"  + 11 )
   }
 
+}
 
-  val tabTypes:tenv = Map("int" -> INT(), "string" -> STRING()) withDefault notFound
+object Seman extends Seman {
+
+  val tabTypes:tenv = Map("int" -> INT(), "string" -> STRING())
 
   val tabVars:venv = Map(
-    "print" -> FuncEntry(Env.mainLevel, "print", List(STRING()), STRING(), true),
-    "flush" -> FuncEntry(Env.mainLevel, "flush", Nil, UNIT(), true),
-    "getchar" -> FuncEntry(Env.mainLevel, "getstr", Nil, STRING(), true),
-    "ord" -> FuncEntry(Env.mainLevel, "ord", Nil, INT(), true),
-    "chr" -> FuncEntry(Env.mainLevel, "chr", List(INT()), STRING(), true),
-    "size" -> FuncEntry(Env.mainLevel, "size", List(STRING()), INT(), true),
-    "substring" -> FuncEntry(Env.mainLevel, "substring", List(STRING(), INT(), INT()), STRING(), true),
-    "concat" -> FuncEntry(Env.mainLevel, "substring", List(STRING(), STRING()), STRING(), true),
-    "not" -> FuncEntry(Env.mainLevel, "not", List(INT()), INT(), true),
-    "exit" -> FuncEntry(Env.mainLevel, "exit", List(INT()), UNIT(), true)
-  ) withDefault notFound
+    "print" -> FuncEntry(Env.mainLevel, "print", List(STRING()), STRING(), extern = true),
+    "flush" -> FuncEntry(Env.mainLevel, "flush", Nil, UNIT(), extern = true),
+    "getchar" -> FuncEntry(Env.mainLevel, "getstr", Nil, STRING(), extern = true),
+    "ord" -> FuncEntry(Env.mainLevel, "ord", Nil, INT(), extern = true),
+    "chr" -> FuncEntry(Env.mainLevel, "chr", List(INT()), STRING(), extern = true),
+    "size" -> FuncEntry(Env.mainLevel, "size", List(STRING()), INT(), extern = true),
+    "substring" -> FuncEntry(Env.mainLevel, "substring", List(STRING(), INT(), INT()), STRING(), extern = true),
+    "concat" -> FuncEntry(Env.mainLevel, "substring", List(STRING(), STRING()), STRING(), extern = true),
+    "not" -> FuncEntry(Env.mainLevel, "not", List(INT()), INT(), extern = true),
+    "exit" -> FuncEntry(Env.mainLevel, "exit", List(INT()), UNIT(), extern = true)
+  )
+
+  def transVar(venv: Env.venv, tenv: Env.tenv, vr: Var): ExpTy = {
+    val trans = new Trans(venv, tenv)
+    trans.trVar(vr)
+  }
+
+  def transExp(venv: Env.venv, tenv: Env.tenv, exp: Exp): ExpTy = {
+    val trans = new Trans(venv, tenv)
+    trans.trExp(exp)
+  }
+
+  def transDec(venv: Env.venv, tenv: Env.tenv, dec: Dec): (Env.venv, Env.tenv) = {
+    val trans = new Trans(venv, tenv)
+    trans.trDec(venv, tenv,dec)
+  }
+
+  def transProg(exp:Exp):ExpTy = transExp(tabVars,tabTypes,exp)
 
 
-  def transProg(prog: Exp): Unit = ???
-
-  def transVar(venv: venv, tenv: tenv, vr: Var): Seman.ExpTy = ???
-
-  def transExp(venv: venv, tenv: tenv, exp: Exp): Seman.ExpTy = ???
-
-  def transDec(venv: venv, tenv: tenv, dec: Dec): (venv, tenv) = ???
-
-  def transTy(tenv: tenv, exp: Types.Ty): Types.Ty = ???
 }

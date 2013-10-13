@@ -2,6 +2,7 @@ package tiger
 
 import tiger.Types.Ty
 
+
 /**
  * User: jose
  * Date: 9/18/13
@@ -19,7 +20,6 @@ object Types {
     case Some(a) => a
     case _ => throw new Error("Type alias not found")
   }
-
 
   sealed abstract class Ty {
 
@@ -79,13 +79,13 @@ object Env {
 
   sealed abstract class EnvEntry
 
-
-  /* int readonly */
   case class VarEntry(ty: Ty) extends EnvEntry
 
   case class FuncEntry(level: Unit, label: Temp.Label, params: List[Ty],
                        result: Ty, extern: Boolean) extends EnvEntry
 
+  type venv = Map[String, EnvEntry]
+  type tenv = Map[String, Ty]
 
 }
 

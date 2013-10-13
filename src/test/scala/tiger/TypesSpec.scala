@@ -33,7 +33,8 @@ class TypesSpec extends PropSpec with TableDrivenPropertyChecks with ShouldMatch
       (STRING(), STRING()),
       (r1,r1),
       (a2,a2),
-      (ALIAS("a", Some(INT())), INT() ),
+
+      (ALIAS("a", Some(INT())), INT() ), //unpack works \o/
       (INT(), ALIAS("a", Some(INT())) ),
 
       (ALIAS("a", Some(r1)), ALIAS("b", Some(r1)) ),

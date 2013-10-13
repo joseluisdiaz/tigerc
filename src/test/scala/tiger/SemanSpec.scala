@@ -43,7 +43,7 @@ class SemanSpec extends FlatSpec {
 
   /* una idea en busca de una mejor sintaxis */
   def tigerProg(s: String) = {
-    trExp ( (new TigerAbsFromString(s) with TigerEscapes) tigerProgram()).ty
+    Seman.transProg( ( new TigerAbsFromString(s) with TigerEscapes) tigerProgram() ).ty
   }
 
   def typeTo(ty:Ty) = be(ty) compose tigerProg
@@ -87,8 +87,8 @@ class SemanSpec extends FlatSpec {
       )
     )
 
-    intercept[Error] {
-      trDec(recTy, Seman.tabVars, Seman.tabTypes)
+    intercept[RuntimeException] {
+      Seman.transDec(Seman.tabVars, Seman.tabTypes, recTy)
     }
 
   }
@@ -108,7 +108,7 @@ class SemanSpec extends FlatSpec {
             Field("rest",false,NameTy("list"))
           )),3)))
 
-    val (venv, tenv) = trDec(recTy, Seman.tabVars, Seman.tabTypes)
+    val (venv, tenv) = Seman.transDec(Seman.tabVars, Seman.tabTypes, recTy)
 
     tenv("a") should be(INT())
     tenv("b") should be(INT())

@@ -34,14 +34,14 @@ import tiger.Abs._
 
 %nonassoc THEN
 %left ELSE
+%nonassoc DO
+%nonassoc OF
 %nonassoc DOSPIG
 %left PIPE
 %left AMPER
 %nonassoc IGUAL MENOR MENIG MAYOR MAYIG DIST
 %left MAS MENOS
 %left POR DIV
-%nonassoc DO
-%nonassoc OF
 
 %start prog
 
@@ -58,6 +58,7 @@ exp : NRO                               { $$ = IntExp($1, line); }
     | l_value                           { $$ = VarExp($1, line); }
     | l_value DOSPIG exp                { $$ = AssignExp($1, $3, line); }
     | PI exp PCOMA explist PD           { $$ = SeqExp( $2 :: $4, line); }
+    | FOR id DOSPIG exp TO exp DO exp   { $$ = ForExp($2, false, $4, $6, $8, line); }
     | exp PIPE exp                      { $$ = IfExp($1, IntExp(1, line), Some($3), line); }
     | exp AMPER exp                     { $$ = IfExp($1, $3, Some(IntExp(0, line)), line); }
     | exp IGUAL exp			{ $$ = OpExp($1, EqOp(), $3, line); }
@@ -76,7 +77,6 @@ exp : NRO                               { $$ = IntExp($1, line); }
     | IF exp THEN exp	                { $$ = IfExp($2, $4, None, line); }
     | IF exp THEN exp ELSE exp          { $$ = IfExp($2, $4, Some($6), line); }
     | WHILE exp DO exp	                { $$ = WhileExp($2, $4, line); }
-    | FOR id DOSPIG exp TO exp DO exp   { $$ = ForExp($2, false, $4, $6, $8, line); }
     | LET decs IN END		        { $$ = LetExp($2, UnitExp(line), line); }
     | LET decs IN exp END	        { $$ = LetExp($2, $4, line); }
     | LET decs IN exp PCOMA explist END { $$ = LetExp($2, SeqExp($4::$6, line), line); }
@@ -93,7 +93,7 @@ rec_fields : id IGUAL exp COMA rec_fields { $$ = ($1, $3) :: $5 ; }
            |				  { $$ = Nil; }	
 	   ;
 
-decs : dec decs				{ $$ = $1 :: $2; }
+decs : dec decs				{ $$ = fundeLFunTipos($1,$2); }
      |					{ $$ = Nil; }
      ;
 

@@ -1,7 +1,8 @@
 package tiger
 
 object Abs {
-  type Pos = Int
+  case class Pos(p:Int)
+
   type Symbol = String
 
   trait BooleanRef {
@@ -20,7 +21,7 @@ object Abs {
   }
 
   trait NullPosition extends Position {
-    def position: Abs.Pos = 0
+    def position: Abs.Pos = Pos(0)
   }
 
 

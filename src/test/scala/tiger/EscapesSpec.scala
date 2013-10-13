@@ -34,6 +34,12 @@ class EscapesSpec extends FlatSpec {
     }
   }
 
+  "escapes1" should "be ''correct " in new TigerAbs("/type/assign-loop-var.tig") with TigerEscapes {
+      inside(tigerProgram()) { case ForExp(symbol, s, hi, lo, body, _) =>
+        symbol should be("i")
+      }
+  }
+
 
 //  "escape2" should "be correct" in new TigerAbs("/aditionals/escap2.tig") with TigerEscapes {
 //    inside(tigerProgram()) { case LetExp(List(decF) , body, _)  =>
