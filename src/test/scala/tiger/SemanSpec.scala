@@ -1,32 +1,19 @@
 package tiger
 
-import tiger.TigerTestUtil.{TigerEscapes, TigerAbsFromString}
+import tiger.TigerTestUtil.{TigerAbs, TigerEscapes, TigerAbsFromString}
 import org.scalatest._
 import org.scalatest.Matchers._
 
-import org.scalatest.matchers.{MatchResult, Matcher}
-import tiger.Seman._
 import tiger.Types._
-import tiger.Abs._
-import tiger.Abs.RecordTy
-import tiger.Abs.TypeDec
-import tiger.Abs.Field
 import tiger.Types.Ty
-import tiger.Abs.TypeDecs
-import tiger.Types.STRING
-import tiger.Abs.ArrayTy
-import tiger.Abs.NameTy
-import tiger.Types.UNIT
 import org.scalatest.Inside._
 import tiger.Abs.RecordTy
 import tiger.Abs.TypeDec
 import tiger.Abs.Field
-import tiger.Abs.VarDec
 import tiger.Abs.TypeDecs
 import tiger.Types.STRING
 import tiger.Abs.ArrayTy
 import tiger.Abs.NameTy
-import tiger.Abs.LetExp
 import tiger.Types.ARRAY
 import tiger.Types.UNIT
 
@@ -42,11 +29,18 @@ import tiger.Types.UNIT
 class SemanSpec extends FlatSpec {
 
   /* una idea en busca de una mejor sintaxis */
-  def tigerProg(s: String) = {
+  def tigerProgFromString(s: String) = {
     Seman.transProg( ( new TigerAbsFromString(s) with TigerEscapes) tigerProgram() ).ty
   }
 
-  def typeTo(ty:Ty) = be(ty) compose tigerProg
+  def tigerProg(s: String) = {
+    Seman.transProg( ( new TigerAbs(s) with TigerEscapes) tigerProgram() ).ty
+  }
+
+
+  def typeTo(ty:Ty) = be(ty) compose tigerProgFromString
+
+  def typ = be(INT()) compose tigerProg
 
   "a binary operation " should "type to INT" in
   {
@@ -56,7 +50,7 @@ class SemanSpec extends FlatSpec {
 
     " 2 + 4 "  should typeTo( INT() )
 
-    intercept[Error] {
+    intercept[TypeError] {
       """ 2 > "4"  """ should typeTo( INT() )
     }
   }
@@ -65,15 +59,15 @@ class SemanSpec extends FlatSpec {
     {
       """substring("stringy",1,1)""" should typeTo( STRING() )
 
-      intercept[Error] {
+      intercept[TypeError] {
         "cunak(1)" should typeTo ( UNIT() )
       }
 
-      intercept[Error] {
+      intercept[TypeError] {
         """substring("hola")""" should typeTo( STRING() )
       }
 
-      intercept[Error] {
+      intercept[TypeError] {
         "substring(1,1,1)" should typeTo(STRING())
       }
 
@@ -101,7 +95,6 @@ class SemanSpec extends FlatSpec {
         TypeDec("c", NameTy("int"), 2),
 
         TypeDec("p", ArrayTy("a"), 2),
-
         TypeDec("list",
           RecordTy(List(
             Field("first",false,NameTy("p")),
@@ -138,6 +131,37 @@ class SemanSpec extends FlatSpec {
     }
 
 
+
+
+  }
+
+  "this list" should "have a type" in {
+    "/good/compare-record-and-nil.tig" should typ
+    "/good/fact.tig" should typ
+    "/good/fun-vs-var.tig" should typ
+    "/good/local-vs-global-type.tig" should typ
+    "/good/merge.tig" should typ
+    "/good/queens.tig" should typ
+    "/good/recursive-comments.tig" should typ
+    "/good/recursive-types.tig" should typ
+    "/good/test01.tig" should typ
+    "/good/test02.tig" should typ
+    "/good/test03.tig" should typ
+    "/good/test06.tig" should typ
+    "/good/test07.tig" should typ
+    "/good/test08.tig" should typ
+    "/good/test12.tig" should typ
+    "/good/test27.tig" should typ
+    "/good/test30.tig" should typ
+    "/good/test37.tig" should typ
+    "/good/test38.tig" should typ
+    "/good/test39.tig" should typ
+    "/good/test42.tig" should typ
+    "/good/test44.tig" should typ
+    "/good/test47.tig" should typ
+    "/good/test48.tig" should typ
+//    "/good/test50.tig" should typ
+    "/good/three-name-spaces.tig" should typ
   }
 
 

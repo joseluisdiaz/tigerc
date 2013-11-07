@@ -50,7 +50,9 @@ class TypesSpec extends PropSpec with TableDrivenPropertyChecks with ShouldMatch
       (a1, a2),
       (r1, r2),
       (f2, f3),
-      (ALIAS("a", Some(r1)), ALIAS("b", Some(r2)))
+      (ALIAS("a", Some(r1)), ALIAS("b", Some(r2))),
+      (UNIT(), NIL()),
+      (NIL(), UNIT())
 
     )
 

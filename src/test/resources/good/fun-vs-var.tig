@@ -7,7 +7,7 @@
 let
    type a = int
    var a : a := 2
-   function a (a : a) : a = a
+   function b (a : a) : a = a
 in
-   a (a + a)
+  b (a + a)
 end

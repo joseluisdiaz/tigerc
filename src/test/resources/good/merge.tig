@@ -50,5 +50,5 @@ let
    var list1 := readlist ()
    var list2 := (buffer := getchar (); readlist ())
 
-in printlist (merge (list1,list2))
+in printlist (merge (list1,list2));0
 end

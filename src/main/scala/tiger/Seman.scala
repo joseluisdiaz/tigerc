@@ -20,6 +20,10 @@ import tiger.Types.STRING
  * Time: 1:16 PM
  */
 case class ExpTy(exp: Unit, ty: Types.Ty)
+class TypeError(message: String) extends RuntimeException(message)
+class EnvError(message: String) extends RuntimeException(message)
+
+
 
 trait Seman {
 
@@ -30,6 +34,13 @@ trait Seman {
 }
 
 class Trans(tabVars:venv, tabTypes:tenv) {
+
+  //TODO: may be a state monad will help
+  var currentPosition:Pos = 0
+  def position() = currentPosition
+  def position(p:Exp):Exp = { currentPosition = p.position;p }
+  def position(p:Dec):Dec = { currentPosition = p.position;p }
+
 
   def trVar(variable: Var): ExpTy = variable match {
 
@@ -58,7 +69,8 @@ class Trans(tabVars:venv, tabTypes:tenv) {
     }
 
     case SubscriptVar(leftValue, exp) => {
-      val arrayTy = trVar(leftValue).ty match {
+      val varEntry = unpack(trVar(leftValue).ty)
+      val arrayTy = varEntry  match {
         case ARRAY(ty) => ty
         case found@_ => error("type error: found " + found + " ARRAY" + " required")
       }
@@ -74,24 +86,24 @@ class Trans(tabVars:venv, tabTypes:tenv) {
 
   }
 
-  def trDec(venv:venv, tenv:tenv, dec: Dec):(venv,tenv) = dec match {
+  def trDec(venv:venv, tenv:tenv, dec: Dec):(venv,tenv) = position(dec) match {
 
     case VarDec(name, escape, None, init, position) => {
       val initTy = Seman.transExp(venv, tenv, init)
 
-      (venv, tenv + (name -> initTy.ty))
+      (venv + (name -> VarEntry(initTy.ty)), tenv )
     }
 
     case VarDec(name, escape, Some(ty), init, position) => {
       val initTy = Seman.transExp(venv, tenv, init)
-      val varDecTy = venv(ty)
+      val varDecTy = tenv(ty)
 
       // RECORD == NIL is handled on Types equality declaration
       if (initTy.ty != varDecTy) {
         error("type error: invalid declaration")
       }
 
-      (venv, tenv + (name -> initTy.ty))
+      (venv + (name -> VarEntry(varDecTy)), tenv )
     }
 
     case TypeDecs(decs) => {
@@ -177,20 +189,19 @@ class Trans(tabVars:venv, tabTypes:tenv) {
         FuncEntry((), Temp.newLabel(), params, result, extern = false)
       }
 
-      val finalVariableEnv = decs.foldLeft(venv)((x:venv, f:FunctionDec) =>  x + (f.name -> functionTrans(f)))
+      val venvWithFunction = decs.foldLeft(venv)((x:venv, f:FunctionDec) =>  x + (f.name -> functionTrans(f)))
 
-      def paramEnv(params:List[Field]) =
-        params.foldLeft(tenv)((x:tenv, f:Field) =>  x + (f.name -> transTy(f.ty)))
+      def addToVEnv(params:List[Field]) =
+        params.foldLeft(venvWithFunction)((x:venv, f:Field) =>  x + (f.name -> VarEntry(transTy(f.ty))))
 
-      decs.map( x => Seman.transExp(finalVariableEnv,paramEnv(x.params),x.body) )
+      decs.map( x => Seman.transExp(addToVEnv(x.params),tenv,x.body) )
 
-      (finalVariableEnv, tenv)
+      (venvWithFunction, tenv)
     }
 
   }
 
-
-  def trExp(exp: Exp): ExpTy = exp match {
+  def trExp(exp: Exp): ExpTy = position(exp) match {
     case VarExp(variable, position) => trVar(variable)
 
     case UnitExp(position) => ExpTy((), UNIT())
@@ -228,8 +239,9 @@ class Trans(tabVars:venv, tabTypes:tenv) {
       val ExpTy(_, tyr) = trExp(right)
       val unpacked = unpack(tyl)
 
+
       if ( tyl == tyr ) oper match {
-          case EqOp()  | NeqOp() if !( tyl == NIL() && tyr == NIL() ) && tyl != NIL()
+          case EqOp()  | NeqOp() if tyl != UNIT() && !( tyl.isNil() && tyr.isNil() )
             => return ExpTy((), INT())
 
           case DivideOp() | TimesOp() | MinusOp() | PlusOp() if unpacked == INT()
@@ -296,7 +308,7 @@ class Trans(tabVars:venv, tabTypes:tenv) {
       val testTy = trExp(test)
       val thenTy = trExp(then)
 
-      if ( testTy.ty != INT() || thenTy.ty == UNIT() ) {
+      if ( testTy.ty != INT() || thenTy.ty != UNIT() ) {
         error("type error: if")
       }
 
@@ -306,10 +318,10 @@ class Trans(tabVars:venv, tabTypes:tenv) {
 
     case IfExp(test, then, Some(_else), position) => {
       val testTy = trExp(test)
-      val thenTy = trExp(test)
+      val thenTy = trExp(then)
       val elseTy = trExp(_else)
 
-      if ( testTy.ty != INT() || thenTy.ty == elseTy.ty ) {
+      if ( testTy.ty != INT() || thenTy.ty != elseTy.ty ) {
         error("type error: if")
       }
 
@@ -318,7 +330,7 @@ class Trans(tabVars:venv, tabTypes:tenv) {
 
     case WhileExp(test, body, position) => {
       val testTy = trExp(test)
-      val bodyTy = trExp(test)
+      val bodyTy = trExp(body)
 
       if (testTy.ty != INT() || bodyTy.ty != UNIT() )
         error("type error: while")
@@ -359,55 +371,81 @@ class Trans(tabVars:venv, tabTypes:tenv) {
     case BreakExp(position) => ExpTy((), UNIT())
 
     case ArrayExp(typ, size, init, position) => {
-      val arrayTy = trExp(init)
+      val initTy = trExp(init)
+      val sizeTy = trExp(size)
+      val arrayTy = unpack(tabTypes(typ))
 
-      if (tabTypes(typ) != arrayTy.ty)
-        error("type error: found" + arrayTy.ty + "required" + tabTypes(typ) )
+      if ( sizeTy.ty != INT() )
+        error("type error: array size should be Int")
 
-      ExpTy((), UNIT())
+      arrayTy match  {
+        case ARRAY(ty) if ty == initTy.ty => true
+        case ARRAY(x) => error("type error: found" + initTy.ty + "required" + x )
+        case _ => error("type error: not an array")
+      }
+
+      ExpTy((), arrayTy)
     }
   }
 
-  def notFound(key: String) = {
-    error("type error: no defined " + key) //tendria que poder usar implicit aca
-  }
-
-  def error(msg: String)/*(implicit pos: Pos)*/ = {
-    throw new Error(msg + " @line:"  + 11 )
+  def error(msg: String) = {
+    throw new TypeError(msg + " @line:"  + position() )
   }
 
 }
 
 object Seman extends Seman {
 
-  val tabTypes:tenv = Map("int" -> INT(), "string" -> STRING())
+  val tabTypes:tenv = Map("int" -> INT(), "string" -> STRING()) withDefault error
 
   val tabVars:venv = Map(
-    "print" -> FuncEntry(Env.mainLevel, "print", List(STRING()), STRING(), extern = true),
+    "print" -> FuncEntry(Env.mainLevel, "print", List(STRING()), UNIT(), extern = true),
     "flush" -> FuncEntry(Env.mainLevel, "flush", Nil, UNIT(), extern = true),
     "getchar" -> FuncEntry(Env.mainLevel, "getstr", Nil, STRING(), extern = true),
-    "ord" -> FuncEntry(Env.mainLevel, "ord", Nil, INT(), extern = true),
+    "ord" -> FuncEntry(Env.mainLevel, "ord", List(STRING()), INT(), extern = true),
     "chr" -> FuncEntry(Env.mainLevel, "chr", List(INT()), STRING(), extern = true),
     "size" -> FuncEntry(Env.mainLevel, "size", List(STRING()), INT(), extern = true),
     "substring" -> FuncEntry(Env.mainLevel, "substring", List(STRING(), INT(), INT()), STRING(), extern = true),
     "concat" -> FuncEntry(Env.mainLevel, "substring", List(STRING(), STRING()), STRING(), extern = true),
     "not" -> FuncEntry(Env.mainLevel, "not", List(INT()), INT(), extern = true),
     "exit" -> FuncEntry(Env.mainLevel, "exit", List(INT()), UNIT(), extern = true)
-  )
+  ) withDefault error
+
+
+  def error(key: String) = {
+    throw new EnvError("type error: not found " + key )
+  }
 
   def transVar(venv: Env.venv, tenv: Env.tenv, vr: Var): ExpTy = {
     val trans = new Trans(venv, tenv)
-    trans.trVar(vr)
+
+    try {   // No se me ocurre como hacerlo mas feo.
+      trans.trVar(vr)
+    } catch {
+      case e:EnvError => trans.error(e.getMessage)
+    }
+
   }
 
   def transExp(venv: Env.venv, tenv: Env.tenv, exp: Exp): ExpTy = {
     val trans = new Trans(venv, tenv)
-    trans.trExp(exp)
+
+    try {   // No se me ocurre como hacerlo mas feo.
+      return trans.trExp(exp)
+    } catch {
+      case e:EnvError => trans.error(e.getMessage)
+    }
+
   }
 
   def transDec(venv: Env.venv, tenv: Env.tenv, dec: Dec): (Env.venv, Env.tenv) = {
     val trans = new Trans(venv, tenv)
-    trans.trDec(venv, tenv,dec)
+
+    try {   // No se me ocurre como hacerlo mas feo.
+      trans.trDec(venv, tenv,dec)
+    } catch {
+      case e:EnvError => trans.error(e.getMessage)
+    }
   }
 
   def transProg(exp:Exp):ExpTy = transExp(tabVars,tabTypes,exp)

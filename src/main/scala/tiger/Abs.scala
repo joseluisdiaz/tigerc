@@ -1,7 +1,7 @@
 package tiger
 
 object Abs {
-  case class Pos(p:Int)
+  type Pos = Int
 
   type Symbol = String
 
@@ -21,14 +21,13 @@ object Abs {
   }
 
   trait NullPosition extends Position {
-    def position: Abs.Pos = Pos(0)
+    def position: Pos = 0
   }
-
 
   /* Expresiones */
   sealed abstract class Exp extends Position
 
-  case class VarExp(variable: Var, position: Pos) extends Exp
+  case class VarExp(variable: Var, position:Pos) extends Exp
   case class UnitExp(position: Pos) extends Exp
   case class NilExp(position: Pos) extends Exp
   case class IntExp(value: Integer, position: Pos) extends Exp

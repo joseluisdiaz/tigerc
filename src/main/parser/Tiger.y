@@ -139,9 +139,9 @@ l_value : id				{ $$ = SimpleVar($1); }
 %%
 
   def fundeLFunTipos(d: Dec, p: List[Dec]) = (d, p) match {
-  case (TypeDecs(List(dt)), TypeDecs(hdt)::t ) => TypeDecs(dt::hdt) :: t
-  case (FunctionDecs(List(dt)), FunctionDecs(hdt)::t ) => FunctionDecs(dt :: hdt)::t
-  case (d1, dl) => d1::dl 
+      case (TypeDecs(List(dt)), TypeDecs(hdt)::t ) => TypeDecs(dt::hdt) :: t
+      case (FunctionDecs(List(dt)), FunctionDecs(hdt)::t ) => FunctionDecs(dt :: hdt)::t
+      case (d1, dl) => d1::dl
   }
 	
 

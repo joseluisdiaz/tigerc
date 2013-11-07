@@ -11,5 +11,5 @@ let
   var lis : intlist := intlist { hd = 0, tl = nil }
 
 in
-  lis
+  lis;0
 end

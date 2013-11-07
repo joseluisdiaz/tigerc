@@ -23,6 +23,11 @@ object Types {
 
   sealed abstract class Ty {
 
+    def isNil() = (this) match {
+      case NIL() => true
+      case _ => false
+    }
+
     // TODO: Se podra usar una funcion parcial?
     override def equals(that: Any) = (this, that) match {
       case (NIL(), NIL()) => true

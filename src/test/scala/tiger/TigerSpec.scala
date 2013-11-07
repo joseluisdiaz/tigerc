@@ -1,7 +1,6 @@
 package tiger
 
-import java.io.{ByteArrayInputStream, StringReader}
-import tiger.{Escapes, Abs}
+import java.io.{ByteArrayInputStream}
 import tiger.parser.TigerParser
 
 
@@ -26,6 +25,7 @@ object TigerTestUtil {
     private val cp = new TigerParser()
     def tigerProgram()  = cp.parse(new ByteArrayInputStream(text.getBytes("UTF-8")))
   }
+
 
 
   trait TigerEscapes extends TigerProgram {

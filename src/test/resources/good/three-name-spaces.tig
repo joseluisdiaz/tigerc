@@ -1,6 +1,7 @@
 let type a = {a : int}
     var  a := 0
-    function a (a : a) : a = a{a = a.a}
+    function b (a : a) : a = a{a = a.a}
 in
-    a (a{a = a})
+    b (a{a = a});
+    0
 end

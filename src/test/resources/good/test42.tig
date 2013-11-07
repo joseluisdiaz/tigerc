@@ -23,5 +23,6 @@ in
 
   rec1.name := "sdf";
   rec2.dates[0] := 2323;
-  rec2.dates[2] := 2323
+  rec2.dates[2] := 2323;
+  0
 end
