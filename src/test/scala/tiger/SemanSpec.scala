@@ -40,7 +40,7 @@ class SemanSpec extends FlatSpec {
 
   def typeTo(ty:Ty) = be(ty) compose tigerProgFromString
 
-  def typ = be(INT()) compose tigerProg
+  def typ(x:Ty) = be(x) compose tigerProg
 
   "a binary operation " should "type to INT" in
   {
@@ -136,32 +136,54 @@ class SemanSpec extends FlatSpec {
   }
 
   "this list" should "have a type" in {
-    "/good/compare-record-and-nil.tig" should typ
-    "/good/fact.tig" should typ
-    "/good/fun-vs-var.tig" should typ
-    "/good/local-vs-global-type.tig" should typ
-    "/good/merge.tig" should typ
-    "/good/queens.tig" should typ
-    "/good/recursive-comments.tig" should typ
-    "/good/recursive-types.tig" should typ
-    "/good/test01.tig" should typ
-    "/good/test02.tig" should typ
-    "/good/test03.tig" should typ
-    "/good/test06.tig" should typ
-    "/good/test07.tig" should typ
-    "/good/test08.tig" should typ
-    "/good/test12.tig" should typ
-    "/good/test27.tig" should typ
-    "/good/test30.tig" should typ
-    "/good/test37.tig" should typ
-    "/good/test38.tig" should typ
-    "/good/test39.tig" should typ
-    "/good/test42.tig" should typ
-    "/good/test44.tig" should typ
-    "/good/test47.tig" should typ
-    "/good/test48.tig" should typ
-//    "/good/test50.tig" should typ
-    "/good/three-name-spaces.tig" should typ
+//    "/good/compare-record-and-nil.tig" should typ
+//    "/good/fact.tig" should typ
+//    "/good/fun-vs-var.tig" should typ
+//    "/good/local-vs-global-type.tig" should typ
+//    "/good/merge.tig" should typ
+//    "/good/queens.tig" should typ
+//    "/good/recursive-comments.tig" should typ
+//    "/good/recursive-types.tig" should typ
+//    "/good/test01.tig" should typ
+//    "/good/test02.tig" should typ
+//    "/good/test03.tig" should typ
+//    "/good/test06.tig" should typ
+//    "/good/test07.tig" should typ
+//    "/good/test08.tig" should typ
+//    "/good/test12.tig" should typ
+//    "/good/test27.tig" should typ
+//    "/good/test30.tig" should typ
+//    "/good/test37.tig" should typ
+//    "/good/test38.tig" should typ
+//    "/good/test39.tig" should typ
+//    "/good/test42.tig" should typ
+//    "/good/test44.tig" should typ
+//    "/good/test47.tig" should typ
+//    "/good/test48.tig" should typ
+////    "/good/test50.tig" should typ
+//    "/good/three-name-spaces.tig" should typ
+  }
+
+  "this other list" should "have a type" in {
+
+//    intercept[TypeError] {
+//      "/type/assign-loop-var.tig" should typ(UNIT())
+//      "/type/nil-equal-nil.tig" should typ(UNIT())
+//    }
+//    "/type/test31.tig" should typ(UNIT())
+//    "/type/test32.tig" should typ(UNIT())
+//    "/type/test33.tig" should typ(UNIT())
+//    "/type/test34.tig" should typ(UNIT())
+//    "/type/test35.tig" should typ(UNIT())
+//    "/type/test36.tig" should typ(UNIT())
+//    "/type/test43.tig" should typ(UNIT())
+//    "/type/test45.tig" should typ(UNIT())
+//    "/type/test51.tig" should typ(UNIT())
+//    "/type/test52.tig" should typ(UNIT())
+
+    "/type/test40.tig" should typ(UNIT())
+
+
   }
 
 

@@ -62,7 +62,7 @@ class Trans(tabVars:venv, tabTypes:tenv) {
 
       val ty = recordTy find { _._1 == id } match {
         case Some( (_,x,_) ) => x //Type
-        case None => error("type error: field not found" + id)
+        case None => error("type error: field not found " + id)
       }
 
       ExpTy((), ty)
@@ -90,6 +90,9 @@ class Trans(tabVars:venv, tabTypes:tenv) {
 
     case VarDec(name, escape, None, init, position) => {
       val initTy = Seman.transExp(venv, tenv, init)
+
+      if (initTy.ty.isNil() )
+        error("type error: invalid declaration")
 
       (venv + (name -> VarEntry(initTy.ty)), tenv )
     }
@@ -194,7 +197,15 @@ class Trans(tabVars:venv, tabTypes:tenv) {
       def addToVEnv(params:List[Field]) =
         params.foldLeft(venvWithFunction)((x:venv, f:Field) =>  x + (f.name -> VarEntry(transTy(f.ty))))
 
-      decs.map( x => Seman.transExp(addToVEnv(x.params),tenv,x.body) )
+      val functionsTy = decs.map( x => (x.name, Seman.transExp(addToVEnv(x.params),tenv,x.body).ty ))
+
+      functionsTy.foreach({
+        case (x, y) => venvWithFunction(x) match {
+          case VarEntry(ty) => false
+          case FuncEntry(_, _, _, result, _) => if (result != y)
+            error("return type must be: "+ result+ " found " +y)
+        }
+      })
 
       (venvWithFunction, tenv)
     }
