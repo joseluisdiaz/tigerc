@@ -8,132 +8,324 @@ import scala.Some
 import tiger.Types.RECORD
 import tiger.Env.FuncEntry
 import tiger.Env.VarEntry
-import tiger.Types.ARRAY
-import tiger.Types.UNIT
-import tiger.Types.NIL
-import tiger.Types.ALIAS
-import tiger.Types.STRING
+
 
 /**
  * User: jose
  * Date: 9/18/13
  * Time: 1:16 PM
  */
-case class ExpTy(exp: Unit, ty: Types.Ty)
+
 class TypeError(message: String) extends RuntimeException(message)
-class EnvError(message: String) extends RuntimeException(message)
-
-
 
 trait Seman {
 
-  def transVar(venv:venv, tenv:tenv, vr:Var): ExpTy
-  def transExp(venv:venv, tenv:tenv, exp:Exp): ExpTy
-  def transDec(venv:venv, tenv:tenv, dec:Dec): (venv,tenv)
+  case class ExpTy(exp: translate.Expression, ty: Types.Ty)
+
+  val translate: Translate
+
+  def transProg(tree: Exp): ExpTy
 
 }
 
-class Trans(tabVars:venv, tabTypes:tenv) {
+object Seman extends Seman {
 
-  //TODO: may be a state monad will help
+  //TODO: perhabs a state monad will help
   var currentPosition:Pos = 0
+
   def position() = currentPosition
   def position(p:Exp):Exp = { currentPosition = p.position;p }
   def position(p:Dec):Dec = { currentPosition = p.position;p }
 
 
-  def trVar(variable: Var): ExpTy = variable match {
+  def transVar(varsEnv:venv, typesEnv:tenv, level:translate.Level, variable: Var): ExpTy = variable match {
 
     case SimpleVar(id) => {
-      val varTy = tabVars(id) match {
-        case VarEntry(v) => v
+      val (access, varTy) = varsEnv(id) match {
+        case v@VarEntry(_, _) => v
         case found@_ => error("variable expected: " + found)
       }
 
-      ExpTy((), varTy)
+      ExpTy(translate.simpleVar(access, level), varTy)
     }
 
-    case FieldVar(leftValue, id) => {
+    case SubscriptVar(lv, exp) => {
+      val leftValue = transVar(varsEnv, typesEnv, level, lv)
 
-      val recordTy = trVar(leftValue).ty match {
-        case RECORD(records) => records
-        case found@_ => error("type error: found " + found + " RECORD" + " required")
-      }
-
-      val ty = recordTy find { _._1 == id } match {
-        case Some( (_,x,_) ) => x //Type
-        case None => error("type error: field not found " + id)
-      }
-
-      ExpTy((), ty)
-    }
-
-    case SubscriptVar(leftValue, exp) => {
-      val varEntry = unpack(trVar(leftValue).ty)
-      val arrayTy = varEntry  match {
+      val arrayTy = unpack(leftValue.ty) match {
         case ARRAY(ty) => ty
         case found@_ => error("type error: found " + found + " ARRAY" + " required")
       }
 
-      val expTy = trExp(exp)
+      val index = transExp(varsEnv, typesEnv, level, exp)
 
-      if ( expTy.ty != INT() ) {
-        error("type error: found " + expTy.ty + " INT" + " required")
+      if ( index.ty != INT() ) {
+        error("type error: found " + index.ty + " INT" + " required")
       }
 
-      ExpTy((), arrayTy)
+      ExpTy(translate.subscriptVar(leftValue.exp, index.exp), arrayTy)
     }
+
+    case FieldVar(leftValue, id) => {
+      val recordExp = transVar(varsEnv, typesEnv, level, leftValue)
+
+      val recordTy = recordExp.ty match {
+        case RECORD(records) => records
+        case found@_ => error("type error: found " + found + " RECORD" + " required")
+      }
+
+      val (ty, offset) = recordTy find { _._1 == id } match {
+        case Some( (_,x,y) ) => (x,y) //Type
+        case None => error("type error: field not found " + id)
+      }
+
+      ExpTy(translate.fieldVar(recordExp.exp, offset), ty)
+    }
+
 
   }
 
-  def trDec(venv:venv, tenv:tenv, dec: Dec):(venv,tenv) = position(dec) match {
+  def transTy(typesEnv: tenv,ty:Abs.Ty): Types.Ty = ty match {
+    case RecordTy(fields) => {
+
+      val records = for {
+        (f,i) <- fields.zipWithIndex
+      } yield (f.name, transTy(typesEnv, f.ty),i)
+
+      val idList = records.map( _._1)
+
+      if (idList.size != idList.toSet.size) {
+        error("type error: record contain duplicated fields")
+      }
+
+      RECORD (records)
+    }
+
+    case NameTy(name) => ALIAS(name,None)
+    case ArrayTy(name) => ARRAY(ALIAS(name, None))
+  }
+
+  def transExp(varsEnv:venv, typesEnv:tenv, level:translate.Level, exp: Exp): ExpTy = position(exp) match {
+    case VarExp(v, position) => transVar(varsEnv, typesEnv, level, v)
+
+    case UnitExp(position) => ExpTy(translate.unitExp(), UNIT)
+    case NilExp(position) => ExpTy(translate.nilExp(), NIL)
+    case IntExp(value, position) => ExpTy(translate.intExp(value), INT())
+    case StringExp(value, position) => ExpTy(translate.stringExp(value), STRING)
+
+    case CallExp(func, args, position) => {
+      val fdef = varsEnv(func) match {
+        case func@FuncEntry(_, _, _, _, _) => func
+        case found@_ => error("function expected: " + found)
+      }
+
+      if (args.size != fdef.params.size) {
+        throw error("type error: wrong argument size")
+      }
+
+      val evaluedArgs = for ( x <- args ) yield (x, transExp(varsEnv,typesEnv, x))
+
+      for (
+        ( (param, ExpTy(_,ty1)), ty2 ) <- evaluedArgs zip fdef.params
+      ) yield {
+        if (ty1 != ty2) {
+          error("type error: param " + param +
+                " not matches " + ty2 +
+                " in function " + func)
+        }
+      }
+
+      ExpTy((), fdef.result)
+    }
+
+    case OpExp(leftExp, oper, rightExp, position) => {
+      val left = transExp(varsEnv, typesEnv, level, leftExp)
+      val right = transExp(varsEnv,typesEnv, level, rightExp)
+      val unpacked = unpack(left.ty)
+
+
+      if ( left.ty == right.ty ) oper match {
+          case EqOp  | NeqOp if left.ty != UNIT && !( left.ty.isNil && right.ty.isNil )
+            => return ExpTy(translate.relOpExp(oper, left.ty, left.exp, right.exp), INT())
+
+          case DivideOp | TimesOp | MinusOp | PlusOp if unpacked == INT()
+            => return ExpTy(translate.binOpExp(oper, left.exp, right.exp), INT())
+
+          case LtOp | LeOp | GtOp | GeOp if unpacked == INT() || unpacked == STRING
+            => return ExpTy(translate.relOpExp(oper, left.ty, left.exp, right.exp), INT())
+
+          case _ => ()
+       }
+
+      error("type error")
+    }
+
+    case RecordExp(fields, typ, position) => {
+      val r = typesEnv(typ) match {
+        case r@RECORD(_) => r
+        case _ =>  error("type error: '" + typ + "' not declared")
+      }
+
+      if ( r.records.size != fields.size ) {
+        throw error("type error: wrong argument size")
+      }
+
+      val tfields = for ( (sy, exp) <- fields ) yield (sy, transExp(varsEnv, typesEnv,level, exp))
+
+      val recordExps = for (
+        ( (sym1, ExpTy(e, ty1)), (sym2, ty2, _)  ) <- tfields zip r.records
+      ) yield {
+        if ( sym1 != sym2) error("type error: " + sym1 + "!=" + sym2)
+        if ( ty1 != ty2 ) error("type error: " + ty1 + "!=" + ty1)
+        e
+      }
+
+      ExpTy(translate.recordExp(recordExps) , r)
+    }
+
+
+    case ArrayExp(typ, size, init, position) => {
+      val initTy = transExp(varsEnv, typesEnv, level, init)
+      val sizeTy = transExp(varsEnv, typesEnv, level, size)
+      val arrayTy = unpack(typesEnv(typ))
+
+      if ( sizeTy.ty != INT() )
+        error("type error: array size should be Int")
+
+      arrayTy match  {
+        case ARRAY(ty) if ty == initTy.ty => true
+        case ARRAY(x) => error("type error: found" + initTy.ty + "required" + x )
+        case _ => error("type error: not an array")
+      }
+
+      ExpTy(translate.arrayExp(sizeTy.exp, initTy.exp), arrayTy)
+    }
+
+    case SeqExp(exps, position) => {
+
+      val expTr = exps.map(transExp(varsEnv, typesEnv, level, _))
+
+      val expression = translate.seqExp(expTr.map(_.exp))
+
+     ExpTy(expression, expTr.last.ty)
+    }
+
+    case AssignExp(v, e, position) => {
+      val vTr = transVar(varsEnv, typesEnv, level, v)
+      val eTr = transExp(varsEnv, typesEnv, level, e)
+
+      vTr.ty match {
+        case INT(true) => error("type error: found read only integer in assign")
+        case _ => ()
+      }
+
+      if (vTr.ty != eTr.ty) {
+        error("type error: found " + eTr.ty + " required " + vTr.ty )
+      }
+
+      ExpTy(translate.assignExp(vTr.exp, eTr.exp), UNIT)
+
+    }
+
+    case IfExp(test, then, None, position) => {
+      val testTy = transExp(varsEnv, typesEnv, test)
+      val thenTy = transExp(varsEnv, typesEnv, then)
+
+      if ( testTy.ty != INT() || thenTy.ty != UNIT() ) {
+        error("type error: if")
+      }
+
+      ExpTy((), UNIT())
+    }
+
+    case IfExp(test, then, Some(_else), position) => {
+      val testTy = transExp(variableEnv, typesEnv, test)
+      val thenTy = transExp(variableEnv, typesEnv, then)
+      val elseTy = transExp(variableEnv, typesEnv, _else)
+
+      if ( testTy.ty != INT() || thenTy.ty != elseTy.ty ) {
+        error("type error: if")
+      }
+
+      ExpTy((), elseTy.ty)
+    }
+
+    case WhileExp(test, body, position) => {
+      translate.preWhile()
+      val testTr = transExp(varsEnv, typesEnv, level, test)
+      val bodyTr = transExp(varsEnv, typesEnv, level, body)
+
+      if (testTr.ty != INT() || bodyTr.ty != UNIT )
+        error("type error: while")
+
+      val exp = translate.whileExp(testTr.exp, bodyTr.exp)
+
+      translate.postWhile()
+
+      ExpTy(exp, UNIT)
+
+    }
+
+    case ForExp(variable, escape, lo, hi, body, position) => {
+      val loTy = transExp(varsEnv, typesEnv, lo)
+      val hiTy = transExp(varsEnv, typesEnv, hi)
+
+      if (loTy.ty != INT()) error("type error: for: lo must be int")
+      if (hiTy.ty != INT()) error("type error: for: hi must be int")
+
+      val bodyEnv = varsEnv + (variable -> VarEntry(INT(readOnly = true)))
+
+      val _ = transExp(bodyEnv, typesEnv, body)
+
+      ExpTy((), UNIT())
+    }
+
+    case LetExp(decs, body, position) => {
+      val (venv, tenv) = decs.foldLeft( (varsEnv, typesEnv) ) (
+
+        (x:(venv,tenv), dec:Dec ) => {
+          val (newVenv, newTenv) = transDec(x._1, x._2, level, dec)
+
+          (x._1 ++ newVenv, x._2 ++ newTenv)
+        }
+
+      )
+      val letTy = transExp(venv, tenv, level, body)
+
+      ExpTy((), letTy.ty)
+    }
+
+    case BreakExp(position) => ExpTy((), UNIT())
+
+  }
+
+  def transDec(varsEnv:venv, typesEnv:tenv, level:translate.Level, dec: Dec):(venv, tenv)= position(dec) match {
 
     case VarDec(name, escape, None, init, position) => {
-      val initTy = Seman.transExp(venv, tenv, init)
+      val initTy = transExp(varsEnv, typesEnv, level, init)
 
-      if (initTy.ty.isNil() )
+      if (initTy.ty.isNil)
         error("type error: invalid declaration")
 
-      (venv + (name -> VarEntry(initTy.ty)), tenv )
+      ( varsEnv + (name -> VarEntry( initTy.ty)), typesEnv)
     }
 
     case VarDec(name, escape, Some(ty), init, position) => {
-      val initTy = Seman.transExp(venv, tenv, init)
-      val varDecTy = tenv(ty)
+      val initTy = transExp(varsEnv, typesEnv, level, init)
+      val varDecTy = typesEnv(ty)
 
       // RECORD == NIL is handled on Types equality declaration
       if (initTy.ty != varDecTy) {
         error("type error: invalid declaration")
       }
 
-      (venv + (name -> VarEntry(varDecTy)), tenv )
+      ( varsEnv + (name -> VarEntry(varDecTy)), typesEnv )
     }
 
     case TypeDecs(decs) => {
 
-      //TODO: Check if the type exists in a previous enviroment; tab makes no sense now
-      def transTy(tab: tenv,ty:Abs.Ty): Types.Ty = ty match {
-        case RecordTy(fields) => {
-
-          val records = for {
-            (f,i) <- fields.zipWithIndex
-          } yield (f.name, transTy(tab, f.ty),i)
-
-          val idList = records.map( _._1)
-
-          if (idList.size != idList.toSet.size) {
-            error("type error: record contain duplicated fields")
-          }
-
-          RECORD (records)
-        }
-
-        case NameTy(name) => ALIAS(name,None)
-        case ArrayTy(name) => ARRAY(ALIAS(name, None))
-      }
-
       // create an enviroment with empty functions
-      val voidtenv = decs.foldLeft(tenv)(
+      val voidtenv = decs.foldLeft(typesEnv)(
         (acc:tenv, t:TypeDec) => acc + (t.name -> ALIAS(t.name, None))
       )
 
@@ -144,11 +336,11 @@ class Trans(tabVars:venv, tabTypes:tenv) {
 
       // look for ALIAS(None) definitions and ARRAY(ALIAS("x", None)
       def genDependencyGraph(tab:List[(String, Types.Ty)]):List[(String, String)] = tab match {
-          case Nil => Nil
-          case (next, ALIAS(prev, None))::xs => (prev, next)::genDependencyGraph(xs)
-          case (next, ARRAY(x))::xs => genDependencyGraph(List((next, x))) ++ genDependencyGraph(xs)
+        case Nil => Nil
+        case (next, ALIAS(prev, None))::xs => (prev, next)::genDependencyGraph(xs)
+        case (next, ARRAY(x))::xs => genDependencyGraph(List((next, x))) ++ genDependencyGraph(xs)
         //  case (next, RECORD(r))::xs => genDependencyGraph(r.map( x => (x._1, x._2) )) ++ genDependencyGraph(xs)
-          case x::xs => genDependencyGraph(xs)
+        case x::xs => genDependencyGraph(xs)
       }
 
       val envKeyProcOrder = Util.tsort(genDependencyGraph(__tenv.toList))
@@ -169,17 +361,18 @@ class Trans(tabVars:venv, tabTypes:tenv) {
         case _ => ()
       }
 
-      val recordsKeySet = __tenv.keySet -- tenv.keySet //-- envKeyProcOrder
+      val recordsKeySet = __tenv.keySet -- typesEnv.keySet //-- envKeyProcOrder
       //TODO: revisit substract envKeyProcOrder impact
 
       recordsKeySet.map( x => changeReferences(finalTypeEnv(x), finalTypeEnv) )
 
-      (venv, finalTypeEnv)
+      (varsEnv, finalTypeEnv)
     }
+
     case FunctionDecs(decs) => {
 
       def transTy(ty:Abs.Ty):Types.Ty = ty match {
-        case NameTy(name) => tenv(name)
+        case NameTy(name) => typesEnv(name)
         case _ => error("type error: shouln't happend")
       }
 
@@ -187,215 +380,34 @@ class Trans(tabVars:venv, tabTypes:tenv) {
         val params = f.params.map( x => transTy(x.ty))
         val result = f.result match {
           case None => UNIT()
-          case Some(x) => tenv(x)
+          case Some(x) => typesEnv(x)
         }
-        FuncEntry((), Temp.newLabel(), params, result, extern = false)
+
+        val fname = Temp.namedLabel(f.name)
+        val escape = f.params map ( x => x.escape )
+
+        val level = translate.newLevel(translate.outermost(), fname, escape)
+
+        FuncEntry(level, fname, params, result, extern = false)
       }
 
-      val venvWithFunction = decs.foldLeft(venv)((x:venv, f:FunctionDec) =>  x + (f.name -> functionTrans(f)))
+      val venvWithFunction = decs.foldLeft(varsEnv)((x:venv, f:FunctionDec) =>  x + (f.name -> functionTrans(f)))
 
       def addToVEnv(params:List[Field]) =
-        params.foldLeft(venvWithFunction)((x:venv, f:Field) =>  x + (f.name -> VarEntry(transTy(f.ty))))
+        params.foldLeft(venvWithFunction)((x:venv, arg:Field) =>  x + (arg.name -> VarEntry(transTy(arg.ty))))
 
-      val functionsTy = decs.map( x => (x.name, Seman.transExp(addToVEnv(x.params),tenv,x.body).ty ))
+      // Validate return values
+      val functionsTy = decs.map( x => (x.name, transExp(addToVEnv(x.params),typesEnv,x.body).ty ))
 
       functionsTy.foreach({
         case (x, y) => venvWithFunction(x) match {
-          case VarEntry(ty) => false
+          case VarEntry(_, _) => false
           case FuncEntry(_, _, _, result, _) => if (result != y)
             error("return type must be: "+ result+ " found " +y)
         }
       })
 
-      (venvWithFunction, tenv)
-    }
-
-  }
-
-  def trExp(exp: Exp): ExpTy = position(exp) match {
-    case VarExp(variable, position) => trVar(variable)
-
-    case UnitExp(position) => ExpTy((), UNIT())
-    case NilExp(position) => ExpTy((), NIL())
-    case IntExp(value, position) => ExpTy((), INT())
-    case StringExp(value, position) => ExpTy((), STRING())
-
-    case CallExp(func, args, position) => {
-      val fdef = tabVars(func) match {
-        case func@FuncEntry(_, _, _, _, _) => func
-        case found@_ => error("function expected: " + found)
-      }
-
-      if (args.size != fdef.params.size) {
-        throw error("type error: wrong argument size")
-      }
-
-      val evaluedArgs = for ( x <- args ) yield (x, trExp(x))
-
-      for (
-        ( (param, ExpTy(_,ty1)), ty2 ) <- evaluedArgs zip fdef.params
-      ) yield {
-        if (ty1 != ty2) {
-          error("type error: param " + param +
-                " not matches " + ty2 +
-                " in function " + func)
-        }
-      }
-
-      ExpTy((), fdef.result)
-    }
-
-    case OpExp(left, oper, right, position) => {
-      val ExpTy(_, tyl) = trExp(left)
-      val ExpTy(_, tyr) = trExp(right)
-      val unpacked = unpack(tyl)
-
-
-      if ( tyl == tyr ) oper match {
-          case EqOp()  | NeqOp() if tyl != UNIT() && !( tyl.isNil() && tyr.isNil() )
-            => return ExpTy((), INT())
-
-          case DivideOp() | TimesOp() | MinusOp() | PlusOp() if unpacked == INT()
-            => return ExpTy((), INT())
-
-          case LtOp() | LeOp() | GtOp() | GeOp() if unpacked == INT() || unpacked == STRING()
-            => return ExpTy((), INT())
-
-          case _ => ()
-       }
-
-      error("type error")
-    }
-
-    case RecordExp(fields, typ, position) => {
-      val r = tabTypes(typ) match {
-        case r@RECORD(_) => r
-        case _ =>  error("type error: '" + typ + "' not declared")
-      }
-
-      if ( r.records.size != fields.size ) {
-        throw error("type error: wrong argument size")
-      }
-
-      val tfields = for ( (sy, exp) <- fields ) yield (sy, trExp(exp))
-
-      for (
-        ( (sym1, ExpTy(e, ty1)), (sym2, ty2, _)  ) <- tfields zip r.records
-      ) yield {
-        if ( sym1 != sym2) error("type error: " + sym1 + "!=" + sym2)
-        if ( ty1 != ty2 ) error("type error: " + ty1 + "!=" + ty1)
-      }
-
-      ExpTy(() , r)
-    }
-
-    case SeqExp(exps, position) => {
-      val ty = for {
-          exp <- exps
-          ExpTy(_, t) = trExp(exp)
-      } yield t
-
-      ExpTy((), ty.last)
-    }
-
-    case AssignExp(v, e, position) => {
-      val vTy = trVar(v)
-      val eTy = trExp(e)
-
-      vTy.ty match {
-        case INT(true) => error("type error: found read only integer in assign")
-        case _ => ()
-      }
-
-      if (vTy.ty != eTy.ty) {
-        error("type error: found " + eTy.ty + " required " + vTy.ty )
-      }
-
-      ExpTy((), UNIT())
-
-    }
-
-    case IfExp(test, then, None, position) => {
-      val testTy = trExp(test)
-      val thenTy = trExp(then)
-
-      if ( testTy.ty != INT() || thenTy.ty != UNIT() ) {
-        error("type error: if")
-      }
-
-      ExpTy((), UNIT())
-
-    }
-
-    case IfExp(test, then, Some(_else), position) => {
-      val testTy = trExp(test)
-      val thenTy = trExp(then)
-      val elseTy = trExp(_else)
-
-      if ( testTy.ty != INT() || thenTy.ty != elseTy.ty ) {
-        error("type error: if")
-      }
-
-      ExpTy((), elseTy.ty)
-    }
-
-    case WhileExp(test, body, position) => {
-      val testTy = trExp(test)
-      val bodyTy = trExp(body)
-
-      if (testTy.ty != INT() || bodyTy.ty != UNIT() )
-        error("type error: while")
-
-      ExpTy((), UNIT())
-
-    }
-
-    case ForExp(variable, escape, lo, hi, body, position) => {
-      val loTy = trExp(lo)
-      val hiTy = trExp(hi)
-
-      if (loTy.ty != INT()) error("type error: for: lo must be int")
-      if (hiTy.ty != INT()) error("type error: for: hi must be int")
-
-      val bodyEnv = tabVars + (variable -> VarEntry(INT(ro = true)))
-
-      val _ = Seman.transExp(bodyEnv, tabTypes, body)
-
-      ExpTy((), UNIT())
-    }
-
-    case LetExp(decs, body, position) => {
-      val (venv, tenv) = decs.foldLeft( (tabVars, tabTypes) ) (
-
-        (x:(venv,tenv), dec:Dec ) => {
-          val y = Seman.transDec(x._1, x._2, dec)
-
-          (x._1 ++ y._1, x._2 ++ y._2)
-        }
-
-      )
-      val letTy = Seman.transExp(venv, tenv, body)
-
-      ExpTy((), letTy.ty)
-    }
-
-    case BreakExp(position) => ExpTy((), UNIT())
-
-    case ArrayExp(typ, size, init, position) => {
-      val initTy = trExp(init)
-      val sizeTy = trExp(size)
-      val arrayTy = unpack(tabTypes(typ))
-
-      if ( sizeTy.ty != INT() )
-        error("type error: array size should be Int")
-
-      arrayTy match  {
-        case ARRAY(ty) if ty == initTy.ty => true
-        case ARRAY(x) => error("type error: found" + initTy.ty + "required" + x )
-        case _ => error("type error: not an array")
-      }
-
-      ExpTy((), arrayTy)
+      (venvWithFunction, typesEnv)
     }
   }
 
@@ -403,63 +415,9 @@ class Trans(tabVars:venv, tabTypes:tenv) {
     throw new TypeError(msg + " @line:"  + position() )
   }
 
-}
+  def transProg(exp:Exp):ExpTy = transExp(Env.baseVenv,Env.baseTenv, translate.outermost(), exp)
 
-object Seman extends Seman {
-
-  val tabTypes:tenv = Map("int" -> INT(), "string" -> STRING()) withDefault error
-
-  val tabVars:venv = Map(
-    "print" -> FuncEntry(Env.mainLevel, "print", List(STRING()), UNIT(), extern = true),
-    "flush" -> FuncEntry(Env.mainLevel, "flush", Nil, UNIT(), extern = true),
-    "getchar" -> FuncEntry(Env.mainLevel, "getstr", Nil, STRING(), extern = true),
-    "ord" -> FuncEntry(Env.mainLevel, "ord", List(STRING()), INT(), extern = true),
-    "chr" -> FuncEntry(Env.mainLevel, "chr", List(INT()), STRING(), extern = true),
-    "size" -> FuncEntry(Env.mainLevel, "size", List(STRING()), INT(), extern = true),
-    "substring" -> FuncEntry(Env.mainLevel, "substring", List(STRING(), INT(), INT()), STRING(), extern = true),
-    "concat" -> FuncEntry(Env.mainLevel, "substring", List(STRING(), STRING()), STRING(), extern = true),
-    "not" -> FuncEntry(Env.mainLevel, "not", List(INT()), INT(), extern = true),
-    "exit" -> FuncEntry(Env.mainLevel, "exit", List(INT()), UNIT(), extern = true)
-  ) withDefault error
-
-
-  def error(key: String) = {
-    throw new EnvError("type error: not found " + key )
-  }
-
-  def transVar(venv: Env.venv, tenv: Env.tenv, vr: Var): ExpTy = {
-    val trans = new Trans(venv, tenv)
-
-    try {   // No se me ocurre como hacerlo mas feo.
-      trans.trVar(vr)
-    } catch {
-      case e:EnvError => trans.error(e.getMessage)
-    }
-
-  }
-
-  def transExp(venv: Env.venv, tenv: Env.tenv, exp: Exp): ExpTy = {
-    val trans = new Trans(venv, tenv)
-
-    try {   // No se me ocurre como hacerlo mas feo.
-      return trans.trExp(exp)
-    } catch {
-      case e:EnvError => trans.error(e.getMessage)
-    }
-
-  }
-
-  def transDec(venv: Env.venv, tenv: Env.tenv, dec: Dec): (Env.venv, Env.tenv) = {
-    val trans = new Trans(venv, tenv)
-
-    try {   // No se me ocurre como hacerlo mas feo.
-      trans.trDec(venv, tenv,dec)
-    } catch {
-      case e:EnvError => trans.error(e.getMessage)
-    }
-  }
-
-  def transProg(exp:Exp):ExpTy = transExp(tabVars,tabTypes,exp)
-
+  override val translate: Translate = new MyTranslate()
 
 }
+

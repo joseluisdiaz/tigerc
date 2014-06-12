@@ -1,12 +1,12 @@
 
-Compiladores 
+Compiladores
 ============
 
 Bajar: dcc.fceia.unr.edu.ar/lcc/T-521-Compiladores/Public/entrega1 && /test.tgz
 
 * [2013-08-21 Wed]
 
-Pasemos a discribir la gramática de tiger. Usaremos gramáticas líbres de contexto. 
+Pasemos a discribir la gramática de tiger. Usaremos gramáticas líbres de contexto.
 
 - Un conjunto finito de símbolos terminales T (Tokens).
 - Un conjunto finito de símbolos no terminales NT ; T \cap NT = \emptyset
@@ -26,24 +26,24 @@ Gramática:
 Reglas de producción:
 
 - \alpha : e //* vacío *//
-- \alpha : ( \alpha ) 
+- \alpha : ( \alpha )
 
 
-Funciona? 
+Funciona?
 
 ((())) \rightarrow^1 (((\alpha))) \rightarrow^2 ((\alpha)) \rightarrow^2 (\alpha) \rightarrow^2 \alpha(start)
 
 
 **** Ejemplo 2: Una calculadora.
 
-T = { +, *, NRO, (, ) } 
+T = { +, *, NRO, (, ) }
 NT = { expr }
 
 start = expr
 
 Reglas de produción:
 
-- expr : NRO 
+- expr : NRO
   | expr + expr
   | expr * expr
   | ( expr )
@@ -64,26 +64,26 @@ expr + expr  + expr
 ----   ------------
     |           |
     +--- expr + expr -> expr
- 
+
 Tenemos dos formas de reducir.
 
 #+BEGIN_EXAMPLE
 
-       +             +              
-      / \           / \     
-     +   4    ó    2   +    
-    / \               / \       
-   2   3             3   4       
+       +             +
+      / \           / \
+     +   4    ó    2   +
+    / \               / \
+   2   3             3   4
 
 
-Asociativo: 
+Asociativo:
 Izquierda           Derecha
 
 #+END_EXAMPLE
 
 
 **** Shift Reduce
-Este conflicto se conoce como "problema shift-reduce" y no es grave. 
+Este conflicto se conoce como "problema shift-reduce" y no es grave.
 Se puede eliminar de vairas maneras.
 
 a) Reescribir la grámatica agregando más NT, para forzar un shift ó un reduce.
@@ -96,17 +96,17 @@ En particular usaremos:
 
 Ahora, nuestra glc es:
 
-%left + 
-%left *  
+%left +
+%left *
 
-El orden establece precedencia, de menor a mayor. 
+El orden establece precedencia, de menor a mayor.
 
 
 #+BEGIN_EXAMPLE
-- expr : NRO 
+- expr : NRO
   | expr + expr
   | expr * expr
-  | ( expr )   
+  | ( expr )
 
 #+END_EXAMPLE
 
@@ -121,15 +121,15 @@ a = b = c == (a = (b = c))
 
 a < b < c --> a < b && b < c
 
-**** No asociativo 
+**** No asociativo
 
-De hecho bison tiene uan directiva 
+De hecho bison tiene uan directiva
 
-  %expect n 
+  %expect n
 
-Espere n conflictos shift-reduce, para tranquilizar al programador. 
-Uno de estos conflictos se conoce como el dangling else, y aparece en 
-los lenguajes derivados de ALGOL, que introdujo nocion de sentencia 
+Espere n conflictos shift-reduce, para tranquilizar al programador.
+Uno de estos conflictos se conoce como el dangling else, y aparece en
+los lenguajes derivados de ALGOL, que introdujo nocion de sentencia
 compuesta.
 
 Usado en C y Pascal
@@ -137,7 +137,7 @@ Usado en C y Pascal
   sent: if ( cond ) sent
   sent: { sentencias } /* sentencias compuestas */
 
-Otra opcion es usar una construccion (Fortran, Ada, etc) donde una 
+Otra opcion es usar una construccion (Fortran, Ada, etc) donde una
 construccion se cierra por otra palabra clave:
 
 Ej. (ada)
@@ -166,7 +166,7 @@ if cond_1 then
 end if
 
 
-Hay problemas mas graves (de hecho fatales) llamados reduce-reduce. 
+Hay problemas mas graves (de hecho fatales) llamados reduce-reduce.
 Estos aparecen cuando tenemos reglas de produccion:
 
   \alpha : sentencia
@@ -174,7 +174,7 @@ Estos aparecen cuando tenemos reglas de produccion:
 
 
 La glc para C, que aparece en un apendice del K&R tiene un conflicto
-reduce-reduce. 
+reduce-reduce.
 
  decl     : id_tipo -> id_var
  id_var  : id
@@ -207,14 +207,14 @@ Reglas de prod y acciones semanticas.
 Más codigo ML
 
 *** Gramáticas libres de contexto.
-    
+
 *** Gramatica de tiger
 
 %token EOF
 %token ARRAY OF VAR FUNCTION
 %token LET IN END IF THEN ELSE WHILE DO FOR TO BREAK
 %token PTO DOSP DOSPIG COMA PCOMA IGUAL PI PD CI CD LI LD
-%token AMPER PIPE MENOR MENIG MATOR MAGIG DIST 
+%token AMPER PIPE MENOR MENIG MATOR MAGIG DIST
 %token MAS MENOS POR DIV NIL
 
 Appel por simplicidad reconoces los numeros negativos en el parser con una regla como
@@ -249,24 +249,24 @@ Dejamos esto y veamos las reglas de producción:
 %%
 prog: expr EOF
 expr: NRO
- \| MENOS ABSMININT               
- \| PI PD /* unit */              
- \| NIL                           
- \| LITERAL                       
- \| BREAK                         
- \| L\_value /* valor izquierdo */ 
- \| L\_value DOSPIG expr           
- \| PI expr PCOMA explist PD      
- \| expr PIPE expr                
- \| expr AMPR expr                 
- \| expr IGUAL expr               
- \| expr DIST expr                
- \|                               
- \| expr DIST expr                
- \| expr MAS expr                 
- \|                               
- \| expr DIV expr                 
- \|                               
+ \| MENOS ABSMININT
+ \| PI PD /* unit */
+ \| NIL
+ \| LITERAL
+ \| BREAK
+ \| L\_value /* valor izquierdo */
+ \| L\_value DOSPIG expr
+ \| PI expr PCOMA explist PD
+ \| expr PIPE expr
+ \| expr AMPR expr
+ \| expr IGUAL expr
+ \| expr DIST expr
+ \|
+ \| expr DIST expr
+ \| expr MAS expr
+ \|
+ \| expr DIV expr
+ \|
 
 %left PIPE
 %left AMPER
@@ -285,7 +285,7 @@ Para esto generamos un token trucho (nunca sera generador por el scanner) lo usa
 
 %right UMENOS
 
-y en las reglas de produccion 
+y en las reglas de produccion
 
 expr: MENOS expr %prec UMENOS
 
@@ -294,7 +294,7 @@ Seguimos
   \| id PI args PD /* llamada a función */
   \| IF expr THEN expr
   \| IF expr THEN expr ELSE
-  \| WHILE expr DO expr 
+  \| WHILE expr DO expr
   \| FOR id DOSPIG expr TO expr DO expr
   \| LET decs IN END /* let unit */
   \| LET desc IN expr END
@@ -321,12 +321,12 @@ dec : TYPE id IGUAL ty
    \| vardec
    \| fundec
 
-ty: id 
+ty: id
  \| LI tyfld LD
  \| ARRAY of id
 
 id: ID
-       
+
 tyflds : tyfields COMMA tyflds
        |
        ;
@@ -338,7 +338,7 @@ vardec: VAR id DOSPIG expr
 
 fundec: FUNCTION id PI args PD
         IGUAL expr
-     \| FUNCTION id PI args PD DOSP id 
+     \| FUNCTION id PI args PD DOSP id
      \| IGUAL expr
 
 args : expr COMA args
@@ -347,10 +347,10 @@ args : expr COMA args
      ;
 
 L_value : id
-       \| L_value PTO id                     
+       \| L_value PTO id
        \| L_value CI expr CD
-       
-       
+
+
 * [2013-08-22 Tue]
 
 ** Los constructores de AST
@@ -359,7 +359,7 @@ L_value : id
 
    structure tigaerabs =
 
-   struct 
+   struct
       type symbol = string
       type pos = int
       datatype var = SimpleVar of symbol
@@ -367,7 +367,7 @@ L_value : id
                    | SuscriptVar of var *exp
       and
                exp = VarExp of var *pos
-                   | UnitExp of pos 
+                   | UnitExp of pos
                    | NilExp of pos
                    | IntExp of int *pos
                    | StringExp of string *pos
@@ -380,7 +380,7 @@ L_value : id
                    | WhileExpOf { test:exp, body: exp}*pos
 
 #+END_SRC
-                  
+
 Viene un problema fuera de fase: el for.
 Un for DEFINE implícitamente su índice (Como ada). Así que podemos hacer:
 
@@ -388,8 +388,8 @@ Un for DEFINE implícitamente su índice (Como ada). Así que podemos hacer:
 
 Debemos saber si el índice es por una función definida dentro del for.
 
-  for i:=1 to 10 do 
-    ( 
+  for i:=1 to 10 do
+    (
       let function f():int=i
       in f() + 1 end;
       ()
@@ -397,7 +397,7 @@ Debemos saber si el índice es por una función definida dentro del for.
                  \| LetExp of { desc: des list, body: exp } * pos
                  \| BreakExp of pos
                  \| ArrayExp of { type: symbol, size: exp, init: exp} * pos
-                 \| 
+                 \|
       and
                dec = FunctionDec of ( name:symbol,
                                       parms: field list,
@@ -410,26 +410,26 @@ Debemos saber si el índice es por una función definida dentro del for.
                ty = NameTy of symbol
                  \| RecordTy of field list
                  \| ArrayTy of symbol
-      
+
       and
-             oper = PlusOp | MinusOp | TimesOp | DivideOp 
-                 \|  EqOp  | Neqop   | LtOp    | LeOp 
-                 \| GtOp   | GeOp 
+             oper = PlusOp | MinusOp | TimesOp | DivideOp
+                 \|  EqOp  | Neqop   | LtOp    | LeOp
+                 \| GtOp   | GeOp
       withtype field = { name: symbol, escape: bool ref, typ: ty }
 
 
 ** Acciones semanticas y atributos de terminal y no terminales.
 
-En 1969 D.E.Knuth definió las gramáticas con atributos, es decir, GLC donde los 
+En 1969 D.E.Knuth definió las gramáticas con atributos, es decir, GLC donde los
 terminales y no terminales podrían "arrastrar" valores de un cierto tipo (atributos)
 de uno de ellos en base a los atributos existentes.
 
-   expr = expr + expr  { $$ = $1 + $3; } \leftarrow  
+   expr = expr + expr  { $$ = $1 + $3; } \leftarrow
     $$     $1     $3
 
 Usemos esto. Declaramos los tipos de los atributos en las directivas.
 
-%type<tigerabs.exp> prog expr 
+%type<tigerabs.exp> prog expr
 %type<tigerabs.ty>  ty
 
 
@@ -456,7 +456,7 @@ expr: NRO                  { IntExp($1, P()) }
    \| LITERAL              { StringExp($1, P())
    \| L\_value             { VarExp( $1, PC ) }
    \| L\_value DOSPIG expr { AssignExp({ var=$1, exp=$3 }, P())}
-   
+
 Habrán notado que no tenamos and, or o not, en el AST. De hecho, Tiger no tiene booleanos.
 Tiger hace como C: Cualquier expresión entera que evalúe a cero es falase, distinto de cero true.
 
@@ -491,7 +491,7 @@ Para evitar el dangling else usamos
 
 
 * [2013-08-26 Mon]
-  
+
 ** Empecemos a unir los pedazos.
 
 El main de TIGER, en tigermain tendremos
@@ -502,7 +502,7 @@ El main de TIGER, en tigermain tendremos
 
 #+END_SRC
 
-Ya es claro que tener un compilador operativo implica unas cuantas operaciones (generción del parser etc) 
+Ya es claro que tener un compilador operativo implica unas cuantas operaciones (generción del parser etc)
 Para facilitar esto usaremos make.
 
 
@@ -515,13 +515,13 @@ Para facilitar esto usaremos make.
 
 ** Variables escapadas
 
-Tiger permite funciones anidadas. Las reglas de scope establecen que las variables definidas en las funciones y 
+Tiger permite funciones anidadas. Las reglas de scope establecen que las variables definidas en las funciones y
 lets anidantes son visibles en las anidadas. En el caso de las funciones esto es un problema.
 Las variables se definen en:
   - Lets, que no crean marcos de activación
 
 #+BEGIN_SRC tiger
-  let var x := let var y := let var z := 0 in z end in y end in x end //TODO: revisar 
+  let var x := let var y := let var z := 0 in z end in y end in x end //TODO: revisar
 #+END_SRC
   x,y,z comaprten el marco de activación.
 
@@ -547,7 +547,7 @@ in
 
 Supongamos una función recursiva con una anidada
 
-#+BEGIN_SRC tiger 
+#+BEGIN_SRC tiger
 
 let function f(i:int) =
   let function g():int = i
@@ -558,38 +558,38 @@ let function f(i:int) =
 in f(1000);0 end
 
 #+END_SRC
-Necesitaremos (más adelante) un mecanismo para que g acceda a la última i de f. Esto se facilita 
-si las escapadas se alojan en, memoria dentro del marco de activación de su definición. 
+Necesitaremos (más adelante) un mecanismo para que g acceda a la última i de f. Esto se facilita
+si las escapadas se alojan en, memoria dentro del marco de activación de su definición.
 
 Pero para esto, debemos delimtar las escapadas, recorriendo el AST. Ir llevando cuenta de qué variables fueron
-definidas y en que marcos de activación. Para esto viene comodo una tabla hash, en general las tablas se pueden 
+definidas y en que marcos de activación. Para esto viene comodo una tabla hash, en general las tablas se pueden
 implementar de dos maneras.
 
 Ej.
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
   let var x:=1
        function f(i:int)
           let var z := 2
        in end
   in x end
 
-/* 
+/*
 {x}     dentro del let mas grande
 {x,i,z} dentro de la definicion de funcion.
 */
-#+END_SRC 
+#+END_SRC
 Las tablas crecen al entrar a un scope y se achican al salir de él.
 
 - Una forma de hacer esto es la manera imperativa: Se lleva la cuenta de qué
- variables se han definido el último scope, y al abandonarlo se sacan esas variables. 
- Hay que llevarla cuenta de qué variables fueron ocultadas y despues restaurarlo.  
+ variables se han definido el último scope, y al abandonarlo se sacan esas variables.
+ Hay que llevarla cuenta de qué variables fueron ocultadas y despues restaurarlo.
 
 - manera funcional: Cada vez que se ingrasa a un scope se crea una nueva tabla a parir de las vigente, y se descarta al abandonar ese scope.
 
 Nota: los compiladores se pueden clasificar en:
 
-- Narrow: apenas tiene una porción de AST suficiente, aplica todas las etapas hasta la emisión de código. 
+- Narrow: apenas tiene una porción de AST suficiente, aplica todas las etapas hasta la emisión de código.
           Usa mejor la memoria, la sincronización es una pesadilla
 
 - Borad: procesa todo el AST en cada operación. Usa mal la memoria, pero es mas sencillo.
@@ -598,9 +598,9 @@ Tiger será broad, excepto en la etapa semantica, y de generción de código int
 
 Es conveniente definir un modulo para diccionario que oculte la implementación. Para propósitos de debug, tendrá bastante ventajas.
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
 
-incluir<tigertab.sig>  
+incluir<tigertab.sig>
 
 #+END_SRC
 
@@ -613,7 +613,7 @@ Una posible implementacion es usar el modulo Hash (Standard) o, cin mosml, Polyh
 
 Un poco de la implementación de las tablas hash.
 
-#+BEGIN_SRC ocaml 
+#+BEGIN_SRC ocaml
 
 insert <tigertb.sml>
 
@@ -626,18 +626,18 @@ struct
 
 #+END_SRC
 
-#+BEGIN_SRC ocaml 
+#+BEGIN_SRC ocaml
 
 insert <tigerescp.sml>
 
-#+END_SRC  
+#+END_SRC
 
-El cálculo de escapes se hace luego del parsing. 
+El cálculo de escapes se hace luego del parsing.
 
 
 ** Pretty-printing: está para ver el AST.
 
-Basado en unos combiadores hechos por J.Hughes, 
+Basado en unos combiadores hechos por J.Hughes,
 
 #+BEGIN_SRC ocaml
 
@@ -652,12 +652,12 @@ insert <tigerpp.sml>
 
 
 * [2013-08-29 Thu]
-  
-Terminado el cálculo de escapes viene la etapa de análisis semantico que incluye 
+
+Terminado el cálculo de escapes viene la etapa de análisis semantico que incluye
 verificar el tipado del AST y que genera código intermedio. Es lo suficientemente dura
-como para perder la calma. El modulo debe tomar un AST con los escapes y devoler un 
+como para perder la calma. El modulo debe tomar un AST con los escapes y devoler un
 nuevo record
-   
+
    {exp, ty}
 - exp: código intermedio
 - ty: tipo del programa
@@ -676,11 +676,11 @@ En tigertips.sml definimos
 
 #+END_SRC
 
-Es más, 
+Es más,
 
 #+BEGIN_SRC m
 
-let 
+let
   type A = array of int
   var a := A[10] of 0
   type b = array of int
@@ -698,7 +698,7 @@ Tres Tipos de espacios:
 2) Espacios de nombre de funciones y variables.
 3) Los nombres de miembros de records. (uno por cada record)
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
  let type i = {i:int}
      var i : i:= {i=1}
  in
@@ -710,10 +710,10 @@ Debido a esto usaremos dos diccionarios: *1* (tenv) y para *2* (venv)
 
 #+BEGIN_SRC ml
 
-datatype EnvEntry = 
+datatype EnvEntry =
    VIntro (* int RO *) of {access: tigertrans.access, level: int}
  | Var of {access: tigertrans.access, level: int}
- | Fuct {ty: Tipo:, level: tigertemp.label, formals: Tipo list, extern:bool} 
+ | Fuct {ty: Tipo:, level: tigertemp.label, formals: Tipo list, extern:bool}
 
 #+END_SRC
 
@@ -735,13 +735,13 @@ Por supuesto, en tigertemp definimos
 
 La implementación
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
 
 <include tigertemp.sml>
 
 #+END_SRC
 
-Ahora sí modulo tigerseman 
+Ahora sí modulo tigerseman
 
 #+BEGIN_SRC ml
 
@@ -750,7 +750,7 @@ sig
     type venv = (string, EnvEntry) tigertab.Tabla
     type tenv = (string Tipo) tigertab.Tabla
 
-    type expty (* codigo intermedio) 
+    type expty (* codigo intermedio)
 
     val tab_vars: venv
     val tab_tenv: tenv
@@ -767,7 +767,7 @@ end
 
 ** Volvamos a los tipos internos de Tiger.
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
 
 tigerty.sml?
 
@@ -780,7 +780,7 @@ Inicialmente tendremos
 ("int", TInteger, RW)
 ("string", TString)
 
-Durante todo el análisis semántico necesitaremos comprar los tipos. 
+Durante todo el análisis semántico necesitaremos comprar los tipos.
 Esto no es elemental, y lo haremos con una función checkTipos,
 que tendrá esta pinta.
 
@@ -791,13 +791,13 @@ fun checkTipos t1 t2 =
   (TInteger _, TInteger _) => true
   // Tstring, Tunit => true
   | TRecord(_, u1), TRecord(_, u2) => u1 = u2
-  | TRecord _, TNil => true                
-  | TNil, TRecord _ => true                
-  | TNil, TNil => false (* nil = nil *)                    
+  | TRecord _, TNil => true
+  | TNil, TRecord _ => true
+  | TNil, TNil => false (* nil = nil *)
   | TArray(_, u1), TArray(_, u2) => u1 = u2
-  | etc..                                       
+  | etc..
 
-#+END_SRC 
+#+END_SRC
 
 Lo mejor es que estas declaraciones den origen a estos tipos (asumimos que tenemos int/string).
 
@@ -848,7 +848,7 @@ type B = array of A
 
 #+END_SRC
 
-Con los records no tenemos este problema gracias al nil. Por eso tiger pide que se detecten 
+Con los records no tenemos este problema gracias al nil. Por eso tiger pide que se detecten
 clicos en un batch de types, y se marquen como errores.
 Si esto no se hace, no ocurre nada terriblemente grave (último ejercicio del libro de appel)
 La razon es que _no_ podemos construir ningun valor de ese tipo (conseguimos un tipo sin valores)
@@ -884,7 +884,7 @@ tigerseman.ml (<tab_vars>)
 
 Otro problema fuera de fase:
 
-Si emitimos assembler y ensablador debemos linkear nuestro código con el runtime, la libc y el startup (arranca crt*.o). 
+Si emitimos assembler y ensablador debemos linkear nuestro código con el runtime, la libc y el startup (arranca crt*.o).
 Este último se ocupa de disponer el escenario para la ejecución (argumentos, enviroment, señales, etc) y llama a la función main.
 Debemos ver como enganchar nuestro código Tiger con el startup. La manera que elegimos es:
 
@@ -932,22 +932,22 @@ Si hay ciclos es imposible. Una implementación (scada de Haskel)
 
 Procedemos por partes:
 
-1) Introducimos el tipo de función, en EnvV. esto es necesario si queremos que la función puede ser recursiva. 
-Antes del examen de su body. 
+1) Introducimos el tipo de función, en EnvV. esto es necesario si queremos que la función puede ser recursiva.
+Antes del examen de su body.
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
 
-fun decFunc( {name, params, body, result}, nl ) (tenv, venv) = 
- let 
+fun decFunc( {name, params, body, result}, nl ) (tenv, venv) =
+ let
     val formals = map (fn x => transTy(tenv v1#2 x)) params
     val tipfun => case
 #+END_SRC
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
 
-  val name = case name of 
+  val name = case name of
        | "_tigermain" => "tigermain"
-       | name => "." ^ name ^ makestring(nl) ^ "_" ^ newlabel() 
+       | name => "." ^ name ^ makestring(nl) ^ "_" ^ newlabel()
 
 #+END_SRC
 
@@ -956,8 +956,8 @@ fun decFunc( {name, params, body, result}, nl ) (tenv, venv) =
 
 1) solución lambda lifting (Functional programming, de harrison)
 
-#+BEGIN_EXAMPLE 
-  
+#+BEGIN_EXAMPLE
+
   \x.\y.\z = ( x + y + z )
  (completar el ejemplo)
 
@@ -968,7 +968,7 @@ Desventajas: puede consumir mucho stack
 
 2) solución: tabla display ( Dijkstra )
 
-Toda función construye un arreglo con todos los frames pointers de los ultimos marcos de activación de las funciones anidantes. 
+Toda función construye un arreglo con todos los frames pointers de los ultimos marcos de activación de las funciones anidantes.
 
 3)  Volvamos al esquema de \-lifting. El sigt programa Oberon.
 
@@ -986,7 +986,7 @@ La otra cosa que se puede hacer es pasar sólo un puntero, y rescatar los recorr
 Ventajas: creación muy rapida y constante.
 Desventaja: Acceso lineal.
 
-La expriencia indica que SL es la mejor alternativa. 
+La expriencia indica que SL es la mejor alternativa.
 Ahora hay que buscar cómo gestionar el SL en llamados a funciones.
 
 Llamamos P_llamante y P_llamada a las profundidades de las anidantes de las funciones llamadas y llamantes.
@@ -999,12 +999,12 @@ P_llamante = P_llamda
 
 #+BEGIN_EXAMPLE
 
-f() 
+f()
 {
 
 }
 
-g() 
+g()
 {
 
 }
@@ -1025,7 +1025,7 @@ P_llamada = P_llamante + 1
 P_llamante > P_llamada
 
 No hay restricciones.
-# 
+#
 
 R \letfarrow SL_llamante
 R \leftarrow *R
@@ -1034,7 +1034,7 @@ P_llamante - P_llamada } veces
 
 R \leftarrow *R
 
-SL_llamante \leftarrow R  
+SL_llamante \leftarrow R
 
 ** Lenguaje intermedio (IL o IR representacion)
 
@@ -1054,7 +1054,7 @@ Empesemos a esbozar la traducción de código intermedio. Es una etpa angosta: s
  mismo tiempo que generamos código.
 
 #+BEGIN_EXAMPLE
- 
+
      | --- exp -->  |
 sema |              |  translate
      | <-- tree --  |
@@ -1064,7 +1064,7 @@ sema |              |  translate
 Se puede ver como una especie de semántica denotacional. Presenta algunos problemas en el sentido
  que nos faltará contexto para saber cómo deberá usarse un código Ej:
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
   a > b
 #+END_SRC
 
@@ -1102,7 +1102,7 @@ fun unNx
 #+END_EXAMPLE
 
 
-El tercer desempaquetador 
+El tercer desempaquetador
 
 #+BEGIN_EXAMPLE
 fun unCx
@@ -1113,15 +1113,15 @@ Veamos cómo se pueden integrar seman y translate.
 
 En seman:
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
 
-  trexp(BreakExp, nl) = { exp = SCAF, ty = TUnit } 
+  trexp(BreakExp, nl) = { exp = SCAF, ty = TUnit }
 
-Cambiamos esto a 
+Cambiamos esto a
 
-  trexp(BreakExp, nl) = { exp = breakExp(), ty = TUnit } 
+  trexp(BreakExp, nl) = { exp = breakExp(), ty = TUnit }
 
-fun breakExp() = 
+fun breakExp() =
   Nx(JUMP(hd (!salida), [hd (!salida)]))
 
 #+END_SRC
@@ -1181,7 +1181,7 @@ in 0 end
 
 #+END_EXAMPLE
 
-Por esto, cuando se analiza una declaracion de un record, se ordenan los nombres y se le agrega un entero que indica que 
+Por esto, cuando se analiza una declaracion de un record, se ordenan los nombres y se le agrega un entero que indica que
 orden tiene la secuencia (empezando por 0)
 
 Al igual que los areglos, los records son dinámicos y la creacion la hacemos en el runtime, usando stdarg.h por razones obvias.
@@ -1193,16 +1193,16 @@ En el rutime:
 #include <stdlib.h>
 #include <stdarg.h>
 
-long *makeRecord(long cts, ...) 
+long *makeRecord(long cts, ...)
 {
   long *p, *q;
   va_list lst;
-  va_start(lst, ctos); 
+  va_start(lst, ctos);
   p = q = malloc(ctos * sizeof(long))
 
   while(ctos--)
     *q++ = va_arg(lst, long);
-   
+
   va_end(lst)
   return p;
 
@@ -1234,9 +1234,9 @@ Qué debe hacer el compilador con expresiones como estas?
 
 #+BEGIN_EXAMPLE
    2 + 3
-#+END_EXAMPLE  
+#+END_EXAMPLE
 
-  Puede generar código para hacer esta suma en tiempo de ejcucion ó puede calcularla en tiempo de compilacición. Supongamos que elegimos 
+  Puede generar código para hacer esta suma en tiempo de ejcucion ó puede calcularla en tiempo de compilacición. Supongamos que elegimos
 esta última. Debemos tener cuidad con cosas como:
 
 #+BEGIN_EXAMPLE
@@ -1249,7 +1249,7 @@ Tenemos que reconvertir, para evaluar en :
    1 + 2 + x == 3 + x
 #+END_EXAMPLE
 
-Por supuesto, estos reordenamientos valen si la operación es commutativa. 
+Por supuesto, estos reordenamientos valen si la operación es commutativa.
 Podemos volver conmutativas la diferencia y el cociente, usando:
 
 #+BEGIN_EXAMPLE
@@ -1282,47 +1282,46 @@ De hecho, hay que cuidar al reordenar :
 #+END_EXAMPLE
 
 Tambien está el problema de que /Tiger/ hace caso omiso de overflows (como C), pero ML sí los detecta.
-pero ML sí los detecta. Una posible solucion es, si hay overflow, el compilador no evalua, sino que genera 
+pero ML sí los detecta. Una posible solucion es, si hay overflow, el compilador no evalua, sino que genera
 código para el cálculo en ejecución.
 
 
 * [2013-09-18 Wed]
 
-Declaraciones de Variables  
+Declaraciones de Variables
 
 #+BEGIN_EXAMPLE
 Ver fotos de las 2013-09-18 - 16:06
 #+END_EXAMPLE
 
 
+* [2013-09-23 Mon] (* Falta *)
 
-* [2013-09-23 Mon] (* Falta *) 
-
-* [2013-09-26 Thu] 
+* [2013-09-26 Thu]
 
 ** Canonización
 
-  El codigo intermedio, escrito en TREE, sigue siendo un árbol, y tenemos que tranformarlo 
+  El codigo intermedio, escrito en TREE, sigue siendo un árbol, y tenemos que tranformarlo
 en una lista. Haremos esto usando un sistema de reescritura de términos (Term-Rewriting System). Nuestro TRS termina
 
 Def: Un árbol que está canonizado si:
 
 - No Tiene SEQ ni ESEQ.
-- El padre de todo CALL, ó EXP ó MOVE(TEMP T, ..) 
+- El padre de todo CALL, ó EXP ó MOVE(TEMP T, ..)
 
 
 ** Reglas
 
 - Página 176 de Libro
 
-Una vez canonizado el árbol (esto es convertido en una lista), se divide en BLOQUES BASICOS. 
+Una vez canonizado el árbol (esto es convertido en una lista), se divide en BLOQUES BASICOS.
 
 Un BB es una secuencia de instrucciones que cumple estas reglas:
 
 - Tiene un solo LABEL, y es la primera instrucción
-- Tiene un solo CJUMP ó JUMP al final 
+- Tiene un solo CJUMP ó JUMP al final
 
-Sabemos que todas las instrucciones de un bloque basico son ejecutadas. 
+Sabemos que todas las instrucciones de un bloque basico son ejecutadas.
 Ademas un BB se puede cambiar de lugar sin prlboemas.
 Ayuda a identificar código muerto.
 
@@ -1330,19 +1329,19 @@ Ayuda a identificar código muerto.
 
 tigercanon.sig :
 
- basicBlocks  
- traceSchedule 
+ basicBlocks
+ traceSchedule
 
 #+END_EXAMPLE
 
 
-* [2013-10-03 Thu] 
+* [2013-10-03 Thu]
 
 #+BEGIN_EXAMPLE
 let
   function f(iF:int, j:string):int =
      function g(iG:int):int =
-        function h(iH:int):int = 
+        function h(iH:int):int =
            ( if (ih = 2) then f(10,"hola") else 0;
            iF + iG + iH + size(j)
         in h(iG + 1 ) end
@@ -1354,7 +1353,7 @@ let
 #+END_EXAMPLE
 
 #+BEGIN_SOURCE
- 
+
 { name = h.8.3, formals=[false], locals=[], actualLocal = 0, actualArg = 0, actualReg:[A,B,C,D] }
 { name = g.9.2, formals=[true], locals=[], actualLocal = 0, actualArg = 2, actualReg:[A,B,C,D] }
 { name = z.12.1, formals=[false], locals=[], actualLocal = 0, actualArg = 0, actualReg:[A,B,C,D] }
@@ -1367,5 +1366,4 @@ let
 
 * Footnotes
 
-[fn:1] El segundo id debe ser un nombre de tipo, pero no podemos saberlo, lo chequeamos mas adelante. 
-
+[fn:1] El segundo id debe ser un nombre de tipo, pero no podemos saberlo, lo chequeamos mas adelante.

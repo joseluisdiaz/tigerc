@@ -1,14 +1,10 @@
 package tiger
 
-import tiger.Types.Ty
-
-
 /**
  * User: jose
  * Date: 9/18/13
  * Time: 1:18 PM
  */
-
 object Types {
 
   def unpack(ty: Ty): Ty = ty match {
@@ -23,20 +19,19 @@ object Types {
 
   sealed abstract class Ty {
 
-    def isNil() = (this) match {
-      case NIL() => true
+    def isNil = this match {
+      case NIL => true
       case _ => false
     }
 
-    // TODO: Se podra usar una funcion parcial?
     override def equals(that: Any) = (this, that) match {
-      case (NIL(), NIL()) => true
+      case (NIL, NIL) => true
       case (INT(_), INT(_)) => true
-      case (UNIT(), UNIT()) => true
-      case (STRING(), STRING()) => true
+      case (UNIT, UNIT) => true
+      case (STRING, STRING) => true
 
-      case (NIL(), RECORD(_)) => true
-      case (RECORD(_), NIL()) => true
+      case (NIL, RECORD(_)) => true
+      case (RECORD(_), NIL) => true
 
       case (ARRAY(_), t@ARRAY(_)) => this.eq(t)
       case (RECORD(_), r@RECORD(_)) => this.eq(r)
@@ -51,13 +46,13 @@ object Types {
 
   }
 
-  case class UNIT() extends Ty
+  case object UNIT extends Ty
 
-  case class INT(ro:Boolean) extends Ty
+  case class INT(readOnly:Boolean) extends Ty //ro: readOnly
 
-  case class STRING() extends Ty
+  case object STRING extends Ty
 
-  case class NIL() extends Ty
+  case object NIL extends Ty
 
   case class RECORD(records: List[(String, Ty, Int)]) extends Ty
 
@@ -71,50 +66,9 @@ object Types {
   }
 
   object INT {
-    def apply():INT = INT(false)
-  }
-
-
-
-}
-
-
-object Env {
-  val mainLevel = ()
-
-  sealed abstract class EnvEntry
-
-  case class VarEntry(ty: Ty) extends EnvEntry
-
-  case class FuncEntry(level: Unit, label: Temp.Label, params: List[Ty],
-                       result: Ty, extern: Boolean) extends EnvEntry
-
-  type venv = Map[String, EnvEntry]
-  type tenv = Map[String, Ty]
-
-}
-
-trait Temp {
-  type Label = String
-  type Temp = String
-
-  def newTemp(): Temp
-
-  def newLabel(): Label
-
-}
-
-object Temp extends Temp {
-  var i, j = 0;
-
-  def newTemp(): Temp = {
-    i = i + 1;
-    "T" + i
-  }
-
-  def newLabel(): Label = {
-    j = j + 1;
-    "L" + i
+    def apply():INT = INT(readOnly=false)
+    def readOnly():INT = INT(readOnly=true)
   }
 
 }
+

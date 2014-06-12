@@ -30,13 +30,12 @@ class SemanSpec extends FlatSpec {
 
   /* una idea en busca de una mejor sintaxis */
   def tigerProgFromString(s: String) = {
-    Seman.transProg( ( new TigerAbsFromString(s) with TigerEscapes) tigerProgram() ).ty
+    Seman.transProg( new TigerAbsFromString(s) with TigerEscapes tigerProgram() ).ty
   }
 
   def tigerProg(s: String) = {
-    Seman.transProg( ( new TigerAbs(s) with TigerEscapes) tigerProgram() ).ty
+    Seman.transProg( new TigerAbs(s) with TigerEscapes tigerProgram() ).ty
   }
-
 
   def typeTo(ty:Ty) = be(ty) compose tigerProgFromString
 
@@ -97,8 +96,8 @@ class SemanSpec extends FlatSpec {
         TypeDec("p", ArrayTy("a"), 2),
         TypeDec("list",
           RecordTy(List(
-            Field("first",false,NameTy("p")),
-            Field("rest",false,NameTy("list"))
+            Field("first",escape = false,NameTy("p")),
+            Field("rest",escape = false,NameTy("list"))
           )),3)))
 
     val (venv, tenv) = Seman.transDec(Seman.tabVars, Seman.tabTypes, recTy)
@@ -129,10 +128,6 @@ class SemanSpec extends FlatSpec {
 
       }
     }
-
-
-
-
   }
 
   "this list" should "have a type" in {
@@ -160,7 +155,7 @@ class SemanSpec extends FlatSpec {
 //    "/good/test44.tig" should typ
 //    "/good/test47.tig" should typ
 //    "/good/test48.tig" should typ
-////    "/good/test50.tig" should typ
+//    "/good/test50.tig" should typ
 //    "/good/three-name-spaces.tig" should typ
   }
 

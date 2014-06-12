@@ -85,16 +85,16 @@ object Abs {
 
   /* operadores */
   sealed abstract class Oper
-  case class PlusOp() extends Oper
-  case class MinusOp() extends Oper
-  case class TimesOp() extends Oper
-  case class DivideOp() extends Oper
-  case class EqOp() extends Oper
-  case class NeqOp() extends Oper
-  case class LtOp() extends Oper
-  case class LeOp() extends Oper
-  case class GtOp() extends Oper
-  case class GeOp() extends Oper
+  case object PlusOp extends Oper
+  case object MinusOp extends Oper
+  case object TimesOp extends Oper
+  case object DivideOp extends Oper
+  case object EqOp extends Oper
+  case object NeqOp extends Oper
+  case object LtOp extends Oper
+  case object LeOp extends Oper
+  case object GtOp extends Oper
+  case object GeOp extends Oper
 
 
 }
