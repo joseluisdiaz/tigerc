@@ -5,13 +5,13 @@ import tiger.Types.{UNIT, STRING, INT, Ty}
 object Env {
   class EnvError(message: String) extends RuntimeException(message)
 
-  val mainLevel:Translate#Level = ()
+  val mainLevel:Seman.translate.Level = Nil
 
   sealed abstract class EnvEntry
 
-  case class VarEntry(access: Translate#Access, ty: Ty) extends EnvEntry
+  case class VarEntry(access: Seman.translate.Access, ty: Ty) extends EnvEntry
 
-  case class FuncEntry(level: Translate#Level,
+  case class FuncEntry(level: Seman.translate.Level,
                        label: Temp.Label,
                        params: List[Ty],
                        result: Ty,
@@ -20,22 +20,22 @@ object Env {
   type venv = Map[String, EnvEntry]
   type tenv = Map[String, Ty]
 
-  case class Enviroment(vars:venv, types:tenv) {
-
-    def ++(e:Enviroment) = Enviroment(this.vars ++ e.vars, this.types ++ e.types)
-
-    def +(tv: (String, EnvEntry)) = Enviroment(this.vars + tv, this.types)
-
-    def +(tv: (String, Ty)) = Enviroment(this.vars, this.types + tv)
-
-  }
+//  case class Enviroment(vars:venv, types:tenv) {
+//
+//    def ++(e:Enviroment) = Enviroment(this.vars ++ e.vars, this.types ++ e.types)
+//
+//    def +(tv: (String, EnvEntry)) = Enviroment(this.vars + tv, this.types)
+//
+//    def +(tv: (String, Ty)) = Enviroment(this.vars, this.types + tv)
+//
+//  }
 
 
   def error(key: String) = {
     throw new EnvError("type error: not found " + key )
   }
 
-  val baseTenv:tenv = Map("int" -> INT(), "string" -> STRING) withDefault error
+  val baseTenv:tenv = Map("int" -> INT(), "intRo" -> INT.readOnly(), "string" -> STRING) withDefault error
 
   val baseVenv:venv = Map(
     "print" -> FuncEntry(Env.mainLevel, "print", List(STRING), UNIT, extern = true),

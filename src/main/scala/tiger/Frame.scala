@@ -30,8 +30,12 @@ trait Frame {
   def allocLocal(esc: Boolean): Access
   def allocArg(esc: Boolean): Access
 
+  def procEntryExit1(body:Tree.Stm): Tree.Stm
+
   val calleeSave = List()
   val callerSave = List()
+
+
 
 }
 
@@ -72,6 +76,8 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
     InReg(Temp.newTemp())
   }
 
+  override def procEntryExit1(body: Stm): Stm = body
+
 }
 
 object Frame extends ArmConstants {
@@ -81,7 +87,12 @@ object Frame extends ArmConstants {
   case class PROC(body: Stm, frame: Frame) extends Frag
   case class STRING(label: Temp.Label, s: String) extends Frag
 
-  def extenalCall(name:String, args:Exp*) = CALL(NAME(Temp.namedLabel(name)), args.toList)
+  /*
+   * Da lo mismo cuale s la llamada en sí, estaría bueno reemplazarlo y tal vez hacer el calculo
+   * de SL aca cuando *NO* sea una llamda a una función externa
+   */
+  def externalCall(name:String, args:Exp*) = externalCall(name, args.toList)
+  def externalCall(name:String, args:List[Exp]) = CALL(NAME(Temp.namedLabel(name)), args.toList)
 
   sealed class Access
   case class InFrame(i: Int) extends Access
@@ -92,7 +103,7 @@ object Frame extends ArmConstants {
   val SL = "R1"
 
   def exp(access:Access, fp:Tree.Exp) = access match {
-    case InFrame(i) => MEM(BINOP(PLUS, fp, CONST(i))
+    case InFrame(i) => MEM(BINOP(PLUS, fp, CONST(i)))
     case InReg(l) => TEMP(l)
   }
 

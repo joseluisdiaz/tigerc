@@ -1,27 +1,10 @@
 package tiger
 
-import tiger.Tree._
-
-import scala.collection.mutable
-import tiger.Temp.Label
-import tiger.Types._
 import tiger.Abs._
-import scala.Some
-import tiger.Tree.EXP
-import tiger.Tree.MEM
-import tiger.Types.Ty
-import tiger.Tree.SEQ
-import tiger.Tree.ESEQ
-import tiger.Tree.MOVE
-import tiger.Tree.BINOP
-import tiger.Tree.NAME
-import tiger.Tree.CJUMP
-import tiger.Frame.{extenalCall, InFrame}
-import tiger.Tree.TEMP
-import tiger.Tree.JUMP
-import tiger.Tree.CONST
-import tiger.Tree.LABEL
-import java.beans.Expression
+import tiger.Frame.{InFrame, externalCall}
+import tiger.Temp.Label
+import tiger.Tree.{BINOP, CJUMP, CONST, ESEQ, EXP, JUMP, LABEL, MEM, MOVE, NAME, SEQ, TEMP, _}
+import tiger.Types.{Ty, _}
 
 
 object SemanHelper {
@@ -37,6 +20,11 @@ object SemanHelper {
 
   case class Cx(genstm: (Temp.Label, Temp.Label) => Tree.Stm) extends InteropExp
 
+  /**
+   * Sequences
+   * @param stms
+   * @return
+   */
 
   def seq(stms: List[Stm]): Stm = if (stms.isEmpty) EXP(CONST(0)) else stms reduce SEQ
 
@@ -51,6 +39,14 @@ object SemanHelper {
   def seq(s1: Stm, s2: Stm, s3: Stm, s4: Stm, s5: Stm, l: List[Stm]) = seq(s1 :: s2 :: s3 :: s4 :: s5 :: l)
 
   def seq(s: Stm*) = seq(s.toList)
+
+
+  //  implicit def stm2list(stm: Stm): List[Stm] = List(stm)
+  //
+  //  def seq(stms: List[Stm]*): Stm = {
+  //    val flat = stms.flatten
+  //    if (flat.isEmpty) EXP(CONST(0)) else stms reduce SEQ
+  //  }
 
 
   def unEx(ex: InteropExp) = ex match {
@@ -95,26 +91,20 @@ object SemanHelper {
 }
 
 trait Translate {
-  def whileExp(expression: Seman.Expression, expression1: _root_.tiger.Seman.translate.Expression) = ???
-
 
   type Level
   type Access
   type Expression
 
-  def newLevel(parent: Option[Level], name: Temp.Label, formals: List[Boolean]): Level
+  def newLevel(parent: Option[Level], name: Temp.Label): Level
 
   def formals(l: Level): List[Access]
 
   def allocLocal(l: Level, esc: Boolean): Access
 
-  def outermost(): Level
+  def preWhile(l: Level): Unit
 
-  // While
-
-  def preWhile()
-  def postWhile()
-
+  def postWhile(l: Level): Unit
 
   // Variables
   def simpleVar(acc: Access, currentLevel: Level): Expression
@@ -144,13 +134,36 @@ trait Translate {
 
   def assignExp(left: Expression, right: Expression): Expression
 
+  def whileExp(condition: Expression, body: Expression, currentLevel: Level): Expression
+
+  def ifThenExp(test: Expression, then: Expression): Expression
+
+  def ifThenElseExp(test: Expression, then: Expression, elsa: Expression): Expression
+
+  def forExp(lo: Expression, hi: Expression, v: Expression, body: Expression): Expression
+
+  def callExp(name: Temp.Label, params: List[Expression], level: Level, isProc: Boolean, extern: Boolean): Expression
+
+  def letExp(decsExp:List[Expression], body:Expression): Expression
+
+  def breakExp(l: Level): Option[Expression]
+
+  // Declarations
+  def varDec(acc: Access, currentLevel: Level, init: Expression): Expression
+
+  def functionDec(body: Expression, currentLevel: Level, isProc: Boolean): Expression
+
 }
+
 
 class MyTranslate extends Translate {
 
-  import SemanHelper._
+  import tiger.SemanHelper._
 
   class MyLevel(val parent: Option[MyLevel], val frame: Frame) {
+    import scala.collection.mutable
+
+    val labels = new mutable.Stack[Temp.Label]
 
     def count(to: MyLevel): Int = parent match {
       //      case None => op(this,z)
@@ -168,19 +181,17 @@ class MyTranslate extends Translate {
   override type Access = (MyLevel, Frame#Access)
   override type Expression = InteropExp
 
-  val levels = new mutable.Stack[Level]
+  override def preWhile(l: MyLevel): Unit = l.labels.push(Temp.newLabel())
 
-  //  override def newLevel(parent: Option[Level], name: Temp.Label, formals: List[Boolean]):Level =
-  //
+  override def postWhile(l: MyLevel): Unit = l.labels
 
-  override def newLevel(parent: Option[MyLevel], name: Label, formals: List[Boolean]): MyLevel =
-    MyLevel(parent, Frame(name, true :: formals))
+  override def newLevel(parent: Option[MyLevel], name: Label): MyLevel =
+    MyLevel(parent, Frame(name, List(true))) // el primer parametro es el static link
+
 
   override def formals(l: MyLevel): List[(MyLevel, Frame#Access)] = l.frame.formals map ((l, _))
 
   override def allocLocal(l: MyLevel, esc: Boolean): (MyLevel, Frame#Access) = (l, l.frame.allocLocal(esc))
-
-  override def outermost(): Level = ???
 
   // Implicit convertions
   implicit def temp2ExpTemp(value: Temp.Temp) = TEMP(value)
@@ -206,13 +217,6 @@ class MyTranslate extends Translate {
   }
 
 
-  val labels = new mutable.Stack[Temp.Label]
-
-  override def preWhile(): Unit = labels.push(Temp.newLabel())
-
-  override def postWhile(): Unit = labels.pop()
-
-
   /**
    * Interaction with SEMAN
    */
@@ -222,12 +226,12 @@ class MyTranslate extends Translate {
     val SL = InFrame(-1)
 
     // static link calculation
-    def genStaticLink(n: Int): Tree.Exp = n match {
+    def calcStaticLink(n: Int): Tree.Exp = n match {
       case 0 => Frame.exp(acc._2, TEMP(Frame.FP))
-      case _ => Frame.exp(SL, genStaticLink(n - 1))
+      case _ => Frame.exp(SL, calcStaticLink(n - 1))
     }
 
-    Ex(genStaticLink(0))
+    Ex(calcStaticLink(0))
   }
 
   override def subscriptVar(array: InteropExp, index: InteropExp): InteropExp = {
@@ -265,7 +269,7 @@ class MyTranslate extends Translate {
   override def intExp(n: Int): InteropExp = Ex(n)
 
 
-  override def relOpExp(op: Oper, ty: Ty, left: InteropExp, rigth: InteropExp): InteropExp = ty match {
+  override def relOpExp(op: Oper, ty: Types.Ty, left: InteropExp, rigth: InteropExp): InteropExp = ty match {
     case INT(_) =>
       Cx((t: Temp.Label, f: Temp.Label) => CJUMP(op, unEx(left), unEx(rigth), t, f))
 
@@ -315,7 +319,7 @@ class MyTranslate extends Translate {
       MOVE(MEM(BINOP(PLUS, rt, index * Frame.WS)), unEx(exp))
 
     Ex(ESEQ(seq(
-      EXP(extenalCall("_newRecord", expressions.length)),
+      EXP(externalCall("_newRecord", expressions.length)),
       MOVE(rt, Frame.RV),
       values
     ), rt))
@@ -326,7 +330,7 @@ class MyTranslate extends Translate {
 
     Ex(ESEQ(
       seq(
-        EXP(extenalCall("_allocArray", unEx(size), unEx(init))),
+        EXP(externalCall("_allocArray", unEx(size), unEx(init))),
         MOVE(rt, Frame.RV))
       , rt))
   }
@@ -341,6 +345,103 @@ class MyTranslate extends Translate {
 
   override def assignExp(left: InteropExp, right: InteropExp): InteropExp = {
     Nx(MOVE(unEx(left), unEx(right)))
+  }
+
+  override def whileExp(condition: InteropExp, body: InteropExp, currentLevel: Level): InteropExp = {
+    val f = currentLevel.labels.head
+    val t = Temp.newLabel()
+    val i = Temp.newLabel()
+
+    Nx(
+      seq(LABEL(i),
+        unCx(condition)(t, f),
+        LABEL(t),
+        unNx(body),
+        JUMP(NAME(i), List(i)),
+        LABEL(f)))
+  }
+
+  override def ifThenExp(test: InteropExp, then: InteropExp): InteropExp = {
+    val f = Temp.newLabel()
+    val t = Temp.newLabel()
+
+    Nx(
+      seq(
+        unCx(test)(t, f),
+        LABEL(t),
+        unNx(then),
+        LABEL(f)))
+
+  }
+
+  override def ifThenElseExp(test: InteropExp, then: InteropExp, elsa: InteropExp): InteropExp = {
+    val f = Temp.newLabel()
+    val t = Temp.newLabel()
+    val end = Temp.newLabel()
+    val rt = Temp.newTemp()
+
+    Ex(ESEQ(seq(
+      unCx(test)(t, f),
+      LABEL(t),
+      MOVE(rt, unEx(then)),
+      JUMP(NAME(end), List(end)),
+      LABEL(f),
+      MOVE(rt, unEx(elsa)),
+      LABEL(end))
+      , rt))
+  }
+
+  override def forExp(lo: InteropExp, hi: InteropExp, v: InteropExp, body: InteropExp): InteropExp = ???
+
+  override def callExp(name: Label, params: List[InteropExp], level: MyLevel, isProc: Boolean, extern: Boolean): InteropExp = {
+    val SL = MEM(CONST(0))
+
+    // prepend static link
+    val firstParam = if (extern) List(SL) else List()
+
+    val paramsEx = firstParam ++ (params map unEx)
+
+
+    if (isProc)
+      Nx(EXP(externalCall(name, paramsEx)))
+    else {
+      val rt = Temp.newTemp()
+      Ex(ESEQ(seq(
+        EXP(externalCall(name, paramsEx)),
+        MOVE(rt, Frame.RV))
+        , rt))
+    }
+  }
+
+  override def letExp(decsExp: List[Expression], body: Expression): Expression = {
+    if (decsExp.isEmpty) Ex(unEx(body))
+    else Ex(ESEQ(seq(decsExp map unNx), unEx(body)))
+  }
+
+  override def breakExp(l: Level): Option[Expression] = {
+    if (l.labels.isEmpty)
+      return None
+
+    val jmp = l.labels.head
+
+    Some(Nx(JUMP(NAME(jmp), List(jmp))))
+  }
+
+  // Declarations
+  override def varDec(acc: (MyLevel, Frame#Access), currentLevel: Level, init: Expression): Unit = {
+    Nx(MOVE(unEx(simpleVar(acc,currentLevel)), unEx(init)))
+  }
+
+  override def functionDec(body: InteropExp, currentLevel: MyLevel, isProc: Boolean): Unit = {
+    val bodyTree = if (isProc) unNx(body) else MOVE(Frame.RV, unEx(body))
+
+//    currentLevel.frame.procEntryExit(body)
+//
+//    procEntryExit1(currentLevel.frame, body)
+//
+//    val () = procEntryExit{body=Nx body', level=l}
+//    in	Ex(CONST 0) end
+    Ex(0)
   }
 
 }

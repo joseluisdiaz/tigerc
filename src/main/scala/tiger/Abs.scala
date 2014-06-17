@@ -36,7 +36,8 @@ object Abs {
   case class OpExp (left: Exp, oper: Oper, right: Exp, position: Pos) extends Exp
   case class RecordExp(fields: List[(Symbol, Exp)], typ: Symbol, position: Pos) extends Exp
   case class SeqExp(exps:List[Exp], position:Pos) extends Exp
-  case class AssignExp(variable: Var, exp: Exp, position: Pos) extends Exp
+  case class AssignExp(variable: Var, exp: Exp, position: Pos, checkRO: Boolean = true) extends Exp
+
   case class IfExp(test: Exp, then: Exp, _else: Option[Exp], position: Pos) extends Exp
   case class WhileExp(test: Exp, body: Exp, position: Pos) extends Exp
 
