@@ -1,10 +1,10 @@
 package tiger
 
-import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.prop.TableDrivenPropertyChecks
-import org.scalatest.{PropSpec, FlatSpec}
+import org.scalatest.{Matchers, PropSpec, FlatSpec}
 
 import tiger.Types._
+import Matchers._
 
 
 
@@ -13,7 +13,7 @@ import tiger.Types._
  * Date: 9/26/13
  * Time: 10:29 PM
  */
-class TypesSpec extends PropSpec with TableDrivenPropertyChecks with ShouldMatchers {
+class TypesSpec extends PropSpec with TableDrivenPropertyChecks {
 
   val r1 = RECORD(List(("i", INT(), 1)))
   val r2 = RECORD(List(("i", INT(), 1)))
@@ -39,7 +39,7 @@ class TypesSpec extends PropSpec with TableDrivenPropertyChecks with ShouldMatch
 
       (ALIAS("a", Some(r1)), ALIAS("b", Some(r1)) ),
       (f1,f2),
-      (INT(false), INT(true))
+      (INT(), INT.readOnly())
     )
 
   val FALSE =

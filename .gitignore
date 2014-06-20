@@ -15,3 +15,7 @@ project/plugins/project/
 # IntelliJ files
 *.iml
 .idea
+
+# ENSIME!
+.ensime
+.ensime_lucene

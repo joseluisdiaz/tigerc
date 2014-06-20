@@ -91,10 +91,10 @@ object Frame extends ArmConstants {
    * Da lo mismo cuale s la llamada en sí, estaría bueno reemplazarlo y tal vez hacer el calculo
    * de SL aca cuando *NO* sea una llamda a una función externa
    */
-  def externalCall(name:String, args:Exp*) = externalCall(name, args.toList)
-  def externalCall(name:String, args:List[Exp]) = CALL(NAME(Temp.namedLabel(name)), args.toList)
+  def externalCall(name:String, args:Expr*):Tree.Expr = externalCall(name, args.toList)
+  def externalCall(name:String, args:List[Expr]) = CALL(NAME(Temp.namedLabel(name)), args.toList)
 
-  sealed class Access
+  sealed abstract class Access
   case class InFrame(i: Int) extends Access
   case class InReg(l: Temp.Label) extends Access
 
@@ -102,7 +102,7 @@ object Frame extends ArmConstants {
   val RV = "RV"
   val SL = "R1"
 
-  def exp(access:Access, fp:Tree.Exp) = access match {
+  def exp(access:Access, fp:Tree.Expr) = access match {
     case InFrame(i) => MEM(BINOP(PLUS, fp, CONST(i)))
     case InReg(l) => TEMP(l)
   }

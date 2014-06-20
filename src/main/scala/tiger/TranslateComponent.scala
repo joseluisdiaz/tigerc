@@ -1,6 +1,5 @@
 package tiger
 
-import java.util.logging.Level
 
 import tiger.Abs._
 import tiger.Frame.{InFrame, externalCall}
@@ -100,7 +99,7 @@ trait TranslateComponent {
 
       override def preWhile(): Unit = labels.push(Temp.newLabel())
 
-      override def postWhile(): Unit = labels
+      override def postWhile(): Unit = labels.pop()
 
     }
 
@@ -117,16 +116,15 @@ trait TranslateComponent {
     override def allocLocal(l: MyLevelImpl, esc: Boolean): (MyLevelImpl, Frame#Access) = (l, l.frame.allocLocal(esc))
 
 
-
     override type Access = (Level, Frame#Access)
 
 
     /**
      * Seman interoperability
      */
-    sealed case class InteropExp()
+    sealed abstract class InteropExp()
 
-    case class Ex(e: Tree.Exp) extends InteropExp
+    case class Ex(e: Tree.Expr) extends InteropExp
 
     case class Nx(s: Tree.Stm) extends InteropExp
 
@@ -140,17 +138,17 @@ trait TranslateComponent {
 
     def seq(stms: List[Stm]): Stm = if (stms.isEmpty) EXP(CONST(0)) else stms reduce SEQ
 
-    def seq(s1: Stm, l: List[Stm]) = seq(s1 :: l)
+    def seq(s1: Stm, l: List[Stm]): Stm = seq(s1 :: l)
 
-    def seq(s1: Stm, s2: Stm, l: List[Stm]) = seq(s1 :: s2 :: l)
+    def seq(s1: Stm, s2: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: l)
 
-    def seq(s1: Stm, s2: Stm, s3: Stm, l: List[Stm]) = seq(s1 :: s2 :: s3 :: l)
+    def seq(s1: Stm, s2: Stm, s3: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: s3 :: l)
 
-    def seq(s1: Stm, s2: Stm, s3: Stm, s4: Stm, l: List[Stm]) = seq(s1 :: s2 :: s3 :: s4 :: l)
+    def seq(s1: Stm, s2: Stm, s3: Stm, s4: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: s3 :: s4 :: l)
 
-    def seq(s1: Stm, s2: Stm, s3: Stm, s4: Stm, s5: Stm, l: List[Stm]) = seq(s1 :: s2 :: s3 :: s4 :: s5 :: l)
+    def seq(s1: Stm, s2: Stm, s3: Stm, s4: Stm, s5: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: s3 :: s4 :: s5 :: l)
 
-    def seq(s: Stm*) = seq(s.toList)
+    def seq(s: Stm*): Stm = seq(s.toList)
 
 
     //  implicit def stm2list(stm: Stm): List[Stm] = List(stm)
@@ -189,7 +187,6 @@ trait TranslateComponent {
           LABEL(t),
           LABEL(f))
     }
-
 
     def unCx(ex: InteropExp) = ex match {
       case Ex(CONST(0)) => (t: Temp.Label, f: Temp.Label) => JUMP(NAME(f), List(f))
@@ -236,7 +233,7 @@ trait TranslateComponent {
       val SL = InFrame(-1)
 
       // static link calculation
-      def calcStaticLink(n: Int): Tree.Exp = n match {
+      def calcStaticLink(n: Int): Tree.Expr = n match {
         case 0 => Frame.exp(acc._2, TEMP(Frame.FP))
         case _ => Frame.exp(SL, calcStaticLink(n - 1))
       }
@@ -283,7 +280,7 @@ trait TranslateComponent {
       case INT(_) =>
         Cx((t: Temp.Label, f: Temp.Label) => CJUMP(op, unEx(left), unEx(rigth), t, f))
 
-      case STRING =>
+      case STRING() =>
         val l = Temp.newTemp()
         val r = Temp.newTemp()
         val rt = Temp.newTemp()
@@ -338,8 +335,7 @@ trait TranslateComponent {
     override def arrayExp(size: InteropExp, init: InteropExp) = {
       val rt = Temp.newTemp()
 
-      Ex(ESEQ(
-        seq(
+      Ex(ESEQ(seq(
           EXP(externalCall("_allocArray", unEx(size), unEx(init))),
           MOVE(rt, Frame.RV))
         , rt))
@@ -444,6 +440,7 @@ trait TranslateComponent {
 
     override def functionDec(body: InteropExp, currentLevel: MyLevelImpl, isProc: Boolean): Expression = {
       val bodyTree = if (isProc) unNx(body) else MOVE(Frame.RV, unEx(body))
+
 
       //    currentLevel.frame.procEntryExit(body)
       //

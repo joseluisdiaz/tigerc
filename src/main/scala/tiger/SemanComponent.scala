@@ -18,7 +18,7 @@ trait SemanComponent {
 
   trait Seman {
 
-    case class ExpTy(exp: Translate#Expression, ty: Types.Ty)
+    case class ExpTy(exp: translate.Expression, ty: Types.Ty)
 
     def transProg(tree: Exp): ExpTy
 
@@ -32,17 +32,17 @@ trait SemanComponent {
     def position() = currentPosition
 
     def position(p: Exp): Exp = {
-      currentPosition = p.position;
+      currentPosition = p.position
       p
     }
 
     def position(p: Dec): Dec = {
-      currentPosition = p.position;
+      currentPosition = p.position
       p
     }
 
 
-    def transVar(varsEnv: Env#venv, typesEnv: Env#tenv, level: Translate#Level, variable: Var): ExpTy = variable match {
+    def transVar(varsEnv: env.venv, typesEnv: env.tenv, level: translate.Level, variable: Var): ExpTy = variable match {
 
       case SimpleVar(id) => {
         val v = varsEnv(id) match {
@@ -91,7 +91,7 @@ trait SemanComponent {
 
     }
 
-    def transTy(typesEnv: Env#tenv, ty: Abs.Ty): Types.Ty = ty match {
+    def transTy(typesEnv: env.tenv, ty: Abs.Ty): Types.Ty = ty match {
       case RecordTy(fields) => {
 
         val records = for {
@@ -111,13 +111,13 @@ trait SemanComponent {
       case ArrayTy(name) => ARRAY(ALIAS(name, None))
     }
 
-    def transExp(varsEnv: Env#venv, typesEnv: Env#tenv, level: Translate#Level, exp: Exp): ExpTy = position(exp) match {
+    def transExp(varsEnv: env.venv, typesEnv: env.tenv, level: translate.Level, exp: Exp): ExpTy = position(exp) match {
       case VarExp(v, position) => transVar(varsEnv, typesEnv, level, v)
 
-      case UnitExp(position) => ExpTy(translate.unitExp(), UNIT)
-      case NilExp(position) => ExpTy(translate.nilExp(), NIL)
+      case UnitExp(position) => ExpTy(translate.unitExp(), UNIT())
+      case NilExp(position) => ExpTy(translate.nilExp(), NIL())
       case IntExp(value, position) => ExpTy(translate.intExp(value), INT())
-      case StringExp(value, position) => ExpTy(translate.stringExp(value), STRING)
+      case StringExp(value, position) => ExpTy(translate.stringExp(value), STRING())
 
       case CallExp(func, args, position) => {
 
@@ -142,7 +142,8 @@ trait SemanComponent {
             paramExp
         }
         // Marche un merge(↑) \o/ :D
-        val isProc = f.result == UNIT
+        val isProc = f.result == UNIT()
+
 
         ExpTy(translate.callExp(f.label, argsExp, f.level, isProc, f.extern), f.result)
       }
@@ -154,13 +155,13 @@ trait SemanComponent {
 
 
         if (left.ty == right.ty) oper match {
-          case EqOp | NeqOp if left.ty != UNIT && !(left.ty.isNil && right.ty.isNil)
+          case EqOp | NeqOp if left.ty != UNIT() && !(left.ty.isNil && right.ty.isNil)
           => return ExpTy(translate.relOpExp(oper, left.ty, left.exp, right.exp), INT())
 
           case DivideOp | TimesOp | MinusOp | PlusOp if unpacked == INT()
           => return ExpTy(translate.binOpExp(oper, left.exp, right.exp), INT())
 
-          case LtOp | LeOp | GtOp | GeOp if unpacked == INT() || unpacked == STRING
+          case LtOp | LeOp | GtOp | GeOp if unpacked == INT() || unpacked == STRING()
           => return ExpTy(translate.relOpExp(oper, left.ty, left.exp, right.exp), INT())
 
           case _ => ()
@@ -169,7 +170,7 @@ trait SemanComponent {
         error("type error")
       }
 
-      case RecordExp(fields, typ, position) => {
+      case RecordExp(fields, typ, position) =>
         val r = typesEnv(typ) match {
           case r@RECORD(_) => r
           case _ => error("type error: '" + typ + "' not declared")
@@ -190,7 +191,6 @@ trait SemanComponent {
         }
 
         ExpTy(translate.recordExp(recordExps), r)
-      }
 
 
       case ArrayExp(typ, size, init, position) => {
@@ -233,7 +233,7 @@ trait SemanComponent {
           error("type error: found " + eTr.ty + " required " + vTr.ty)
         }
 
-        ExpTy(translate.assignExp(vTr.exp, eTr.exp), UNIT)
+        ExpTy(translate.assignExp(vTr.exp, eTr.exp), UNIT())
 
       }
 
@@ -241,15 +241,15 @@ trait SemanComponent {
         val testTr = transExp(varsEnv, typesEnv, level, test)
         val thenTr = transExp(varsEnv, typesEnv, level, then)
 
-        if (testTr.ty != INT() || thenTr.ty != UNIT) {
+        if (testTr.ty != INT() || thenTr.ty != UNIT()) {
           error("type error: if")
         }
 
-        ExpTy(translate.ifThenExp(testTr.exp, testTr.exp), UNIT)
+        ExpTy(translate.ifThenExp(testTr.exp, testTr.exp), UNIT())
 
       }
 
-      case IfExp(test, then, Some(elsa), position) => {
+      case IfExp(test, then, Some(elsa), position) =>
         val testTr = transExp(varsEnv, typesEnv, level, test)
         val thenTr = transExp(varsEnv, typesEnv, level, then)
         val elsaTr = transExp(varsEnv, typesEnv, level, elsa)
@@ -258,23 +258,20 @@ trait SemanComponent {
           error("type error: if")
         }
 
-        ExpTy(translate.ifThenElseExp(testTr.exp, testTr.exp, elsaTr.exp), UNIT)
-      }
+        ExpTy(translate.ifThenElseExp(testTr.exp, testTr.exp, elsaTr.exp), UNIT())
 
-      case WhileExp(test, body, position) => {
+      case WhileExp(test, body, position) =>
         level.preWhile()
         val testTr = transExp(varsEnv, typesEnv, level, test)
         val bodyTr = transExp(varsEnv, typesEnv, level, body)
 
-        if (testTr.ty != INT() || bodyTr.ty != UNIT)
+        if (testTr.ty != INT() || bodyTr.ty != UNIT())
           error("type error: while")
 
         val exp = translate.whileExp(testTr.exp, bodyTr.exp, level)
         level.postWhile()
 
-        ExpTy(exp, UNIT)
-
-      }
+        ExpTy(exp, UNIT())
 
       /*
        * ForExp => WhileExp
@@ -319,7 +316,7 @@ trait SemanComponent {
 
       case LetExp(decs, body, position) => {
 
-        val (venv, tenv, lexp) = decs.foldLeft((varsEnv, typesEnv, List[Translate#Expression]()))({
+        val (venv, tenv, lexp) = decs.foldLeft((varsEnv, typesEnv, List[translate.Expression]()))({
           case ((v, t, l), dec) =>
             val (nv, nt, nl) = transDec(v, t, level, dec)
             (v ++ nv, t ++ nt, l ++ nl)
@@ -330,18 +327,17 @@ trait SemanComponent {
         ExpTy(translate.letExp(lexp, letTr.exp), letTr.ty)
       }
 
-      case BreakExp(position) => {
+      case BreakExp(position) =>
         val result = translate.breakExp(level)
 
         if (result.isEmpty)
           error("break without a for or a while")
 
-        ExpTy(result.get, UNIT)
-      }
+        ExpTy(result.get, UNIT())
 
     }
 
-    def transDec(varsEnv: Env#venv, typesEnv: Env#tenv, level: Translate#Level, dec: Dec): (Env#venv, Env#tenv, List[Translate#Expression]) = position(dec) match {
+    def transDec(varsEnv: env.venv, typesEnv: env.tenv, level: translate.Level, dec: Dec) = position(dec) match {
 
       case VarDec(name, escape, ty, init, position) => {
         val initTr = transExp(varsEnv, typesEnv, level, init)
@@ -351,7 +347,7 @@ trait SemanComponent {
           // RECORD == NIL is handled on Types equality declaration
           case Some(x) if typesEnv(x) == initTr.ty => initTr.ty
           case None => initTr.ty
-          case _ => NIL
+          case _ => NIL()
         }
 
         if (varDec.isNil) {
@@ -366,7 +362,7 @@ trait SemanComponent {
         (varsEnv + (name -> env.VarEntry(access, varDec)), typesEnv, List(exp))
       }
 
-      case TypeDecs(decs) => {
+      case TypeDecs(decs) =>
 
         // create an enviroment with empty functions
         val voidtenv = decs.foldLeft(typesEnv)(
@@ -412,9 +408,7 @@ trait SemanComponent {
 
         (varsEnv, finalTypeEnv, List())
 
-      }
-
-      case FunctionDecs(decs) => {
+      case FunctionDecs(decs) =>
 
         def transTy(ty: Abs.Ty): Types.Ty = ty match {
           case NameTy(name) => typesEnv(name)
@@ -424,7 +418,7 @@ trait SemanComponent {
         def functionTrans(f: FunctionDec) = {
           val params = f.params.map(x => transTy(x.ty))
           val result = f.result match {
-            case None => UNIT
+            case None => UNIT()
             case Some(x) => typesEnv(x)
           }
 
@@ -438,12 +432,12 @@ trait SemanComponent {
         val functionsEnv = decs.map(functionTrans).toMap
         val venvWithFunction = varsEnv ++ functionsEnv
 
-
         def createParamsEnv(f: FunctionDec) = {
           val funcEntry = functionsEnv(f.name)
 
-          def paramTrans(f: Field) {
+          def paramTrans(f: Field):(Abs.Symbol, env.VarEntry) = {
             def access = translate.allocLocal(funcEntry.level, f.escape)
+
             (f.name, env.VarEntry(access, transTy(f.ty)))
           }
 
@@ -466,11 +460,10 @@ trait SemanComponent {
 
         // se construye la lista de inicializaciones
         val results = functionsTr map {
-          case (_, fe, ExpTy(body, _)) => translate.functionDec(body, fe.level, fe.result == UNIT)
+          case (_, fe, ExpTy(body, _)) => translate.functionDec(body, fe.level, fe.result == UNIT())
         }
 
         (venvWithFunction, typesEnv, results)
-      }
     }
 
     def error(msg: String) = {

@@ -13,7 +13,7 @@ import tiger.TigerTestUtil.{TigerEscapes, TigerAbs}
 
 class EscapesSpec extends FlatSpec {
 
-  "escape0" should "be correct" in new TigerAbs("/aditionals/escap0.tig") with TigerEscapes {
+  "EscapesComponent" should "escapes nested functions" in new TigerAbs("/aditionals/escap0.tig") with TigerEscapes {
     inside(tigerProgram()) { case LetExp(List(decX, decY, decsF) , body, _)  =>
       inside(decX) { case VarDec(name, escape, _, _, _) =>
         name should be ("x")
@@ -34,7 +34,7 @@ class EscapesSpec extends FlatSpec {
     }
   }
 
-  "escapes1" should "be ''correct " in new TigerAbs("/type/assign-loop-var.tig") with TigerEscapes {
+  it should "escapes for counter variable" in new TigerAbs("/type/assign-loop-var.tig") with TigerEscapes {
       inside(tigerProgram()) { case ForExp(symbol, s, hi, lo, body, _) =>
         symbol should be("i")
       }

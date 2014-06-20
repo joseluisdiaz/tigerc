@@ -1,5 +1,6 @@
 package tiger
 
+
 /**
  * User: jose
  * Date: 9/18/13
@@ -17,21 +18,23 @@ object Types {
     case _ => throw new Error("Type alias not found")
   }
 
+
   sealed abstract class Ty {
 
     def isNil = this match {
-      case NIL => true
+      case NIL() => true
       case _ => false
     }
 
     override def equals(that: Any) = (this, that) match {
-      case (NIL, NIL) => true
-      case (INT(_), INT(_)) => true
-      case (UNIT, UNIT) => true
-      case (STRING, STRING) => true
 
-      case (NIL, RECORD(_)) => true
-      case (RECORD(_), NIL) => true
+      case (NIL(), NIL()) => true
+      case (INT(_), INT(_)) => true
+      case (UNIT(), UNIT()) => true
+      case (STRING(), STRING()) => true
+
+      case (NIL(), RECORD(_)) => true
+      case (RECORD(_), NIL()) => true
 
       case (ARRAY(_), t@ARRAY(_)) => this.eq(t)
       case (RECORD(_), r@RECORD(_)) => this.eq(r)
@@ -39,20 +42,23 @@ object Types {
       case (a, ALIAS(_, b)) => a == unpack(b)
       case (ALIAS(_, a), b) => unpack(a) == b
 
-      case (FUNCTION(p1,r1), FUNCTION(p2,r2)) => (p1 == p2) && (r1 == r2)
+      case (FUNCTION(p1, r1), FUNCTION(p2, r2)) => (p1 == p2) && (r1 == r2)
 
       case (_, _) => false
     }
 
   }
 
-  case object UNIT extends Ty
+  case class NIL() extends Ty
 
-  case class INT(readOnly:Boolean) extends Ty //ro: readOnly
+  case class UNIT() extends Ty
 
-  case object STRING extends Ty
+  case class INT(readOnly: Boolean) extends Ty
 
-  case object NIL extends Ty
+  //ro: readOnly
+
+  case class STRING() extends Ty
+
 
   case class RECORD(records: List[(String, Ty, Int)]) extends Ty
 
@@ -66,8 +72,9 @@ object Types {
   }
 
   object INT {
-    def apply():INT = INT(readOnly=false)
-    def readOnly():INT = INT(readOnly=true)
+    def apply(): INT = INT(readOnly = false)
+
+    def readOnly(): INT = INT(readOnly = true)
   }
 
 }

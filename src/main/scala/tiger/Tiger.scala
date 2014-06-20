@@ -12,7 +12,6 @@ object Tiger {
 
     println(prog.treeString)
     println("----")
-    Escapes.findEscapes(prog)
     println(prog.treeString)
   }
 

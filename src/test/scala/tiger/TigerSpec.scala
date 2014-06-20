@@ -2,6 +2,9 @@ package tiger
 
 import java.io.{ByteArrayInputStream}
 import tiger.parser.TigerParser
+import tiger.EscapesComponent
+
+import scala.xml.Utility.Escapes
 
 
 /**
@@ -10,6 +13,10 @@ import tiger.parser.TigerParser
  * Time: 7:52 PM
  */
 object TigerTestUtil {
+
+  object ComponentRegistry extends EscapesComponent {
+    override val escapes: Escapes = new MyEscapes()
+  }
 
   trait TigerProgram {
     def tigerProgram(): Abs.Exp
@@ -21,18 +28,26 @@ object TigerTestUtil {
     def tigerProgram()  = cp.parse(resource)
   }
 
+
+  object TigerAbs {
+    def apply(file:String) = new TigerAbs(file)
+  }
+
+
+
   class TigerAbsFromString(val text:String) extends TigerProgram {
     private val cp = new TigerParser()
     def tigerProgram()  = cp.parse(new ByteArrayInputStream(text.getBytes("UTF-8")))
   }
 
 
-
   trait TigerEscapes extends TigerProgram {
     abstract override def tigerProgram(): Abs.Exp = {
       val p = super.tigerProgram()
-      Escapes.findEscapes(p)
+      ComponentRegistry.escapes.findEscapes(p)
       p
     }
   }
+
+
 }
