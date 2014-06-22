@@ -34,7 +34,7 @@ trait EnvComponent {
       throw new EnvError("type error: not found " + key)
     }
 
-    val baseTenv: tenv = Map("int" -> INT(), "int_ro" -> INT.readOnly(), "string" -> STRING()) withDefault error
+    val baseTenv: tenv = Map("int" -> INT(), "_int_ro" -> INT.readOnly(), "string" -> STRING()) withDefault error
 
     val baseVenv: venv = Map(
       "print" -> FuncEntry(mainLevel, "print", List(STRING()), UNIT(), extern = true),

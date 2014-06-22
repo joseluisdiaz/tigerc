@@ -28,7 +28,7 @@ trait EscapesComponent {
       case SimpleVar(id) => env.get(id) match {
         case Some((dd, ref)) if d > dd => ref.set(true)
         case Some(_) => ()
-        case None => throw new Error("Escape??" + id + "not exist!")
+        case None => () // not exist!
       }
 
       case FieldVar(leftValue, id) => travVar(leftValue, env, d)

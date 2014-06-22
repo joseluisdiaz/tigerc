@@ -1,2 +1,9 @@
 /* error: break out of a loop. */
-if 1 then break
+let
+
+function cuanak (d : int) =
+		 if 1 then break
+in
+	cuanak(0)
+end
+

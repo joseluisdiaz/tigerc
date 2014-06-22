@@ -277,9 +277,6 @@ trait TranslateComponent {
 
 
     override def relOpExp(op: Oper, ty: Types.Ty, left: InteropExp, rigth: InteropExp): InteropExp = ty match {
-      case INT(_) =>
-        Cx((t: Temp.Label, f: Temp.Label) => CJUMP(op, unEx(left), unEx(rigth), t, f))
-
       case STRING() =>
         val l = Temp.newTemp()
         val r = Temp.newTemp()
@@ -294,7 +291,8 @@ trait TranslateComponent {
           ,
           rt))
 
-      case _ => throw new UnsupportedOperationException()
+      case _ =>
+        Cx((t: Temp.Label, f: Temp.Label) => CJUMP(op, unEx(left), unEx(rigth), t, f))
     }
 
     override def binOpExp(op: Oper, left: InteropExp, rigth: InteropExp): InteropExp = {

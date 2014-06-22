@@ -1,6 +1,7 @@
 package tiger
 
 import scala.annotation.tailrec
+import scala.util.{Success, Failure, Try}
 
 /**
  * User: jose
@@ -8,13 +9,13 @@ import scala.annotation.tailrec
  * Time: 9:21 PM
  */
 object Util {
-  def tsort[A](edges: Traversable[(A, A)]): Iterable[A] = {
+  def tsort[A](edges: Traversable[(A, A)]): Try[Iterable[A]] = {
 
     @tailrec
-    def tsort(toPreds: Map[A, Set[A]], done: Iterable[A]): Iterable[A] = {
+    def tsort(toPreds: Map[A, Set[A]], done: Iterable[A]): Try[Iterable[A]] = {
       val (noPreds, hasPreds) = toPreds.partition { _._2.isEmpty }
       if (noPreds.isEmpty) {
-        if (hasPreds.isEmpty) done else sys.error(hasPreds.toString)
+        if (hasPreds.isEmpty) Success(done) else Failure(new RuntimeException(hasPreds.toString()))
       } else {
         val found = noPreds.map { _._1 }
         tsort(hasPreds.mapValues { _ -- found }, done ++ found)

@@ -16,6 +16,8 @@ trait SemanComponent {
 
   class TypeError(message: String) extends RuntimeException(message)
 
+  val seman:Seman
+
   trait Seman {
 
     case class ExpTy(exp: translate.Expression, ty: Types.Ty)
@@ -258,7 +260,7 @@ trait SemanComponent {
           error("type error: if")
         }
 
-        ExpTy(translate.ifThenElseExp(testTr.exp, testTr.exp, elsaTr.exp), UNIT())
+        ExpTy(translate.ifThenElseExp(testTr.exp, testTr.exp, elsaTr.exp), thenTr.ty)
 
       case WhileExp(test, body, position) =>
         level.preWhile()
@@ -345,7 +347,7 @@ trait SemanComponent {
         // chequeo de tipo
         val varDec = ty match {
           // RECORD == NIL is handled on Types equality declaration
-          case Some(x) if typesEnv(x) == initTr.ty => initTr.ty
+          case Some(x) if typesEnv(x) == initTr.ty => typesEnv(x)
           case None => initTr.ty
           case _ => NIL()
         }
@@ -385,6 +387,10 @@ trait SemanComponent {
 
         val envKeyProcOrder = Util.tsort(genDependencyGraph(__tenv.toList))
 
+        if (envKeyProcOrder.isFailure) {
+          error("type error: circular type")
+        }
+
         // create a pseudo-alias-free enviroment
         def unpack(typ: Types.Ty, tab: Env#tenv): Types.Ty = typ match {
           case ARRAY(tipo) => ARRAY(unpack(tipo, tab))
@@ -392,7 +398,7 @@ trait SemanComponent {
           case x => x
         }
 
-        val finalTypeEnv = envKeyProcOrder.foldLeft(__tenv)((acc: Env#tenv, x: String) => acc + (x -> unpack(acc(x), acc)))
+        val finalTypeEnv = envKeyProcOrder.get.foldLeft(__tenv)((acc: Env#tenv, x: String) => acc + (x -> unpack(acc(x), acc)))
 
         def changeReferences(typ: Types.Ty, tab: Env#tenv): Unit = typ match {
           case RECORD(records) => records.map(x => changeReferences(x._2, tab))
@@ -470,7 +476,7 @@ trait SemanComponent {
       throw new TypeError(s"$msg @line:" + position())
     }
 
-    def transProg(exp: Exp): ExpTy = transExp(env.baseVenv, env.baseTenv, env.mainLevel, exp)
+    def transProg(exp: Exp): ExpTy = transExp(env.baseVenv withDefault error, env.baseTenv withDefault error, env.mainLevel, exp)
 
   }
 
