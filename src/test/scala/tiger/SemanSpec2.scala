@@ -2,11 +2,9 @@ package tiger
 
 import org.scalatest._
 import org.scalatest.prop.TableDrivenPropertyChecks
-
-import tiger.TigerTestUtil._
-import tiger.Types.{STRING, Ty, UNIT, _}
-
 import tiger.TigerTestUtil.ComponentRegistry._
+import tiger.TigerTestUtil._
+import tiger.Types._
 
 
 /**

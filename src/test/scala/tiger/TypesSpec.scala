@@ -1,10 +1,9 @@
 package tiger
 
+import org.scalatest.Matchers._
 import org.scalatest.prop.TableDrivenPropertyChecks
-import org.scalatest.{Matchers, PropSpec, FlatSpec}
-
+import org.scalatest.{Matchers, PropSpec}
 import tiger.Types._
-import Matchers._
 
 
 

@@ -1,14 +1,9 @@
 package tiger
 
+import org.scalatest._
 import tiger.TigerTestUtil.ComponentRegistry._
 import tiger.TigerTestUtil._
-import org.scalatest._
-import org.scalatest.Matchers._
-
-import tiger.Types._
-import tiger.Types.Ty
-import tiger.Types.STRING
-import tiger.Types.UNIT
+import tiger.Types.{STRING, UNIT, _}
 
 /**
  * User: jose

@@ -1,14 +1,10 @@
 package tiger
 
-import org.scalatest._
+import org.scalatest.Inside._
 import org.scalatest.Matchers._
-import Inside._
-
-import tiger.Abs._
-import tiger.Abs.FunctionDec
-import tiger.Abs.LetExp
-import tiger.Abs.VarDec
-import tiger.TigerTestUtil.{TigerEscapes, TigerAbs}
+import org.scalatest._
+import tiger.Abs.{FunctionDec, LetExp, VarDec, _}
+import tiger.TigerTestUtil.{TigerAbs, TigerEscapes}
 
 
 class EscapesSpec extends FlatSpec {

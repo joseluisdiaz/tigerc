@@ -1,13 +1,11 @@
 package tiger
 
-import java.io.{ByteArrayInputStream}
+import java.io.ByteArrayInputStream
+
 import org.scalatest.Matchers
-import org.scalatest.Matchers._
 import tiger.TigerTestUtil.ComponentRegistry._
-import tiger.TigerTestUtil.{TigerAbsFromString, TigerEscapes, TigerAbs}
 import tiger.Types.Ty
 import tiger.parser.TigerParser
-import tiger.{SemanComponent, EscapesComponent}
 
 /**
  * User: jose
