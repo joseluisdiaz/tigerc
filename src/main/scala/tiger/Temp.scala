@@ -22,7 +22,7 @@ object Temp extends Temp {
 
   override def newLabel(): Label = {
     j += 1
-    "L" + i
+    "L" + j
   }
 
   override def namedLabel(s: String): Label = s

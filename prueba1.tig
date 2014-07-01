@@ -1,0 +1,9 @@
+let
+        var x:=123
+        var y:= x
+        function f(): int =
+        let
+                var z:=11
+                function g(): int = x+y+z
+        in f(); g() end
+in f() end

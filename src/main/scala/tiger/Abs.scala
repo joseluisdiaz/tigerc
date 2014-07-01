@@ -61,7 +61,7 @@ object Abs {
   sealed abstract class Dec extends Position
 
   case class VarDec(name: Symbol, var escape: Boolean, typ: Option[Symbol],
-                    init: Exp, position: Pos) extends Dec with BooleanRef{
+    init: Exp, position: Pos) extends Dec with BooleanRef{
 
     def set(bool: Boolean) { escape = bool }
   }
@@ -70,7 +70,7 @@ object Abs {
 
   case class TypeDecs(decs: List[TypeDec]) extends Dec with NullPosition
 
-  case class FunctionDec(name: Symbol, params: List[Field], result: Option[Symbol], 
+  case class FunctionDec(name: Symbol, params: List[Field], result: Option[Symbol],
                          body: Exp, Position: Pos)
   case class FunctionDecs(decs: List[FunctionDec]) extends Dec with NullPosition
 
@@ -99,4 +99,3 @@ object Abs {
 
 
 }
-

@@ -9,8 +9,6 @@ import tiger.Types._
  * Date: 9/18/13
  * Time: 1:16 PM
  */
-
-
 trait SemanComponent {
   this: TranslateComponent with EnvComponent =>
 
@@ -24,11 +22,12 @@ trait SemanComponent {
 
     def transProg(tree: Exp): ExpTy
 
+
   }
 
   class SemanImp extends Seman {
 
-    //TODO: perhabs a state monad will help
+    //TODO: state monad?
     var currentPosition: Pos = 0
 
     def position() = currentPosition
@@ -146,8 +145,9 @@ trait SemanComponent {
         // Marche un merge(↑) \o/ :D
         val isProc = f.result == UNIT()
 
+        println(s"callExp($func) - " + f.label)
 
-        ExpTy(translate.callExp(f.label, argsExp, f.level, isProc, f.extern), f.result)
+        ExpTy(translate.callExp(f.label, argsExp, level, f.level, isProc, f.extern), f.result)
       }
 
       case OpExp(leftExp, oper, rightExp, position) => {
@@ -166,7 +166,7 @@ trait SemanComponent {
           case LtOp | LeOp | GtOp | GeOp if unpacked == INT() || unpacked == STRING()
           => return ExpTy(translate.relOpExp(oper, left.ty, left.exp, right.exp), INT())
 
-          case _ => ()
+         case _ => ()
         }
 
         error("type error")
@@ -187,8 +187,8 @@ trait SemanComponent {
         val recordExps = for (
           ((sym1, ExpTy(e, ty1)), (sym2, ty2, _)) <- tfields zip r.records
         ) yield {
-          if (sym1 != sym2) error("type error: " + sym1 + "!=" + sym2)
-          if (ty1 != ty2) error("type error: " + ty1 + "!=" + ty1)
+          if (sym1 != sym2) error(s"type error: $sym1 != $sym2")
+          if (ty1 != ty2) error(s"type error: $ty1 !=  $ty2")
           e
         }
 
@@ -263,7 +263,7 @@ trait SemanComponent {
         ExpTy(translate.ifThenElseExp(testTr.exp, testTr.exp, elsaTr.exp), thenTr.ty)
 
       case WhileExp(test, body, position) =>
-        level.preWhile()
+        level.preLoop()
         val testTr = transExp(varsEnv, typesEnv, level, test)
         val bodyTr = transExp(varsEnv, typesEnv, level, body)
 
@@ -271,7 +271,7 @@ trait SemanComponent {
           error("type error: while")
 
         val exp = translate.whileExp(testTr.exp, bodyTr.exp, level)
-        level.postWhile()
+        level.postLoop()
 
         ExpTy(exp, UNIT())
 
@@ -436,18 +436,19 @@ trait SemanComponent {
 
         // Agrego todas las funciones a un nuevo entorno
         val functionsEnv = decs.map(functionTrans).toMap
+
+
         val venvWithFunction = varsEnv ++ functionsEnv
 
-        def createParamsEnv(f: FunctionDec) = {
-          val funcEntry = functionsEnv(f.name)
+        def createParamsEnv(func: FunctionDec) = {
+          val funcEntry = functionsEnv(func.name)
 
           def paramTrans(f: Field):(Abs.Symbol, env.VarEntry) = {
-            def access = translate.allocLocal(funcEntry.level, f.escape)
-
+            def access = translate.allocFormal(funcEntry.level, f.escape)
             (f.name, env.VarEntry(access, transTy(f.ty)))
           }
 
-          f.params map paramTrans
+          func.params map paramTrans
         }
 
 
@@ -460,7 +461,7 @@ trait SemanComponent {
 
         // Valido tipos de retorno
         functionsTr foreach {
-          case (name, fe, ExpTy(_, ty)) => if (fe.result != ty)
+          case (name, fe, ExpTy(_, ty)) => if (fe.result != UNIT() && fe.result != ty)
             error(s"type error: function $name: expected ${fe.result} and returns $ty")
         }
 
@@ -476,7 +477,9 @@ trait SemanComponent {
       throw new TypeError(s"$msg @line:" + position())
     }
 
-    def transProg(exp: Exp): ExpTy = transExp(env.baseVenv withDefault error, env.baseTenv withDefault error, env.mainLevel, exp)
+    def main(main:Exp) = LetExp(List(FunctionDecs(List(FunctionDec("_tigermain", List(), None, main, 0)))), UnitExp(0), 0)
+
+    def transProg(exp: Exp): ExpTy = transExp(env.baseVenv withDefault error, env.baseTenv withDefault error, env.mainLevel, main(exp))
 
   }
 

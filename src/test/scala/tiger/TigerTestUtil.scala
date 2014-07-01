@@ -27,7 +27,6 @@ object TigerTestUtil {
 
   trait TypesToFromString extends Matchers {
 
-    /* una idea en busca de una mejor sintaxis */
     def tigerProgFromString(s: String) = {
       seman.transProg(new TigerAbsFromString(s) with TigerEscapes tigerProgram()).ty
     }

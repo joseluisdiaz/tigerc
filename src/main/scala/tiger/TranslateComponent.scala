@@ -1,8 +1,8 @@
 package tiger
 
-
+import scala.collection.mutable.LinkedList
 import tiger.Abs._
-import tiger.Frame.{InFrame, externalCall}
+import tiger.Frame.{Frag, InFrame, InReg, externalCall}
 import tiger.Temp.Label
 import tiger.Tree.{BINOP, CJUMP, CONST, ESEQ, EXP, JUMP, LABEL, MEM, MOVE, NAME, SEQ, TEMP, _}
 import tiger.Types.{Ty, _}
@@ -18,17 +18,21 @@ trait TranslateComponent {
     type Expression
     type Level <: BaseLevel
 
-    trait BaseLevel {
-      def preWhile(): Unit
+     trait BaseLevel {
+      def preLoop(): Unit
 
-      def postWhile(): Unit
+      def postLoop(): Unit
     }
+
+    def fragments(): List[Frag]
 
     def newLevel(parent: Option[Level], name: Temp.Label): Level
 
     def formals(l: Level): List[Access]
 
     def allocLocal(l: Level, esc: Boolean): Access
+
+    def allocFormal(l: Level, esc: Boolean): Access
 
     // Variables
     def simpleVar(acc: Access, currentLevel: Level): Expression
@@ -66,7 +70,7 @@ trait TranslateComponent {
 
     def forExp(lo: Expression, hi: Expression, v: Expression, body: Expression): Expression
 
-    def callExp(name: Temp.Label, params: List[Expression], level: BaseLevel, isProc: Boolean, extern: Boolean): Expression
+    def callExp(name: Temp.Label, params: List[Expression], caller: Level, callee:Level, isProc: Boolean, extern: Boolean): Expression
 
     def letExp(decsExp: List[Expression], body: Expression): Expression
 
@@ -90,16 +94,16 @@ trait TranslateComponent {
 
       val labels = new mutable.Stack[Temp.Label]
 
-      def count(to: MyLevelImpl): Int = parent match {
-        //      case None => op(this,z)
-        case _ if this == to => 1
-        case Some(x) => 1 + x.count(to)
+      def countTop(): Int = parent match {
+        case None => 0
+        case Some(x) => 1 + x.countTop()
       }
 
+      override def preLoop(): Unit = labels.push(Temp.newLabel())
 
-      override def preWhile(): Unit = labels.push(Temp.newLabel())
+      override def postLoop(): Unit = labels.pop()
 
-      override def postWhile(): Unit = labels.pop()
+      override def toString() = s"(frame: $frame)"
 
     }
 
@@ -107,6 +111,9 @@ trait TranslateComponent {
       def apply(parent: Option[MyLevelImpl], frame: Frame) = new MyLevelImpl(parent, frame)
     }
 
+    val frags = scala.collection.mutable.ListBuffer.empty[Frag]
+
+    override def fragments = frags.toList
 
     override def newLevel(parent: Option[MyLevelImpl], name: Label): MyLevelImpl =
       MyLevelImpl(parent, Frame(name, List(true))) // el primer parametro es el static link
@@ -115,9 +122,15 @@ trait TranslateComponent {
 
     override def allocLocal(l: MyLevelImpl, esc: Boolean): (MyLevelImpl, Frame#Access) = (l, l.frame.allocLocal(esc))
 
+    override def allocFormal(l: MyLevelImpl, esc: Boolean): (MyLevelImpl, Frame#Access) = {
+      println("allocFormal from translate: " + l.frame.name)
+      val access = l.frame.allocFormal(esc)
+      println(access)
+
+      (l, access)
+    }
 
     override type Access = (Level, Frame#Access)
-
 
     /**
      * Seman interoperability
@@ -135,8 +148,7 @@ trait TranslateComponent {
      * @param stms
      * @return
      */
-
-    def seq(stms: List[Stm]): Stm = if (stms.isEmpty) EXP(CONST(0)) else stms reduce SEQ
+    def seq(stms: List[Stm]): Stm = if (stms.isEmpty) EXP(CONST(0)) else if (stms.length == 1 ) stms.head else SEQ(stms.head, seq(stms.tail))
 
     def seq(s1: Stm, l: List[Stm]): Stm = seq(s1 :: l)
 
@@ -223,22 +235,35 @@ trait TranslateComponent {
       case GeOp => GE
     }
 
-
-    /**
+    /*
      * Interaction with SEMAN
      */
 
     // variables
     override def simpleVar(acc: (MyLevelImpl, Frame#Access), currentLevel: MyLevelImpl): InteropExp = {
-      val SL = InFrame(-1)
+      val SL = 2*Frame.WS
 
-      // static link calculation
-      def calcStaticLink(n: Int): Tree.Expr = n match {
-        case 0 => Frame.exp(acc._2, TEMP(Frame.FP))
-        case _ => Frame.exp(SL, calcStaticLink(n - 1))
+      val (level, access) = acc
+
+      val t = Temp.newTemp()
+
+      val result = access match {
+        case InFrame(i) => {
+          val n = currentLevel.countTop() - level.countTop()
+          val offset =  1 to n map {  x => MOVE(t, MEM(BINOP(PLUS, CONST(SL), t )) ) }
+
+          ESEQ(
+            seq(
+              MOVE(TEMP(t), Frame.FP),
+              offset.toList),
+
+            MEM(BINOP(PLUS, CONST(i), t )))
+
+        }
+        case InReg(l) => TEMP(l)
       }
 
-      Ex(calcStaticLink(0))
+      Ex(result)
     }
 
     override def subscriptVar(array: InteropExp, index: InteropExp): InteropExp = {
@@ -248,23 +273,24 @@ trait TranslateComponent {
       val arrayTemp = Temp.newTemp()
       val indexTemp = Temp.newTemp()
 
-      Ex(ESEQ(seq(
-        MOVE(arrayTemp, arrayEx),
-        MOVE(indexTemp, indexEx)
-        //      EXP(externalCall("_checkindex", ra, ri)))))
-      ),
-        MEM(BINOP(PLUS, arrayTemp, BINOP(MUL, indexTemp, Frame.WS)))))
-    }
+      Ex(
+        ESEQ(seq(
+          MOVE(arrayTemp, arrayEx),
+          MOVE(indexTemp, indexEx),
+          EXP(externalCall("_checkindex", arrayEx, indexEx))),
 
+          MEM(BINOP(PLUS, arrayTemp, BINOP(MUL, indexTemp, Frame.WS)))))
+    }
 
     override def fieldVar(record: InteropExp, offset: Int): InteropExp = {
       val recordTemp = Temp.newTemp()
 
-      Ex(ESEQ(seq(
-        MOVE(recordTemp, unEx(record))
-        //      EXP(externalCall("_checkRecord", List(TEMP(ra), TEMP(ri)))))
-      ),
-        MEM(BINOP(PLUS, recordTemp, offset * Frame.WS))))
+      Ex(
+        ESEQ(seq(
+          MOVE(recordTemp, unEx(record)),
+          EXP(externalCall("_checkRecord", recordTemp))),
+
+          MEM(BINOP(PLUS, recordTemp, offset * Frame.WS))))
 
     }
 
@@ -275,7 +301,6 @@ trait TranslateComponent {
 
     override def intExp(n: Int): InteropExp = Ex(n)
 
-
     override def relOpExp(op: Oper, ty: Types.Ty, left: InteropExp, rigth: InteropExp): InteropExp = ty match {
       case STRING() =>
         val l = Temp.newTemp()
@@ -283,12 +308,10 @@ trait TranslateComponent {
         val rt = Temp.newTemp()
 
         Ex(ESEQ(seq(
-
           MOVE(l, unEx(left)),
           MOVE(r, unEx(rigth)),
           //        EXP (CALL (NAME (namedlabel "_compString"),List(CONST opc,TEMP t1, TEMP t2)),
-          MOVE(rt, Frame.RV))
-          ,
+          MOVE(rt, Frame.RV)),
           rt))
 
       case _ =>
@@ -300,19 +323,21 @@ trait TranslateComponent {
       val t2 = Temp.newTemp()
       val rt = Temp.newTemp()
 
-      // optimización en la siguiente etapa?
-      Ex(ESEQ(
-        seq(
-          MOVE(t1, unEx(left)),
-          MOVE(t2, unEx(rigth)),
-          MOVE(rt, BINOP(op, t1, t2)))
-        , TEMP(rt)))
+      Ex(
+        ESEQ(
+          seq(
+            MOVE(t1, unEx(left)),
+            MOVE(t2, unEx(rigth)),
+            MOVE(rt, BINOP(op, t1, t2))),
+
+          TEMP(rt)))
     }
 
     override def stringExp(s: String): InteropExp = {
       val l = Temp.newLabel()
+      println(l)
 
-      Frame.STRING(l, s) // it should add it to global string -what-ever-
+      frags += Frame.STRING(l, s)
 
       Ex(Tree.NAME(l))
     }
@@ -323,28 +348,36 @@ trait TranslateComponent {
       val values = for ((exp, index) <- expressions.zipWithIndex) yield
         MOVE(MEM(BINOP(PLUS, rt, index * Frame.WS)), unEx(exp))
 
-      Ex(ESEQ(seq(
-        EXP(externalCall("_newRecord", expressions.length)),
-        MOVE(rt, Frame.RV),
-        values
-      ), rt))
+      Ex(
+        ESEQ(
+          seq(
+            EXP(externalCall("_newRecord", expressions.length)),
+            MOVE(rt, Frame.RV),
+            values),
+
+          rt))
     }
 
     override def arrayExp(size: InteropExp, init: InteropExp) = {
       val rt = Temp.newTemp()
 
-      Ex(ESEQ(seq(
-          EXP(externalCall("_allocArray", unEx(size), unEx(init))),
-          MOVE(rt, Frame.RV))
+      Ex(
+        ESEQ(
+          seq(
+            EXP(externalCall("_allocArray", unEx(size), unEx(init))),
+            MOVE(rt, Frame.RV))
+
         , rt))
     }
 
     override def seqExp(expressions: List[InteropExp]): InteropExp = {
       val init = expressions.init.map(unNx)
 
-      Ex(ESEQ(
-        seq(init),
-        unEx(expressions.head)))
+      Ex(
+        ESEQ(
+          seq(init),
+
+          unEx(expressions.last)))
     }
 
     override def assignExp(left: InteropExp, right: InteropExp): InteropExp = {
@@ -384,36 +417,71 @@ trait TranslateComponent {
       val end = Temp.newLabel()
       val rt = Temp.newTemp()
 
-      Ex(ESEQ(seq(
-        unCx(test)(t, f),
-        LABEL(t),
-        MOVE(rt, unEx(then)),
-        JUMP(NAME(end), List(end)),
-        LABEL(f),
-        MOVE(rt, unEx(elsa)),
-        LABEL(end))
-        , rt))
+      Ex(
+        ESEQ(
+          seq(
+            unCx(test)(t, f),
+            LABEL(t),
+            MOVE(rt, unEx(then)),
+            JUMP(NAME(end), List(end)),
+            LABEL(f),
+            MOVE(rt, unEx(elsa)),
+            LABEL(end))
+
+            , rt))
     }
 
     override def forExp(lo: InteropExp, hi: InteropExp, v: InteropExp, body: InteropExp): InteropExp = ???
 
-    override def callExp(name: Label, params: List[InteropExp], level: BaseLevel, isProc: Boolean, extern: Boolean): InteropExp = {
-      val SL = MEM(CONST(0))
+    override def callExp(name: Label, params: List[InteropExp], caller: MyLevelImpl, callee:MyLevelImpl, isProc: Boolean, extern: Boolean): InteropExp = {
+
+      val lcaller = caller.countTop()
+      val lcallee = callee.countTop()
+
+      println("caller: " + caller.frame.name + " - callee: " + callee.frame.name )
+
+      val SL = if (lcaller > lcallee) {
+        val n = lcaller - lcallee
+
+        val t = Temp.newTemp()
+
+        val offset = (1 to n) map { x:Int => MOVE(t, MEM(BINOP(PLUS, CONST(8), t ))) }
+
+        ESEQ(
+          seq(
+            MOVE(TEMP(t), MEM(BINOP(PLUS, CONST(8), Frame.FP))),
+            offset.toList),
+
+          t)
+
+      } else if (lcaller == lcallee) {
+        // SL -> SL
+
+        MEM(BINOP(PLUS, CONST(8), Frame.FP))
+
+      } else {
+        // FP -> SL
+
+        TEMP(Frame.FP)
+      }
 
       // prepend static link
-      val firstParam = if (extern) List(SL) else List()
+      val firstParam = if (!extern) List(SL) else List()
 
       val paramsEx = firstParam ++ (params map unEx)
 
-
-      if (isProc)
+      if (isProc) {
         Nx(EXP(externalCall(name, paramsEx)))
+      }
       else {
         val rt = Temp.newTemp()
-        Ex(ESEQ(seq(
-          EXP(externalCall(name, paramsEx)),
-          MOVE(rt, Frame.RV))
-          , rt))
+        Ex(
+          ESEQ(
+            seq(
+              EXP(externalCall(name, paramsEx)),
+              MOVE(rt, Frame.RV))
+
+            ,rt))
       }
     }
 
@@ -431,22 +499,26 @@ trait TranslateComponent {
       Some(Nx(JUMP(NAME(jmp), List(jmp))))
     }
 
-    // Declarations
+    //
     override def varDec(acc: (MyLevelImpl, Frame#Access), currentLevel: MyLevelImpl, init: Expression): Expression = {
       Nx(MOVE(unEx(simpleVar(acc, currentLevel)), unEx(init)))
     }
 
     override def functionDec(body: InteropExp, currentLevel: MyLevelImpl, isProc: Boolean): Expression = {
+
       val bodyTree = if (isProc) unNx(body) else MOVE(Frame.RV, unEx(body))
 
+      procEntryExit1(currentLevel, Nx(bodyTree))
 
-      //    currentLevel.frame.procEntryExit(body)
-      //
-      //    procEntryExit1(currentLevel.frame, body)
-      //
-      //    val () = procEntryExit{body=Nx body', level=l}
-      //    in	Ex(CONST 0) end
-      Ex(0)
+      Ex(CONST(0))
+    }
+
+    def procEntryExit1(level: MyLevelImpl, body: Expression) = {
+      val label = Frame.STRING(level.frame.name, "")
+      val bodyProc = Frame.PROC(unNx(body), level.frame)
+      val end = Frame.STRING(";;-----------","")
+
+      frags ++= List(label, bodyProc, end)
     }
 
   }

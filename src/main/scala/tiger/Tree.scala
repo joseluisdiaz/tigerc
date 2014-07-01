@@ -2,7 +2,12 @@ package tiger
 
 object Tree {
 
-  sealed abstract class Expr
+  trait TREE
+
+  sealed abstract class Expr extends TREE {
+
+
+  }
 
   case class CONST(v: Int) extends Expr
   case class NAME(n: Temp.Label) extends Expr
@@ -13,7 +18,8 @@ object Tree {
   case class CALL(e: Expr, args: List[Expr]) extends Expr
   case class ESEQ(s: Stm, e: Expr) extends Expr
 
-  sealed abstract class Stm
+  sealed abstract class Stm extends TREE
+
   case class MOVE(e1: Expr, e2: Expr) extends Stm
   case class EXP(e: Expr) extends Stm
   case class JUMP(e: Expr, labs: List[Temp.Label]) extends Stm

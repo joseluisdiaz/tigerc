@@ -28,14 +28,12 @@ trait Frame {
   def name(): Temp.Label
   def formals(): List[Access]
   def allocLocal(esc: Boolean): Access
-  def allocArg(esc: Boolean): Access
+  def allocFormal(esc: Boolean): Access
 
   def procEntryExit1(body:Tree.Stm): Tree.Stm
 
   val calleeSave = List()
   val callerSave = List()
-
-
 
 }
 
@@ -45,6 +43,7 @@ trait ArmConstants {
   val localIncrement = 1
   val argsLocal = 4
   val argsIncrement = 1
+  val regIncrement = 1
 }
 
 class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants {
@@ -59,25 +58,33 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 
   override def name(): Temp.Label = n
 
-  override def allocLocal(esc: Boolean): Access = if (esc) {
-    val ret = InFrame((actualLocal * WS) + localGap)
-    actualLocal = actualLocal - localIncrement
-    ret
-  } else {
-    InReg(Temp.newTemp())
+  override def allocLocal(esc: Boolean): Access = {
+    if (esc) {
+      val ret = InFrame((actualLocal * WS) - localGap)
+      actualLocal = actualLocal - localIncrement
+      ret
+    } else {
+      actualReg += regIncrement
+      InReg(Temp.newTemp())
+    }
   }
 
-  override def allocArg(esc: Boolean): Access = if (esc)  {
-    val ret = InFrame((actualArg * WS) + argsLocal)
-    actualArg = actualArg + argsIncrement
-    ret
-  }
-  else {
-    InReg(Temp.newTemp())
+  override def allocFormal(esc: Boolean): Access = {
+    if (esc) {
+      val ret = InFrame((actualArg * WS) + argsLocal)
+      actualArg += argsIncrement
+      ret
+    } else {
+      actualReg += regIncrement
+      InReg(Temp.newTemp())
+    }
   }
 
-  override def procEntryExit1(body: Stm): Stm = body
+  override def procEntryExit1(body: Tree.Stm): Tree.Stm = body
 
+  override def toString = s"[$n -> $hashCode() local: $actualLocal // args: $actualArg // reg: $actualReg]"
+
+  f map allocFormal
 }
 
 object Frame extends ArmConstants {
@@ -102,11 +109,5 @@ object Frame extends ArmConstants {
   val RV = "RV"
   val SL = "R1"
 
-  def exp(access:Access, fp:Tree.Expr) = access match {
-    case InFrame(i) => MEM(BINOP(PLUS, fp, CONST(i)))
-    case InReg(l) => TEMP(l)
-  }
 
 }
-
-
