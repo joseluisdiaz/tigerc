@@ -1,4 +1,4 @@
-spackage tiger
+package tiger
 
 import tiger.Temp.Label
 import tiger.Tree._

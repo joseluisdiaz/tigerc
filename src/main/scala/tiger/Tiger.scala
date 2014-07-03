@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import tiger.Frame.{PROC,STRING}
+import tiger.Tree.Stm
 import tiger.parser.{TigerScanner, TigerParser}
 import sext._
 
@@ -32,9 +33,10 @@ object Tiger {
 
     ComponentRegistry.seman.transProg(prog)
 
-    println("==============\n\n")
+    println("======= Canonized intermediate code ==========\n\n")
 
-    ComponentRegistry.translate.fragments().foreach { frag => println(frag.treeString) }
+    var strings:List[(Temp.Label, String)] = List()
+    var procs:List[(List[Stm], Frame)] = List()
 
     ComponentRegistry.translate.fragments().foreach { frag =>
 
@@ -42,12 +44,27 @@ object Tiger {
         case PROC(stm, frame) => {
           println(s"frame:$frame")
           val c = ComponentRegistry.canon.linearize(stm)
+          procs ::= (c, frame)
           c.foreach( x => { println("->" + x) })
         }
 
-        case STRING(l,s) => println(s"$l: $s\n")
+        case f@STRING(l,s) => {
+          strings ::= (l,s)
+
+          println(s"$l: $s\n")
+        }
       }
     }
+
+    val eval = new Interpeter(procs, strings)
+
+    println("===== eval ===== \n\n")
+
+    eval.evalFunc("_tigermain", List())
+
+    println("\n\n==== end =====\n")
   }
+
+
 
 }

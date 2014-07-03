@@ -1,5 +1,6 @@
 package tiger
 
+import scala.collection.mutable.ArrayLike
 import tiger.Tree._
 import tiger.Tree.MEM
 import tiger.Tree.CALL
@@ -39,8 +40,10 @@ trait Frame {
 
 trait ArmConstants {
   val WS = 4
+
   val localGap = 4
   val localIncrement = 1
+
   val argsLocal = 4
   val argsIncrement = 1
   val regIncrement = 1
@@ -52,9 +55,10 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
   var actualArg = 0
   var actualLocal = 0
   var actualReg = 0
-  var formals: List[Access] = Nil
 
-  //  override def formals(): List[Access] = Nil
+  val _formals = scala.collection.mutable.ListBuffer.empty[Access]
+
+  override def formals(): List[Access] = _formals.toList
 
   override def name(): Temp.Label = n
 
@@ -70,7 +74,7 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
   }
 
   override def allocFormal(esc: Boolean): Access = {
-    if (esc) {
+    val formal = if (esc) {
       val ret = InFrame((actualArg * WS) + argsLocal)
       actualArg += argsIncrement
       ret
@@ -78,6 +82,9 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
       actualReg += regIncrement
       InReg(Temp.newTemp())
     }
+    _formals += formal
+
+    formal
   }
 
   override def procEntryExit1(body: Tree.Stm): Tree.Stm = body
@@ -101,9 +108,17 @@ object Frame extends ArmConstants {
   def externalCall(name:String, args:Expr*):Tree.Expr = externalCall(name, args.toList)
   def externalCall(name:String, args:List[Expr]) = CALL(NAME(Temp.namedLabel(name)), args.toList)
 
-  sealed abstract class Access
-  case class InFrame(i: Int) extends Access
-  case class InReg(l: Temp.Label) extends Access
+  sealed abstract class Access {
+    def exp(): Expr
+  }
+
+  case class InFrame(i: Int) extends Access {
+    def exp() = MEM(BINOP(PLUS, TEMP(Frame.FP), CONST(i)))
+  }
+
+  case class InReg(l: Temp.Label) extends Access {
+    def exp() = TEMP(l)
+  }
 
   val FP = "FP"
   val RV = "RV"

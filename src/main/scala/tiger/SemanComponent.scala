@@ -260,7 +260,7 @@ trait SemanComponent {
           error("type error: if")
         }
 
-        ExpTy(translate.ifThenElseExp(testTr.exp, testTr.exp, elsaTr.exp), thenTr.ty)
+        ExpTy(translate.ifThenElseExp(testTr.exp, thenTr.exp, elsaTr.exp), thenTr.ty)
 
       case WhileExp(test, body, position) =>
         level.preLoop()
