@@ -224,6 +224,7 @@ trait TranslateComponent {
       case MinusOp => MINUS
       case TimesOp => MUL
       case DivideOp => DIV
+      case _ => error("transBinOp no debería pasar")
     }
 
     implicit def transRelOp(op: Oper) = op match {
@@ -233,7 +234,9 @@ trait TranslateComponent {
       case LeOp => LE
       case GtOp => GT
       case GeOp => GE
+      case _ => error("transRelOp no debería pasar")
     }
+
 
     /*
      * Interaction with SEMAN
@@ -241,8 +244,6 @@ trait TranslateComponent {
 
     // variables
     override def simpleVar(acc: (MyLevelImpl, Frame#Access), currentLevel: MyLevelImpl): InteropExp = {
-      val SL = 2*Frame.WS
-
       val (level, access) = acc
 
       val t = Temp.newTemp()
@@ -250,7 +251,7 @@ trait TranslateComponent {
       val result = access match {
         case InFrame(i) => {
           val n = currentLevel.countTop() - level.countTop()
-          val offset =  1 to n map {  x => MOVE(t, MEM(BINOP(PLUS, CONST(SL), t )) ) }
+          val offset =  1 to n map {  x => MOVE(t, MEM(BINOP(PLUS, CONST(Frame.SL), t )) ) }
 
           ESEQ(
             seq(
@@ -277,7 +278,7 @@ trait TranslateComponent {
         ESEQ(seq(
           MOVE(arrayTemp, arrayEx),
           MOVE(indexTemp, indexEx),
-          EXP(externalCall("_checkindex", arrayEx, indexEx))),
+          EXP(externalCall("_checkIndexArray", arrayEx, indexEx))),
 
           MEM(BINOP(PLUS, arrayTemp, BINOP(MUL, indexTemp, Frame.WS)))))
     }
@@ -303,16 +304,10 @@ trait TranslateComponent {
 
     override def relOpExp(op: Oper, ty: Types.Ty, left: InteropExp, rigth: InteropExp): InteropExp = ty match {
       case STRING() =>
-        val l = Temp.newTemp()
-        val r = Temp.newTemp()
-        val rt = Temp.newTemp()
-
-        Ex(ESEQ(seq(
-          MOVE(l, unEx(left)),
-          MOVE(r, unEx(rigth)),
-          //        EXP (CALL (NAME (namedlabel "_compString"),List(CONST opc,TEMP t1, TEMP t2)),
-          MOVE(rt, Frame.RV)),
-          rt))
+        Cx((t: Temp.Label, f: Temp.Label) => CJUMP(op,
+          ESEQ(EXP( externalCall("_stringCompare",unEx(left),unEx(rigth))  ), TEMP(Frame.RV)),
+          0,
+          t,f)  )
 
       case _ =>
         Cx((t: Temp.Label, f: Temp.Label) => CJUMP(op, unEx(left), unEx(rigth), t, f))
@@ -449,7 +444,7 @@ trait TranslateComponent {
 
         ESEQ(
           seq(
-            MOVE(TEMP(t), MEM(BINOP(PLUS, CONST(8), Frame.FP))),
+            MOVE(TEMP(t), MEM(BINOP(PLUS, CONST(Frame.SL), Frame.FP))),
             offset.toList),
 
           t)

@@ -205,7 +205,7 @@ trait SemanComponent {
 
         arrayTy match {
           case ARRAY(ty) if ty == initTy.ty => true
-          case ARRAY(x) => error("type error: found" + initTy.ty + "required" + x)
+          case ARRAY(x) => error(s"type error: found ${initTy.ty} required $x")
           case _ => error("type error: not an array")
         }
 
@@ -232,7 +232,7 @@ trait SemanComponent {
         }
 
         if (vTr.ty != eTr.ty) {
-          error("type error: found " + eTr.ty + " required " + vTr.ty)
+          error(s"type error: found ${eTr.ty} required ${vTr.ty}")
         }
 
         ExpTy(translate.assignExp(vTr.exp, eTr.exp), UNIT())

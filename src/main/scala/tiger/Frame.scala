@@ -9,18 +9,18 @@ import tiger.Tree.CONST
 import tiger.Tree.BINOP
 
 /**
- * |    argn    |  fp+4*(n+1)
- * |    ...     |
- * |    arg2    |  fp+16
- * |    arg1    |  fp+12
- * |  fp level  |  fp+8
- * |  retorno   |  fp+4
- * |   fp ant   |  fp
- * --------------  fp
- * |   local1   |  fp-4
- * |   local2   |  fp-8
- * |    ...     |
- * |   localn   |  fp-4*n
+ * |    argn        |  fp+4*(n+1)
+ * |    ...         |
+ * |    arg2        |  fp+16
+ * |    arg1        |  fp+12
+ * |  fp level(sl)  |  fp+8
+ * |  retorno       |  fp+4
+ * |   fp ant       |  fp
+ * ------------------  fp
+ * |   local1       |  fp-4
+ * |   local2       |  fp-8
+ * |    ...         |
+ * |   localn       |  fp-4*n
  */
 
 trait Frame {
@@ -39,13 +39,15 @@ trait Frame {
 }
 
 trait ArmConstants {
-  val WS = 4
+  val WS = 4 /* Word Size */
+  val SL = 2*WS /* Static link location */
 
-  val localGap = 4
-  val localIncrement = 1
+  val localOffsetInitial = WS
+  val localIncrement = -1
 
-  val argsLocal = 4
+  val argsOffsetInitial = 2*WS
   val argsIncrement = 1
+
   val regIncrement = 1
 }
 
@@ -64,8 +66,8 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 
   override def allocLocal(esc: Boolean): Access = {
     if (esc) {
-      val ret = InFrame((actualLocal * WS) - localGap)
-      actualLocal = actualLocal - localIncrement
+      val ret = InFrame((actualLocal * WS) - localOffsetInitial)
+      actualLocal = actualLocal + localIncrement
       ret
     } else {
       actualReg += regIncrement
@@ -75,7 +77,7 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 
   override def allocFormal(esc: Boolean): Access = {
     val formal = if (esc) {
-      val ret = InFrame((actualArg * WS) + argsLocal)
+      val ret = InFrame((actualArg * WS) + argsOffsetInitial)
       actualArg += argsIncrement
       ret
     } else {
@@ -122,7 +124,5 @@ object Frame extends ArmConstants {
 
   val FP = "FP"
   val RV = "RV"
-  val SL = "R1"
-
 
 }

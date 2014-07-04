@@ -1,9 +1,18 @@
 let
-        var x:=123
+        var x:= 32
         var y:= x
-        function f(): int =
+        var i:= 0
+        function f(n:int): int =
         let
-                var z:=11
+                var z:=1
                 function g(): int = x+y+z
-        in f(); g() end
-in f() end
+
+        in
+           if n = 0
+              then g()
+              else f(n-1)
+           end
+in
+ i:=f(7);
+ print(chr(i))
+end

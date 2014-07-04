@@ -29,6 +29,8 @@ object Tiger {
     val cp = new TigerParser()
     val prog = cp.parse(stream)
 
+    println(prog.treeString)
+
     ComponentRegistry.escapes.findEscapes(prog)
 
     ComponentRegistry.seman.transProg(prog)
@@ -59,6 +61,9 @@ object Tiger {
     val eval = new Interpeter(procs, strings)
 
     println("===== eval ===== \n\n")
+
+    if (args.length >= 2 && args(2) == "debug")
+      eval.debug = true
 
     eval.evalFunc("_tigermain", List())
 

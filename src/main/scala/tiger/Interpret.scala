@@ -14,6 +14,8 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
   val mem = new HashMap[Int, Int]
   val reg = new HashMap[Temp.Temp, Int]
 
+  var debug = false
+
   reg.put(Frame.FP, 10000000)
   reg.put(Frame.RV, 0)
 
@@ -54,8 +56,13 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
   type lfunc = PartialFunction[List[Int], Int]
 
   /* Funciones de biblioteca */
-  val initArray:lfunc = { case (size::init::rest) =>
+  val allocArray:lfunc = { case (size::init::rest) =>
     val mem = malloc(size)
+
+    if (debug) {
+      println(s"=== allocArray size:$size init:$init === ")
+      dump()
+    }
 
     /* mem + 1 => array size */
     val l = (mem+1, size) :: List.tabulate(size) { x:Int => ( mem + Frame.WS*x, init) }
@@ -75,7 +82,7 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
 
   val allocRecord:lfunc = { case size::vals =>
     val mem = malloc(size)
-    val addrs = List.tabulate(size) {x => mem + x*Frame.WS}
+    val addrs = List.tabulate(size) { x => mem + x*Frame.WS }
 
     (addrs zip vals) foreach (storeMem _).tupled
 
@@ -109,13 +116,20 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
     str(0).toInt
   }
 
+  def dump(): Unit = {
+    println("==== reg ====")
+    reg.foreach { case (k,v) => println(s"$k \t\t\t $v") }
+
+    println("==== mem ====")
+    mem.foreach { case (k,v) => println(s"$k \t\t\t $v") }
+  }
 
   val library = Map[Temp.Label, lfunc](
-    "_initArray" -> initArray,
+    "_allocArray" -> allocArray,
     "_checkIndexArray" -> checkIndexArray,
     "_allocRecord" -> allocRecord,
     "_checkNil" -> checkNil,
-    "_stringcmp" -> stringCompare,
+    "_stringCompare" -> stringCompare,
     "print" -> printFun,
     "chr" -> chrFun,
     "ord" -> ordFun
@@ -125,7 +139,7 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
 
   def evalLocalFunc(f:Temp.Label)(args: List[Int]): Int = {
 
-    val (body, frame) = getFrag(f) getOrElse { error("Fragmento no encontrado") }
+    val (body, frame) = getFrag(f) getOrElse { error(s"Fragmento no encontrado $f") }
 
     def find(s:Temp.Label): List[Stm] = body.dropWhile({
       case LABEL(l) => l != s
@@ -135,6 +149,7 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
     def execute(prog: List[Stm]):Unit = prog match {
       case Nil => Unit
       case x::xs => {
+        if (debug) println(s"==>$x")
         evalStm(x) match {
           case None => execute(xs)
           case Some(l) => execute(find(l))
@@ -142,6 +157,7 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
       }
     }
 
+    if (debug) println("==== call ====")
     /* Guardar temporarios */
     val prevRegs = saveTemps()
 
@@ -160,12 +176,17 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
       case (MEM(m), y) => storeMem(evalExp(m), y)
     }
 
+    if (debug) dump()
+
     /* Ejecutar la lista de instrucciones */
     execute(body)
 
     val rv = loadTemp(Frame.RV)
     /* Restaurar temporarios */
     restoreTemps(prevRegs)
+
+
+    if (debug) println(s"==== return $rv end call ====")
 
     rv
   }
@@ -184,7 +205,7 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
 
       op match {
         case PLUS => ee1 + ee2
-        case MINUS => ee1 + ee2
+        case MINUS => ee1 - ee2
         case MUL => ee1 * ee2
         case DIV => ee1 / ee2
         case _ => ???
