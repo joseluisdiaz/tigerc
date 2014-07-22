@@ -7,6 +7,7 @@ trait Temp {
   def newTemp(): Temp
   def newLabel(): Label
   def namedLabel(s:String): Label
+  def namedTemp(s:String): Temp
 }
 
 object Temp extends Temp {
@@ -26,4 +27,6 @@ object Temp extends Temp {
   }
 
   override def namedLabel(s: String): Label = s
+  override def namedTemp(s: String): Temp = s
+
 }

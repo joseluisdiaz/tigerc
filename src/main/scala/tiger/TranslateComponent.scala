@@ -341,7 +341,7 @@ trait TranslateComponent {
       val rt = Temp.newTemp()
 
       val values = for ((exp, index) <- expressions.zipWithIndex) yield
-        MOVE(MEM(BINOP(PLUS, rt, index * Frame.WS)), unEx(exp))
+        MOVE(MEM(BINOP(PLUS, index * Frame.WS, rt)), unEx(exp))
 
       Ex(
         ESEQ(

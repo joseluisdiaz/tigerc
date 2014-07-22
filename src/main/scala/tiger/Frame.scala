@@ -33,12 +33,27 @@ trait Frame {
 
   def procEntryExit1(body:Tree.Stm): Tree.Stm
 
-  val calleeSave = List()
-  val callerSave = List()
-
 }
 
-trait ArmConstants {
+trait Constants {
+
+  val calleeSave:List[Temp.Temp]
+  val callerSave:List[Temp.Temp]
+  val argsRegisters:List[Temp.Temp]
+  val argsRegistersSize = argsRegisters.size
+  
+  val FP:Temp.Temp
+  val RV:Temp.Temp
+  val SP:Temp.Temp
+}
+
+
+trait ArmConstants extends Constants {
+
+  case class R(r: String)
+
+  implicit def regToTemp(x:R):Temp.Temp = Temp.namedTemp(x.r)
+
   val WS = 4 /* Word Size */
   val SL = 2*WS /* Static link location */
 
@@ -49,6 +64,16 @@ trait ArmConstants {
   val argsIncrement = 1
 
   val regIncrement = 1
+
+  override val argsRegisters = List("r0", "r1", "r2", "r3")
+  
+  override val calleeSave = List()
+  override val callerSave = List()
+
+  override val FP = "fp"
+  override val RV = "r0"
+  override val SP = "sp"
+
 }
 
 class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants {
@@ -91,7 +116,7 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 
   override def procEntryExit1(body: Tree.Stm): Tree.Stm = body
 
-  override def toString = s"[$n -> $hashCode() local: $actualLocal // args: $actualArg // reg: $actualReg]"
+  override def toString = s"[$n -> local: $actualLocal // args: $actualArg // reg: $actualReg]"
 
   f map allocFormal
 }
@@ -121,8 +146,5 @@ object Frame extends ArmConstants {
   case class InReg(l: Temp.Label) extends Access {
     def exp() = TEMP(l)
   }
-
-  val FP = "FP"
-  val RV = "RV"
 
 }
