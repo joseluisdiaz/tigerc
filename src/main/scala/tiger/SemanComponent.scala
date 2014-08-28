@@ -14,7 +14,7 @@ trait SemanComponent {
 
   class TypeError(message: String) extends RuntimeException(message)
 
-  val seman:Seman
+  val seman: Seman
 
   trait Seman {
 
@@ -166,7 +166,7 @@ trait SemanComponent {
           case LtOp | LeOp | GtOp | GeOp if unpacked == INT() || unpacked == STRING()
           => return ExpTy(translate.relOpExp(oper, left.ty, left.exp, right.exp), INT())
 
-         case _ => ()
+          case _ => ()
         }
 
         error("type error")
@@ -443,7 +443,7 @@ trait SemanComponent {
         def createParamsEnv(func: FunctionDec) = {
           val funcEntry = functionsEnv(func.name)
 
-          def paramTrans(f: Field):(Abs.Symbol, env.VarEntry) = {
+          def paramTrans(f: Field): (Abs.Symbol, env.VarEntry) = {
             def access = translate.allocFormal(funcEntry.level, f.escape)
             (f.name, env.VarEntry(access, transTy(f.ty)))
           }
@@ -477,7 +477,7 @@ trait SemanComponent {
       throw new TypeError(s"$msg @line:" + position())
     }
 
-    def main(main:Exp) = LetExp(List(FunctionDecs(List(FunctionDec("_tigermain", List(), None, main, 0)))), UnitExp(0), 0)
+    def main(main: Exp) = LetExp(List(FunctionDecs(List(FunctionDec("_tigermain", List(), None, main, 0)))), UnitExp(0), 0)
 
     def transProg(exp: Exp): ExpTy = transExp(env.baseVenv withDefault error, env.baseTenv withDefault error, env.mainLevel, main(exp))
 

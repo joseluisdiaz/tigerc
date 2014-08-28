@@ -14,6 +14,8 @@ trait TranslateComponent {
 
   trait Translate {
 
+
+    /* level definition */
     type Access
     type Expression
     type Level <: BaseLevel
@@ -24,6 +26,7 @@ trait TranslateComponent {
       def postLoop(): Unit
     }
 
+    /* interaction with */
     def fragments(): List[Frag]
 
     def newLevel(parent: Option[Level], name: Temp.Label): Level
@@ -433,7 +436,7 @@ trait TranslateComponent {
       val lcaller = caller.countTop()
       val lcallee = callee.countTop()
 
-      println("caller: " + caller.frame.name + " - callee: " + callee.frame.name )
+      println(s"caller: ${caller.frame.name} - callee: ${callee.frame.name}")
 
       val SL = if (lcaller > lcallee) {
         val n = lcaller - lcallee
@@ -481,8 +484,10 @@ trait TranslateComponent {
     }
 
     override def letExp(decsExp: List[Expression], body: Expression): Expression = {
-      if (decsExp.isEmpty) Ex(unEx(body))
-      else Ex(ESEQ(seq(decsExp map unNx), unEx(body)))
+      if (decsExp.isEmpty)
+        Ex(unEx(body))
+      else
+        Ex(ESEQ(seq(decsExp map unNx), unEx(body)))
     }
 
     override def breakExp(l: MyLevelImpl): Option[Expression] = {
@@ -503,12 +508,14 @@ trait TranslateComponent {
 
       val bodyTree = if (isProc) unNx(body) else MOVE(Frame.RV, unEx(body))
 
-      procEntryExit1(currentLevel, Nx(bodyTree))
+      val bodyTree1 = currentLevel.frame.procEntryExit1(bodyTree)
+
+      procEntryExit(currentLevel, Nx(bodyTree1))
 
       Ex(CONST(0))
     }
 
-    def procEntryExit1(level: MyLevelImpl, body: Expression) = {
+    def procEntryExit(level: MyLevelImpl, body: Expression) = {
       val label = Frame.STRING(level.frame.name, "")
       val bodyProc = Frame.PROC(unNx(body), level.frame)
       val end = Frame.STRING(";;-----------","")

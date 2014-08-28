@@ -40,21 +40,20 @@ object Tiger {
     var strings:List[(Temp.Label, String)] = List()
     var procs:List[(List[Stm], Frame)] = List()
 
-    ComponentRegistry.translate.fragments().foreach { frag =>
+    ComponentRegistry.translate.fragments().foreach {
+      case PROC(stm, frame) => {
+        println(s"frame:$frame")
+        val c = ComponentRegistry.canon.linearize(stm)
+        procs ::=(c, frame)
+        c.foreach(x => {
+          println("->" + x)
+        })
+      }
 
-      frag match {
-        case PROC(stm, frame) => {
-          println(s"frame:$frame")
-          val c = ComponentRegistry.canon.linearize(stm)
-          procs ::= (c, frame)
-          c.foreach( x => { println("->" + x) })
-        }
+      case f@STRING(l, s) => {
+        strings ::= (l, s)
 
-        case f@STRING(l,s) => {
-          strings ::= (l,s)
-
-          println(s"$l: $s\n")
-        }
+        println(s"$l: $s\n")
       }
     }
 

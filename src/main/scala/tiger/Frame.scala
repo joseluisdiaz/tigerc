@@ -1,6 +1,5 @@
 package tiger
 
-import scala.collection.mutable.ArrayLike
 import tiger.Tree._
 import tiger.Tree.MEM
 import tiger.Tree.CALL
@@ -26,12 +25,14 @@ import tiger.Tree.BINOP
 trait Frame {
   type Access = Frame.Access
 
-  def name(): Temp.Label
+  def name: Temp.Label
   def formals(): List[Access]
   def allocLocal(esc: Boolean): Access
   def allocFormal(esc: Boolean): Access
 
   def procEntryExit1(body:Tree.Stm): Tree.Stm
+  def procEntryExit2(instructions: List[Asm.Instr]): List[Asm.Instr]
+  def procEntryExit3(instructions: List[Asm.Instr]): (String, List[Asm.Instr], String)
 
 }
 
@@ -67,7 +68,7 @@ trait ArmConstants extends Constants {
 
   override val argsRegisters = List("r0", "r1", "r2", "r3")
   
-  override val calleeSave = List()
+  override val calleeSave = List("r4", "r5", "r6", "r7", "r8" )
   override val callerSave = List()
 
   override val FP = "fp"
@@ -114,8 +115,13 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
     formal
   }
 
-  override def procEntryExit1(body: Tree.Stm): Tree.Stm = body
+  override def procEntryExit1(body: Tree.Stm): Tree.Stm = body  //nombre de la función
+  override def procEntryExit2(instructions: List[Asm.Instr]): List[Asm.Instr] = instructions // acomodar el stack/frame pointer
+  override def procEntryExit3(instructions: List[Asm.Instr]): (String, List[Asm.Instr], String) = ( "; prologo\n", instructions, "; epilogo\n")
 
+  /*
+   * Una instrucción trucha al principio por cada registro callee save, defini'endolo, y otra instr. al final, us'andolos.
+   */
   override def toString = s"[$n -> local: $actualLocal // args: $actualArg // reg: $actualReg]"
 
   f map allocFormal

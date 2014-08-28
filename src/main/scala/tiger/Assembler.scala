@@ -5,7 +5,9 @@ import tiger.Tree._
 
 object Asm {
 
-  sealed abstract class Instr
+  sealed abstract class Instr {
+    def asm:String
+  }
 
   case class OPER(asm: String, src: List[Temp.Temp], dst: List[Temp.Temp], jump: Option[List[Temp.Label]]) extends Instr
 
