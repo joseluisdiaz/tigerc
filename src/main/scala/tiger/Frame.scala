@@ -23,12 +23,14 @@ import tiger.Tree.BINOP
  */
 
 trait Frame {
+
   type Access = Frame.Access
 
   def name: Temp.Label
   def formals(): List[Access]
   def allocLocal(esc: Boolean): Access
   def allocFormal(esc: Boolean): Access
+  def offset(a:Access): Option[Int]
 
   def procEntryExit1(body:Tree.Stm): Tree.Stm
   def procEntryExit2(instructions: List[Asm.Instr]): List[Asm.Instr]
@@ -124,7 +126,14 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
    */
   override def toString = s"[$n -> local: $actualLocal // args: $actualArg // reg: $actualReg]"
 
+  override def offset(a: Access): Option[Int] = a match {
+    case InFrame(i) => Some(i)
+    case InReg(l) => None
+  }
+
+
   f map allocFormal
+
 }
 
 object Frame extends ArmConstants {

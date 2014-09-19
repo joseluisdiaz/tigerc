@@ -1,0 +1,1 @@
+qemu-system-arm -M versatilepb -m 128M -kernel zImage -initrd ./rootfs.img.gz -append "root=/dev/ram rdinit=/sbin/init" -redir tcp:1234::1234 -redir tcp:2022::22

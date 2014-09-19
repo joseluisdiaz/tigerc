@@ -1,0 +1,13 @@
+
+scala> val degree = new mutable.HashMap[String, Int] with MultiSet[String, Int]
+
+scala> degree.getCount("a")
+res0: Int = 0
+
+scala> degree.setCount("a", 1)
+
+scala> degree.setCount("a", 2)
+
+scala> degree.getCount("a")
+res1: Int = 3
+

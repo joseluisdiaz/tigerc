@@ -6,19 +6,30 @@ import tiger.Tree._
 object Asm {
 
   sealed abstract class Instr {
+    def isMove:Boolean
+    def isLabel:Boolean
     def asm:String
   }
 
-  case class OPER(asm: String, src: List[Temp.Temp], dst: List[Temp.Temp], jump: Option[List[Temp.Label]]) extends Instr
+  case class OPER(asm: String, src: List[Temp.Temp], dst: List[Temp.Temp], jump: Option[List[Temp.Label]]) extends Instr {
+    override def isMove = false
+    override def isLabel = false
+  }
 
   object OPER {
     def apply(asm: String, src: List[Temp.Temp], dst: List[Temp.Temp]):OPER = OPER(asm, src, dst, None)
     def apply(asm: String, jump: List[Temp.Label]):OPER = OPER(asm, List(), List(), Some(jump))
   }
 
-  case class LABEL(asm: String, l: Temp.Label) extends Instr
+  case class LABEL(asm: String, l: Temp.Label) extends Instr {
+    override def isMove = false
+    override def isLabel = true
+  }
 
-  case class MOVE(asm: String, src: Temp.Temp, dst: Temp.Temp) extends Instr
+  case class MOVE(asm: String, src: Temp.Temp, dst: Temp.Temp) extends Instr {
+    override def isMove = true
+    override def isLabel = false
+  }
 
 }
 
@@ -96,8 +107,11 @@ class CodeGen {
       val te1 = munchExpr(e1)
       val te2 = munchExpr(e2)
 
+      val next = Temp.newLabel()
+
       emit(A.OPER(asm = s"cmp     `s0, `s1\n", src = List(te1, te2), dst = List()))
-      emit(A.OPER(asm = s"${toAsm(relop)}     $t", jump = List(t)))
+      emit(A.OPER(asm = s"${toAsm(relop)}     $t", jump = List(t,next)))
+      emit(A.LABEL(asm = s"$next:             \n", l = next))
     }
 
     case T.EXP(T.CALL(T.NAME(f), args)) => {
