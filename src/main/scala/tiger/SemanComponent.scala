@@ -18,7 +18,8 @@ trait SemanComponent {
 
   trait Seman {
 
-    case class ExpTy(exp: translate.Expression, ty: Types.Ty)
+    case class ExpTy(exp:
+                     translate.Expression, ty: Types.Ty)
 
     def transProg(tree: Exp): ExpTy
 
@@ -452,12 +453,12 @@ trait SemanComponent {
         }
 
 
-        val functionsTr = decs.map(f => {
+        val functionsTr = decs.map { f =>
           val paramsEnv = venvWithFunction ++ createParamsEnv(f).toMap
           val funcEntry = functionsEnv(f.name)
 
           (f.name, funcEntry, transExp(paramsEnv, typesEnv, funcEntry.level, f.body))
-        })
+        }
 
         // Valido tipos de retorno
         functionsTr foreach {
@@ -477,7 +478,10 @@ trait SemanComponent {
       throw new TypeError(s"$msg @line:" + position())
     }
 
-    def main(main: Exp) = LetExp(List(FunctionDecs(List(FunctionDec("_tigermain", List(), None, main, 0)))), UnitExp(0), 0)
+    def main(e: Exp) = LetExp(
+      List(
+        FunctionDecs(List(FunctionDec("_tigermain", List(), None, e, 0)))),
+      UnitExp(0), 0)
 
     def transProg(exp: Exp): ExpTy = transExp(env.baseVenv withDefault error, env.baseTenv withDefault error, env.mainLevel, main(exp))
 

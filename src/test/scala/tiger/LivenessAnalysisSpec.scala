@@ -30,7 +30,7 @@ class LivenessAnalysisSpec extends FlatSpec with Matchers {
 
     val asm3 = List(
       Asm.LABEL(asm = "enter:", l = "enter"),
-      Asm.MOVE(asm = "1)  c <- r3      ", src = "r3", dst = "c"),
+      Asm.MOVE(asm = "1)  c <- fp      ", src = "fp", dst = "c"),
       Asm.MOVE(asm = "2)  a <- r1      ", src = "r1", dst = "a"),
       Asm.MOVE(asm = "3)  b <- r2      ", src = "r2", dst = "b"),
       Asm.OPER(asm = "4)  d <- 0       ", src = List(), dst = List("d")),
@@ -41,8 +41,8 @@ class LivenessAnalysisSpec extends FlatSpec with Matchers {
       Asm.OPER(asm = "9)  if (e <  0) goto loop   ", src = List("e"), dst = List(), jump = Some(List("loop", "next"))),
       Asm.LABEL(asm = "next:  ", l = "next"),
       Asm.MOVE(asm = "10)  r1 <- d      ", src = "d", dst = "r1"),
-      Asm.MOVE(asm = "11)  r3 <- c      ", src = "c", dst = "r3"),
-      Asm.OPER(asm = " return ", src=List("r1", "r3"), dst = List())
+      Asm.MOVE(asm = "11)  fp <- c      ", src = "c", dst = "fp"),
+      Asm.OPER(asm = " return ", src=List("r1", "fp"), dst = List())
     )
   }
 
@@ -54,21 +54,23 @@ class LivenessAnalysisSpec extends FlatSpec with Matchers {
 
   }
 
-  "RegisterAllocation" should "create interference graph like a boss!!!" in {
-    val r = new RegisterAllocation(List())
-    val g = LivenessComponent.Flow.instrs2graph(fixture.asm1)
-    val nodes = fixture.asm1.map(FlowNode)
+  "RegisterAllocation" should "Work in Progress" in {
+    val asm = fixture.asm3
 
-    // Liveness analisys
-    val (in, out) = LivenessComponent.Interference.liveness(g, nodes)
+    val f = Frame(Temp.namedTemp("function"), List(true, false, false))
+    val r = RegisterAllocation(asm, f)
 
-    r.build(fixture.asm1, out)
+    val (colored, frame) =  r.get()
 
-    println("graph {")
-    for ( (n,v) <- r.adjSet ) { println(s"$n -- $v") }
-    println("}")
+    val registers = colored.map {
+      case Asm.OPER(_, s, d, _) => s ::: d
+      case Asm.MOVE(_, s, d) => List(s, d)
+      case _ => List()
+    }.flatten.distinct
+
+    (registers sorted) should be(frame.registers sorted)
+
   }
-
 
   "LivenessComponent" should "create a correct adjacency graph" in {
     val g1 = LivenessComponent.Flow.instrs2graph(fixture.asm1)

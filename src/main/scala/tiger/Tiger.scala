@@ -35,6 +35,15 @@ object Tiger {
 
     ComponentRegistry.seman.transProg(prog)
 
+    println("======= Intermediate code ==========\n\n")
+
+    ComponentRegistry.translate.fragments().foreach {
+      case PROC(stm, frame) => println(stm.treeString)
+
+      case f@STRING(l, s) => println(s"$l: $s\n")
+
+    }
+
     println("======= Canonized intermediate code ==========\n\n")
 
     var strings:List[(Temp.Label, String)] = List()
@@ -45,6 +54,7 @@ object Tiger {
         println(s"frame:$frame")
         val c = ComponentRegistry.canon.linearize(stm)
         procs ::=(c, frame)
+
         c.foreach(x => {
           println("->" + x)
         })
@@ -57,16 +67,34 @@ object Tiger {
       }
     }
 
-    val eval = new Interpeter(procs, strings)
+    val p = procs map {
+      case (asm,frame) => {
+        val v = CodeGen(asm)
+        println(frame.name)
+        v foreach println
+        (v, frame)
+      }
+    } map {
+      case (asm, frame) => RegisterAllocation(asm, frame).get()
+    } foreach {
+      case (asm, frame) =>
+        println(frame.name + ":")
+        asm foreach { x => println(x.code) }
+    }
 
-    println("===== eval ===== \n\n")
 
-    if (args.length >= 2 && args(2) == "debug")
-      eval.debug = true
 
-    eval.evalFunc("_tigermain", List())
+//    val eval = new Interpeter(procs, strings)
+//
+//    println("===== eval ===== \n\n")
+//
+//    if (args.length >= 2 && args(2) == "debug")
+//      eval.debug = true
+//
+//    eval.evalFunc("_tigermain", List())
+//
+//    println("\n\n==== end =====\n")
 
-    println("\n\n==== end =====\n")
   }
 
 

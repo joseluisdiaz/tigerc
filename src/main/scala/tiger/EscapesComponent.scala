@@ -66,7 +66,7 @@ trait EscapesComponent {
       case WhileExp(test, body, _) => travExp(test, env, d); travExp(body, env, d)
 
       case forexp@ForExp(variable, escape, lo, hi, body, position) =>
-        travExp(lo, env, d);
+        travExp(lo, env, d)
         travExp(hi, env, d)
         travExp(body, env + (variable ->(d, forexp)), d)
 

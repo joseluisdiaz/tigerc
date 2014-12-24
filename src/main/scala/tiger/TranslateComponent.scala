@@ -333,7 +333,6 @@ trait TranslateComponent {
 
     override def stringExp(s: String): InteropExp = {
       val l = Temp.newLabel()
-      println(l)
 
       frags += Frame.STRING(l, s)
 

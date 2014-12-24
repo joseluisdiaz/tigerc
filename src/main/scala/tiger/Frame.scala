@@ -22,7 +22,20 @@ import tiger.Tree.BINOP
  * |   localn       |  fp-4*n
  */
 
-trait Frame {
+trait Constants {
+
+  val calleeSave:List[Temp.Temp]
+  val callerSave:List[Temp.Temp]
+  val argsRegisters:List[Temp.Temp]
+  val registers: List[Temp.Temp]
+
+  val PC:Temp.Temp
+  val FP:Temp.Temp
+  val RV:Temp.Temp
+  val SP:Temp.Temp
+}
+
+trait Frame extends Constants {
 
   type Access = Frame.Access
 
@@ -36,18 +49,6 @@ trait Frame {
   def procEntryExit2(instructions: List[Asm.Instr]): List[Asm.Instr]
   def procEntryExit3(instructions: List[Asm.Instr]): (String, List[Asm.Instr], String)
 
-}
-
-trait Constants {
-
-  val calleeSave:List[Temp.Temp]
-  val callerSave:List[Temp.Temp]
-  val argsRegisters:List[Temp.Temp]
-  val argsRegistersSize = argsRegisters.size
-  
-  val FP:Temp.Temp
-  val RV:Temp.Temp
-  val SP:Temp.Temp
 }
 
 
@@ -69,13 +70,15 @@ trait ArmConstants extends Constants {
   val regIncrement = 1
 
   override val argsRegisters = List("r0", "r1", "r2", "r3")
-  
-  override val calleeSave = List("r4", "r5", "r6", "r7", "r8" )
-  override val callerSave = List()
 
+  override val PC = "pc"
   override val FP = "fp"
   override val RV = "r0"
   override val SP = "sp"
+
+  override val calleeSave = List("r4", "r5", "r6", "r7", "r8" )
+  override val callerSave = List()
+  override val registers = List("r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", FP, SP, PC)
 
 }
 

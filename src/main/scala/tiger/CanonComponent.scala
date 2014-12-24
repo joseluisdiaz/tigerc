@@ -147,9 +147,13 @@ trait CanonComponent {
 
         def next(l: List[Stm], thisblock: List[Stm]):List[List[Stm]] = l match {
           case (s@JUMP(_,_)) :: xs => endblock(xs, s :: thisblock)
+
           case (s@CJUMP(_,_,_,_,_)) :: xs => endblock(xs, s :: thisblock)
+
           case stms@LABEL(lab) :: xs => next(JUMP(NAME(lab), List(lab)) :: stms, thisblock)
+
           case s :: rest => next(rest, s :: thisblock)
+
           case List() => next(List(JUMP(NAME(done), List(done))), thisblock)
         }
 

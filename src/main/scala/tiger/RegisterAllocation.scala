@@ -18,21 +18,26 @@ trait MultiSet[A, T] extends mutable.Map[A, T] {
 
 }
 
-class RegisterAllocation(_precolored: List[Temp.Temp]) {
+object RegisterAllocation {
+  def apply(i: List[Instr], f:Frame) = new RegisterAllocation(i,f)
+}
+
+class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
 
   /* Amount of registers */
-  val K: Int = 3
+  val K: Int = frame.registers.length
 
   /*
    * Node work-list, sets and stacks
    */
 
   /* machine registers, preassigned colors */
-  val precolored = mutable.HashSet[Temp.Temp](_precolored: _*)
+  val precolored = mutable.HashSet[Temp.Temp](frame.registers: _*)
 
+  val _initial = instructions.map(FlowNode).flatMap( x => x.defs() ++ x.uses() ).filterNot(precolored.contains)
 
   /* Temporary registers, not precolored and not yet procesed. */
-  val initial = mutable.HashSet.empty[Temp.Temp]
+  val initial = mutable.HashSet[Temp.Temp]( _initial.toArray :_*)
 
   /*  list of low-dregree non-move-related nodes */
   val simplfiyWorklist = mutable.HashSet.empty[Temp.Temp]
@@ -46,7 +51,7 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
   /*  nodes marked for spilling during this round; initial empty */
   val spilledNodes = mutable.HashSet.empty[Temp.Temp]
 
-  /* register than have been coalesced; when u <- v is coalesced, b is added to this set and u put back on some work-list (or vice versa) */
+  /* register than have been coalesced; when u <- v is coalesced, v is added to this set and u put back on some work-list (or vice versa) */
   val coalescedNodes = mutable.HashSet.empty[Temp.Temp]
 
   /*  nodes successfully colored */
@@ -102,9 +107,79 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
   val color = new mutable.HashMap[Temp.Temp, Int]
 
 
-  def build(instructions: List[Instr], liveOut: nodeMap): Unit = {
+  def rename() = {
 
-    for (i <- instructions.reverse) {
+    def c(t:Temp.Temp) = if (precolored.contains(t)) t else frame.registers(color.getOrElse(t, 0))
+
+    instructions = instructions map {
+      case OPER(asm, src, dst, jump) => OPER(asm, src map c, dst map c, jump)
+      case MOVE(asm, src, dst) => MOVE(asm, c(src) , c(dst))
+      case a => a
+    }
+
+  }
+
+  def remove() = {
+    instructions = instructions filter {
+      case MOVE(asm, src, dst) if src == dst => false
+      case _ => true
+    }
+  }
+
+  def get(): (List[Instr], Frame) = {
+    loop()
+    rename()
+    remove()
+
+    (instructions, frame)
+  }
+
+
+  def loop(): Unit = {
+    build()
+    makeWorkList()
+
+    do {
+
+      if (simplfiyWorklist.nonEmpty)
+        simplify()
+
+      if (workListMoves.nonEmpty)
+        coalesce()
+
+      if (freezeWorklist.nonEmpty)
+        freeze()
+
+      if (spillWorkList.nonEmpty)
+        selectSpill()
+
+    } while (simplfiyWorklist.nonEmpty || workListMoves.nonEmpty || freezeWorklist.nonEmpty || spillWorkList.nonEmpty)
+
+    assignColors()
+
+    if (spilledNodes.nonEmpty) {
+      rewriteProgram()
+      loop()
+    }
+  }
+
+  def liveness(): nodeMap = {
+
+    // Flow Graph
+    val g = LivenessComponent.Flow.instrs2graph(instructions)
+
+    // Liveness analisys
+    val (in, out) = LivenessComponent.Interference.liveness(g, instructions.map(FlowNode))
+
+    out
+  }
+
+
+  def build(): Unit = {
+
+    val liveOut = liveness()
+
+    for (i <- instructions) {
       val node = FlowNode(i)
 
       var live = liveOut(node)
@@ -128,13 +203,16 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
 
     }
 
+    precolored.foreach { x => degree.setCount(x, Int.MaxValue) }
+
+    Util.printgraph(this, "Inference")
+
   }
 
   def addEdge(u: Temp.Temp, v: Temp.Temp) = {
     if (!adjSet.contains((u, v)) && u != v) {
 
       adjSet ++= Set(u -> v, v -> u)
-
 
       if (!precolored.contains(u)) {
         adjList.addBinding(u, v)
@@ -153,7 +231,7 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
     for (n <- initial) {
       initial -= n
 
-      if (degree(n) >= K) {
+      if (degree.getOrElse(n, 0) >= K) {
         spillWorkList += n
       }
       else if (moveRelated(n)) {
@@ -165,9 +243,9 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
     }
   }
 
-  def adjacent(n: Temp.Temp) = adjList(n) -- (coalescedNodes | selectStack.toSet)
+  def adjacent(n: Temp.Temp) = adjList.getOrElse(n, mutable.Set.empty[Temp.Temp]) -- (coalescedNodes | selectStack.toSet)
 
-  def moveNodes(n: Temp.Temp) = moveList(n) & (activeMoves | workListMoves)
+  def moveNodes(n: Temp.Temp) = moveList.getOrElse(n, mutable.Set.empty[Asm.MOVE]) & (activeMoves | workListMoves)
 
   def moveRelated(n: Temp.Temp) = moveNodes(n).isEmpty
 
@@ -177,7 +255,7 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
 
     selectStack.push(n)
 
-    adjacent(n).foreach(decrementDegree)
+    adjacent(n) foreach decrementDegree
   }
 
   def decrementDegree(n: Temp.Temp): Unit = {
@@ -189,9 +267,9 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
       spillWorkList -= n
 
       if (moveRelated(n)) {
-        freezeWorklist -= n
+        freezeWorklist += n
       } else {
-        simplfiyWorklist -= n
+        simplfiyWorklist += n
       }
     }
   }
@@ -207,12 +285,12 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
 
   def getAlias(n: Temp.Temp): Temp.Temp = if (coalescedNodes.contains(n)) getAlias(alias(n)) else n
 
-  def addWorkList(u: Temp.Temp): Unit = if (!precolored.contains(u) && !moveRelated(u) && degree(u) < K) {
+  def addWorkList(u: Temp.Temp): Unit = if (!precolored.contains(u) && !moveRelated(u) && degree.getOrElse(u, 0) < K) {
     freezeWorklist -= u
     simplfiyWorklist += u
   }
 
-  def ok(t: Temp.Temp, r: Temp.Temp): Boolean = degree(t) < K || precolored.contains(t) || adjSet.contains(t -> r)
+  def ok(t: Temp.Temp, r: Temp.Temp): Boolean = precolored.contains(t) || degree(t) < K || adjSet.contains(t -> r)
 
   def conservative(temps: mutable.Set[Temp.Temp]): Boolean = temps.count(degree(_) >= K) < K
 
@@ -233,7 +311,7 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
       decrementDegree(t)
     }
 
-    if (degree(u) >= K && freezeWorklist.contains(u)) {
+    if (degree.getOrElse(u, 0) >= K && freezeWorklist.contains(u)) {
       freezeWorklist -= u
       spillWorkList += u
     }
@@ -248,25 +326,25 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
   }
 
   def freezeMoves(u: Temp.Temp): Unit = {
-    moveNodes(u).foreach { case m@MOVE(_, x, y) =>
-      val v = if (getAlias(y) == getAlias(u)) getAlias(x) else getAlias(y)
+    moveNodes(u).foreach {
+      case m@MOVE(_, x, y) =>
+        val v = if (getAlias(y) == getAlias(u)) getAlias(x) else getAlias(y)
 
-      activeMoves -= m
-      frozenMoves += m
+        activeMoves -= m
+        frozenMoves += m
 
-      if (moveNodes(v).isEmpty && degree(v) < K) {
-        freezeWorklist -= v
-        simplfiyWorklist += v
-      }
-
+        if (moveNodes(v).isEmpty && degree(v) < K) {
+          freezeWorklist -= v
+          simplfiyWorklist += v
+        }
     }
   }
 
   def coalesce() = {
     val m = workListMoves.head
 
-    val x = getAlias(m.dst)
-    val y = getAlias(m.src)
+    val x = getAlias(m.src)
+    val y = getAlias(m.dst)
 
     val (u, v) = if (precolored.contains(y)) (y, x) else (x, y)
 
@@ -301,20 +379,23 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
     val m = spillWorkList.head // Debería usar alguna herustica
 
     spillWorkList -= m
-    spillWorkList += m
+    simplfiyWorklist += m
 
     freezeMoves(m)
   }
 
-  def asignColors(): Unit = {
+  def assignColors(): Unit = {
+
+    precolored.zipWithIndex.foreach { case (r,c) => color.put(r,c) }
+
     while (selectStack.nonEmpty) {
       val n = selectStack.pop()
 
-      val okColors: mutable.Set[Int] = mutable.HashSet[Int](0 to K - 1: _*)
+      val okColors: mutable.Set[Int] = mutable.SortedSet[Int](0 to K - 1: _*)
 
       val union = coloredNodes | precolored
 
-      for (w <- adjList(n); x = getAlias(w) if union.contains(x)) {
+      for (w <- adjList.getOrElse(n, mutable.HashSet.empty[Temp.Temp]); x = getAlias(w) if union contains x) {
         okColors -= color(x)
       }
 
@@ -322,6 +403,7 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
         spilledNodes += n
       } else {
         coloredNodes += n
+
         color.put(n, okColors.head)
       }
     }
@@ -331,15 +413,15 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
     }
   }
 
-  def rewriteProgram(instr: List[Instr], frame: Frame): List[Instr] = {
+  def rewriteProgram(): Unit = {
     /*
      * ldr r1, [r0 + n]   /* r1 ← (*r0 + n) */
      * str r1, [r0 + n]   /* (*r0 + n) ← r1 */
      */
 
-    def alloc = frame.allocLocal(esc = false) match {
+    def alloc = frame.allocLocal(esc = true) match {
       case InFrame(i) => i
-      case InReg(l) => throw new Error("cuanak")
+      case _ => throw new Error("cuanak")
     }
 
     val newTemps = mutable.HashSet.empty[Temp.Temp]
@@ -350,9 +432,9 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
       t
     }
 
-    def storeGen(t: Temp.Temp, offset: Int) = OPER(asm = s"str    `s0, [`s1 + $offset]\n", dst = List(), src = List(t, Frame.FP))
+    def storeGen(t: Temp.Temp, offset: Int) = OPER(asm = s"str    's0, ['s1 + $offset]\n", dst = List(), src = List(t, Frame.FP))
 
-    def fetchGen(t: Temp.Temp, offset: Int) = OPER(asm = s"ldr    `d0, [`s0 + $offset]\n", dst = List(t), src = List(Frame.FP))
+    def fetchGen(t: Temp.Temp, offset: Int) = OPER(asm = s"ldr    'd0, ['s0 + $offset]\n", dst = List(t), src = List(Frame.FP))
 
     def rewrite(instr: List[Instr]): List[Instr] = instr match {
 
@@ -389,7 +471,13 @@ class RegisterAllocation(_precolored: List[Temp.Temp]) {
     }
 
 
-    rewrite(instr)
+    instructions = rewrite(instructions)
+    spilledNodes.clear()
+    initial.clear()
+    initial ++= (coloredNodes | coalescedNodes | newTemps)
+    coloredNodes.clear()
+    coalescedNodes.clear()
+
   }
 
 }

@@ -1,6 +1,7 @@
 package tiger
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.util.{Success, Failure, Try}
 
 /**
@@ -26,5 +27,45 @@ object Util {
       acc + (e._1 -> acc.getOrElse(e._1, Set())) + (e._2 -> (acc.getOrElse(e._2, Set()) + e._1))
     }
     tsort(toPred, Seq())
+  }
+
+  var nro = 0
+
+  def printgraph(r: RegisterAllocation, name:String): Unit = {
+
+    val c = Map ( 0 -> "red", 1 -> "blue", 2 -> "yellow", 3 -> "green")
+
+    println(s"graph $name {")
+
+    for ( (n, color) <- r.color )
+      println(s"$n [style=filled, fillcolor=${c(color)}]")
+
+
+
+    def remove(l:mutable.HashSet[(Temp.Temp, Temp.Temp)]) = l.map {
+      case (i, j) if i > j => (j, i)
+      case x => x
+    }
+
+    val nodes = remove(r.adjSet)
+    val moves = remove(r.workListMoves.map ( x => (x.dst, x.src) ))
+
+
+    val d = "[style=\"dashed\"]"
+
+    for ( (u,v) <- nodes ) {
+      println(s"$u -- $v")
+    }
+
+    for ( (u,v) <- moves ) {
+      println(s"$u -- $v $d")
+    }
+
+
+    println("label=\"graphnro: " + nro + "\"")
+
+    nro = nro + 1
+
+    println("}")
   }
 }

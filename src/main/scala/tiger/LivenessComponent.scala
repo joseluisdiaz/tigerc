@@ -77,12 +77,8 @@ object LivenessComponent {
 
     def liveness(g: Graph[FlowNode], l: List[FlowNode]) = {
 
-      val in: nodeMap = l.map {
-        _ -> Set[Temp.Temp]()
-      }.toMap
-      val out: nodeMap = l.map {
-        _ -> Set[Temp.Temp]()
-      }.toMap
+      val in: nodeMap = l.map {_ -> Set[Temp.Temp]() }.toMap
+      val out: nodeMap = l.map { _ -> Set[Temp.Temp]() }.toMap
 
       def flowEq(in: nodeMap, out: nodeMap): (nodeMap, nodeMap) = {
 
@@ -92,10 +88,10 @@ object LivenessComponent {
           (_i, _o)
         }
 
-        println(s"node\t\tin\tout")
-        l.foreach { node =>
-          println(s"$node\t\t|\t${in2(node)}\t|\t${out2(node)}")
-        }
+//        println(s"node\t\tin\tout")
+//        l.foreach { node =>
+//          println(s"$node\t\t|\t${in2(node)}\t|\t${out2(node)}")
+//        }
 
         if (in == in2 && out == out2) {
           (in2, out2)
