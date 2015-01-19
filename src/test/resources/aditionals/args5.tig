@@ -1,6 +1,6 @@
 let
-	function f(i:int, j:int, k:int):int=i+j+k
+	function f(i:int, j:int, k:int, x:int, y:int, z:int):int=i+j+k+x+y+z
 	var i:=0
 in
-	i:=f(10, 11, 12)
+	i:=f(10, 11, 12, 13, 14, 15)
 end

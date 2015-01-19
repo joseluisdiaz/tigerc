@@ -1,12 +1,14 @@
 let
-	var i:=1
+	var w:=1
 	function x():int=1
 	function y():int=1
 	function z():int=1
 	function g(i:int, j:int, k:int)=
-		(print("i="); print(chr(i));
-		print("j="); print(chr(j));
-		print("k="); print(chr(k)))
+		(
+			print("i="); print(chr(i));
+			print("j="); print(chr(j));
+			print("k="); print(chr(k))
+		)
 in
 	g(x(), y(), z())
 end

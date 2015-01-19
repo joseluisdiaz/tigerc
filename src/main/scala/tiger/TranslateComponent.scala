@@ -86,8 +86,9 @@ trait TranslateComponent {
 
   }
 
-
   class MyTranslate extends Translate {
+
+    import Util._
 
     override type Level = MyLevelImpl
 
@@ -145,25 +146,6 @@ trait TranslateComponent {
     case class Nx(s: Tree.Stm) extends InteropExp
 
     case class Cx(genstm: (Temp.Label, Temp.Label) => Tree.Stm) extends InteropExp
-
-    /**
-     * Sequences
-     * @param stms
-     * @return
-     */
-    def seq(stms: List[Stm]): Stm = if (stms.isEmpty) EXP(CONST(0)) else if (stms.length == 1 ) stms.head else SEQ(stms.head, seq(stms.tail))
-
-    def seq(s1: Stm, l: List[Stm]): Stm = seq(s1 :: l)
-
-    def seq(s1: Stm, s2: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: l)
-
-    def seq(s1: Stm, s2: Stm, s3: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: s3 :: l)
-
-    def seq(s1: Stm, s2: Stm, s3: Stm, s4: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: s3 :: s4 :: l)
-
-    def seq(s1: Stm, s2: Stm, s3: Stm, s4: Stm, s5: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: s3 :: s4 :: s5 :: l)
-
-    def seq(s: Stm*): Stm = seq(s.toList)
 
 
     //  implicit def stm2list(stm: Stm): List[Stm] = List(stm)

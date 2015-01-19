@@ -34,7 +34,11 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
   /* machine registers, preassigned colors */
   val precolored = mutable.HashSet[Temp.Temp](frame.registers: _*)
 
-  val _initial = instructions.map(FlowNode).flatMap( x => x.defs() ++ x.uses() ).filterNot(precolored.contains)
+  val _initial = for {
+    i <- instructions ; x = FlowNode(i)
+    s <- x.defs() ++ x.uses()
+    if !precolored.contains(s)
+  } yield s
 
   /* Temporary registers, not precolored and not yet procesed. */
   val initial = mutable.HashSet[Temp.Temp]( _initial.toArray :_*)
@@ -109,7 +113,7 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
 
   def rename() = {
 
-    def c(t:Temp.Temp) = if (precolored.contains(t)) t else frame.registers(color.getOrElse(t, 0))
+    def c(t:Temp.Temp) = if (precolored.contains(t)) t else frame.registers(color(t))
 
     instructions = instructions map {
       case OPER(asm, src, dst, jump) => OPER(asm, src map c, dst map c, jump)
@@ -121,13 +125,18 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
 
   def remove() = {
     instructions = instructions filter {
-      case MOVE(asm, src, dst) if src == dst => false
+      case m@MOVE(_, src, dst) => equals(m)
       case _ => true
     }
   }
 
   def get(): (List[Instr], Frame) = {
     loop()
+
+    val (epilog, x, prolog) = frame.procEntryExit3(instructions)
+
+    instructions = x
+
     rename()
     remove()
 
@@ -229,8 +238,6 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
 
   def makeWorkList(): Unit = {
     for (n <- initial) {
-      initial -= n
-
       if (degree.getOrElse(n, 0) >= K) {
         spillWorkList += n
       }
@@ -241,13 +248,17 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
         simplfiyWorklist += n
       }
     }
+    initial.clear()
   }
 
   def adjacent(n: Temp.Temp) = adjList.getOrElse(n, mutable.Set.empty[Temp.Temp]) -- (coalescedNodes | selectStack.toSet)
 
-  def moveNodes(n: Temp.Temp) = moveList.getOrElse(n, mutable.Set.empty[Asm.MOVE]) & (activeMoves | workListMoves)
+  def moveNodes(n: Temp.Temp) = if (moveList.contains(n))
+      moveList(n) & (activeMoves | workListMoves)
+  else
+      mutable.Set.empty[Asm.MOVE]
 
-  def moveRelated(n: Temp.Temp) = moveNodes(n).isEmpty
+  def moveRelated(n: Temp.Temp) = moveNodes(n).nonEmpty
 
   def simplify(): Unit = {
     val n = simplfiyWorklist.head
@@ -386,7 +397,8 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
 
   def assignColors(): Unit = {
 
-    precolored.zipWithIndex.foreach { case (r,c) => color.put(r,c) }
+    color.clear()
+    frame.registers.zipWithIndex.foreach { case (r,c) => color.put(r,c) }
 
     while (selectStack.nonEmpty) {
       val n = selectStack.pop()
@@ -404,7 +416,7 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
       } else {
         coloredNodes += n
 
-        color.put(n, okColors.head)
+        color.put(n, okColors.min)
       }
     }
 
@@ -458,7 +470,7 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
         fetchGen(t, alloc) :: OPER(asm = asm, src = newSrc, dst = dst, jump = None) :: rewrite(tl)
       }
 
-      case OPER(asm, src, dst, None) :: tl if spilledNodes.exists(dst.contains(_)) => {
+      case OPER(asm, src , dst, None) :: tl if spilledNodes.exists(dst.contains(_)) => {
         val t = newTemp
 
         val newDst = dst.map { x => if (spilledNodes.contains(x)) t else x}

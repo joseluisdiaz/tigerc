@@ -136,10 +136,9 @@ object LivenessComponent {
 
       // All Nodes
       ins.sliding(2).foreach {
-        case List(o@OPER(_,_,_,Some(ls)), to) => ls foreach { x =>
-          g.mkEdge(o, labels(x))
-        }
+        case List(o@OPER(_,_,_,Some(ls)), to) => ls foreach { x => g.mkEdge(o, labels(x)) }
         case List(from, to) => g.mkEdge(from, to)
+        case List(node) => ()
       }
 
       g

@@ -8,34 +8,39 @@ import scala.collection.mutable.ListBuffer
 object Asm {
 
   sealed abstract class Instr {
-    def isMove:Boolean
-    def isLabel:Boolean
-    def asm:String
+    def isMove: Boolean
 
-    protected def f(reg:String, v:List[String], base:String) = v.zipWithIndex.foldLeft(base) {
+    def isLabel: Boolean
+
+    def asm: String
+
+    protected def f(reg: String, v: List[String], base: String) = v.zipWithIndex.foldLeft(base) {
       case (str, (value, index)) => str.replaceFirst(s"'$reg$index", value)
     }
 
-    def code:String
+    def code: String
 
   }
 
   case class OPER(asm: String, src: List[Temp.Temp], dst: List[Temp.Temp], jump: Option[List[Temp.Label]]) extends Instr {
     override def isMove = false
+
     override def isLabel = false
-    override def code = {
-      val v = f("s", src, f("d", dst, asm))
-      v
-    }
+
+    override def code = f("s", src, f("d", dst, asm))
+
+    override def toString = s"OPER( '$asm' // src: $src // dst: $dst // jump: $jump )"
   }
 
   object OPER {
-    def apply(asm: String, src: List[Temp.Temp], dst: List[Temp.Temp]):OPER = OPER(asm, src, dst, None)
-    def apply(asm: String, jump: List[Temp.Label]):OPER = OPER(asm, List(), List(), Some(jump))
+    def apply(asm: String, src: List[Temp.Temp], dst: List[Temp.Temp]): OPER = OPER(asm, src, dst, None)
+
+    def apply(asm: String, jump: List[Temp.Label]): OPER = OPER(asm, List(), List(), Some(jump))
   }
 
   case class LABEL(asm: String, l: Temp.Label) extends Instr {
     override def isMove = false
+
     override def isLabel = true
 
     override def code = asm
@@ -43,6 +48,7 @@ object Asm {
 
   case class MOVE(asm: String, src: Temp.Temp, dst: Temp.Temp) extends Instr {
     override def isMove = true
+
     override def isLabel = false
 
     override def code = f("s", List(src), f("d", List(dst), asm))
@@ -52,16 +58,18 @@ object Asm {
 }
 
 object CodeGen {
-  import tiger.Tree.Stm
 
-  def apply(l: List[Stm]) = {
-    val gen = new CodeGen()
+  import tiger.Tree.Stm
+  import tiger.{Asm => A}
+
+  def apply(frames: Map[Temp.Label, Frame], l: List[Stm]) = {
+    val gen = new CodeGen(frames)
     l foreach gen.munchStm
     gen.instr.toList
   }
 }
 
-class CodeGen {
+class CodeGen(frames: Map[Temp.Label, Frame]) {
 
   import tiger.{Tree => T}
   import tiger.{Asm => A}
@@ -124,26 +132,42 @@ class CodeGen {
     }
 
     case T.CJUMP(relop, e1, e2, t, f) => {
+
+      // inverted relation
       def toAsm(r: T.Relop) = r match {
-        case T.EQ => "beq"
-        case T.NE => "bne"
-        case T.LT => "blt"
-        case T.LE => "ble"
-        case T.GT => "bgt"
-        case T.GE => "bge"
+        case T.EQ => "bne"
+        case T.NE => "beq"
+        case T.GE => "blt"
+        case T.LT => "bge"
+        case T.LE => "bgt"
+        case T.GT => "ble"
       }
+
 
       val te1 = munchExpr(e1)
       val te2 = munchExpr(e2)
 
-
-      emit(A.OPER(asm = s"cmp     's0, 's1", src = List(te2, te1), dst = List()))
-      emit(A.OPER(asm = s"${toAsm(relop)}     $t", jump = List(t,f)))
+      emit(A.OPER(asm = s"cmp     's0, 's1", src = List(te1, te2), dst = List()))
+      emit(A.OPER(asm = s"${toAsm(relop)}     $f", jump = List(t, f)))
     }
 
     case T.EXP(T.CALL(T.NAME(f), args)) => {
-      val v = munchArgs(args)
-      emit(A.OPER(asm = s"bx     $f", src = v, dst = Frame.callerSave))
+
+      val temps = Frame.argsRegisters map ( x => (x, Temp.newTemp()) )
+
+      temps.foreach {
+        case (arg, temp) =>  emit(A.MOVE(asm = s"mov    'd0, 's0", src = arg, dst = temp))
+
+      }
+
+      val v = munchArgs(args, frames(f))
+      emit(A.OPER(asm = s"bl     $f", src = v, dst = Frame.callerSaves))
+
+      temps.foreach {
+        case (arg, temp) =>  emit(A.MOVE(asm = s"mov    'd0, 's0", src = temp, dst = arg))
+      }
+
+
     }
     case T.EXP(e) => munchExpr(e)
 
@@ -173,19 +197,18 @@ class CodeGen {
       case BINOP(T.MUL, left, right) =>
         result(r => emit(A.OPER(asm = s"mul     'd0, 's0, 's1", src = List(munchExpr(left), munchExpr(right)), dst = List(r))))
 
-      /* está bien devolver el .RV? */
       case BINOP(T.DIV, left, right) => {
         munchStm(T.EXP(T.CALL(T.NAME(Temp.namedLabel("_idiv_runtime")), List(left, right))))
         Frame.RV
       }
 
       case BINOP(T.AND, left, right) =>
-        result(r => emit(A.OPER(asm = s"and     'd0, 's0, 's1", src = List(r), dst = List(munchExpr(left), munchExpr(right)))))
+        result(r => emit(A.OPER(asm = s"and     'd0, 's0, 's1", src = List(munchExpr(left), munchExpr(right)), dst = List(r))))
 
       case BINOP(T.OR, left, right) =>
-        result(r => emit(A.OPER(asm = s"orr     'd0, 's0, 's1", src = List(r), dst = List(munchExpr(left), munchExpr(right)))))
+        result(r => emit(A.OPER(asm = s"orr     'd0, 's0, 's1", src = List(munchExpr(left), munchExpr(right)), dst = List(r))))
 
-      case MEM(e) => result(r => emit(A.OPER(asm = "mov     'd0, 's0 ", src = List(r), dst = List(munchExpr(e)))))
+      case MEM(e) => result(r => emit(A.MOVE(asm = "mov     'd0, 's0", src = munchExpr(e), dst = r)))
 
       case ESEQ(s, e) => {
         munchStm(s)
@@ -196,32 +219,45 @@ class CodeGen {
     }
   }
 
-  def munchArgs(l: List[T.Expr]): List[Temp.Temp] = {
-    val (toReg, toStack) = l.splitAt(Frame.argsRegisters.size)
+  /*
+   *
+   */
 
-    val l1 = for ((e, r) <- toReg zip Frame.argsRegisters) yield munchArgsReg(e, r)
+  def munchArgs(l: List[T.Expr], frame:Frame): List[Temp.Temp] = {
+    val formalsValues = frame.formals.map { x => x.exp() } zip l
 
-    val l2 = for ((e, o) <- toStack.zipWithIndex) yield munchArgsStack(e, o)
+    val argsRegisters = frame.argsRegisters.iterator
 
-    val l3 = for ((instr, regs) <- l2 ++ l1) yield {
-      emit(instr)
-      regs
+    val regs = formalsValues map {
+      case (T.TEMP(t), exp) => munchArgsReg(argsRegisters.next(), exp)
+      case (T.MEM(T.BINOP(T.PLUS, TEMP(Frame.FP), T.CONST(i))), exp) => munchArgsStack(i, exp)
+      case (T.MEM(T.BINOP(T.MINUS, TEMP(Frame.FP), T.CONST(i))), exp) => munchArgsStack(-i, exp)
+      case _ => sys.error("exploto munchArgs")
     }
 
-    l3.flatten.distinct.toList
+    regs.flatten.distinct
   }
 
-  def munchArgsReg(exp: T.Expr, reg: Temp.Temp): (A.Instr, List[Temp.Temp]) = exp match {
-    case CONST(c) => (A.OPER(asm = s"mov     'd0, #$c ", src = List(), dst = List(reg), jump = None), List(reg))
-    case T.TEMP(t) => (A.MOVE(asm = s"mov     'd0, 's0 ", src = t, dst = reg), List(reg, t))
-    case _ =>
+   def munchArgsReg(reg: Temp.Temp, exp: T.Expr): List[Temp.Temp] = exp match {
+    case CONST(c) => {
+      emit(A.OPER(asm = s"mov     'd0, #$c ", src = List(), dst = List(reg), jump =None))
+      List(reg)
+    }
+    case T.TEMP(t) => {
+      A.MOVE(asm = s"mov     'd0, 's0 ", src = t , dst = reg)
+      List(reg, t)
+    }
+    case _ => {
       val e = munchExpr(exp)
-      (A.MOVE(asm = s"mov     'd0, 's0 ", src = e, dst = reg), List(reg, e))
+      emit(A.MOVE(asm = s"mov     'd0, 's0 ", src = e, dst = reg))
+      List(reg, e)
+    }
   }
 
-  def munchArgsStack(exp: T.Expr, offset: Int): (A.Instr, List[Temp.Temp]) = {
+  def munchArgsStack(offset: Int, exp: T.Expr): List[Temp.Temp] = {
     val e = munchExpr(exp)
-    (A.OPER(asm = s"str     's0, ['d0, #${offset * Frame.WS}]", src = List(e), dst = List(Frame.SP), jump = None), List(e, Frame.SP))
+    emit(A.OPER(asm = s"str     's0, ['d0, #$offset]", src = List(e), dst = List(Frame.FP), jump = None))
+    List(e, Frame.FP)
   }
 
 

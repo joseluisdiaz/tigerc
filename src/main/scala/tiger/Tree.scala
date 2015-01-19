@@ -4,10 +4,7 @@ object Tree {
 
   trait TREE
 
-  sealed abstract class Expr extends TREE {
-
-
-  }
+  sealed abstract class Expr extends TREE {}
 
   case class CONST(v: Int) extends Expr
   case class NAME(n: Temp.Label) extends Expr
@@ -20,7 +17,7 @@ object Tree {
 
   sealed abstract class Stm extends TREE
 
-  case class MOVE(e1: Expr, e2: Expr) extends Stm
+  case class MOVE(d: Expr, s: Expr) extends Stm
   case class EXP(e: Expr) extends Stm
   case class JUMP(e: Expr, labs: List[Temp.Label]) extends Stm
   case class CJUMP(o: Relop, e1: Expr, e2: Expr, t: Temp.Label, f: Temp.Label) extends Stm
@@ -50,5 +47,27 @@ object Tree {
   case object ULE extends Relop
   case object UGT extends Relop
   case object UGE extends Relop
+
+
+  /**
+   * Sequences
+   * @param stms
+   * @return
+   */
+
+  // TODO: mover estos metodos a 'applys' de SEQ
+  def seq(stms: List[Stm]): Stm = if (stms.isEmpty) EXP(CONST(0)) else if (stms.length == 1 ) stms.head else SEQ(stms.head, seq(stms.tail))
+
+  def seq(s1: Stm, l: List[Stm]): Stm = seq(s1 :: l)
+
+  def seq(s1: Stm, s2: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: l)
+
+  def seq(s1: Stm, s2: Stm, s3: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: s3 :: l)
+
+  def seq(s1: Stm, s2: Stm, s3: Stm, s4: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: s3 :: s4 :: l)
+
+  def seq(s1: Stm, s2: Stm, s3: Stm, s4: Stm, s5: Stm, l: List[Stm]): Stm = seq(s1 :: s2 :: s3 :: s4 :: s5 :: l)
+
+  def seq(s: Stm*): Stm = seq(s.toList)
 
 }
