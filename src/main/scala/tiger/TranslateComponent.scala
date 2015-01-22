@@ -88,8 +88,6 @@ trait TranslateComponent {
 
   class MyTranslate extends Translate {
 
-    import Util._
-
     override type Level = MyLevelImpl
 
     class MyLevelImpl(val parent: Option[MyLevelImpl], val frame: Frame) extends BaseLevel {
@@ -234,18 +232,24 @@ trait TranslateComponent {
       val t = Temp.newTemp()
 
       val result = access match {
-        case InFrame(i) => {
+        case f@InFrame(i) => {
           val n = currentLevel.countTop() - level.countTop()
-          val offset =  1 to n map {  x => MOVE(t, MEM(BINOP(PLUS, CONST(Frame.SL), t )) ) }
 
-          ESEQ(
-            seq(
-              MOVE(TEMP(t), Frame.FP),
-              offset.toList),
+          if (n != 0) {
+            val offset = 1 to (n - 1) map { x => MOVE(t, MEM(BINOP(MINUS, t, CONST(Frame.SL))))}
 
-            MEM(BINOP(PLUS, CONST(i), t )))
+            ESEQ(
+              seq(
+                MOVE(TEMP(t), MEM(BINOP(MINUS, Frame.FP, CONST(Frame.SL)))),
+                offset.toList),
 
+              MEM(BINOP(MINUS, t, CONST(Math.abs(i)))))
+          }
+          else {
+            f.exp()
+          }
         }
+
         case InReg(l) => TEMP(l)
       }
 
@@ -436,7 +440,7 @@ trait TranslateComponent {
       } else if (lcaller == lcallee) {
         // SL -> SL
 
-        MEM(BINOP(PLUS, CONST(8), Frame.FP))
+        MEM(BINOP(PLUS, Frame.FP, CONST(8)))
 
       } else {
         // FP -> SL
@@ -496,12 +500,10 @@ trait TranslateComponent {
       Ex(CONST(0))
     }
 
-    def procEntryExit(level: MyLevelImpl, body: Expression) = {
-      val label = Frame.STRING(level.frame.name, "")
+    def procEntryExit(level: MyLevelImpl, body: Expression):Unit = {
       val bodyProc = Frame.PROC(unNx(body), level.frame)
-      val end = Frame.STRING(";;-----------","")
 
-      frags ++= List(label, bodyProc, end)
+      frags += bodyProc
     }
 
   }

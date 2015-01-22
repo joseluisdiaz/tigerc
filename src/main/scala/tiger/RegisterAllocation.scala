@@ -125,7 +125,7 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
 
   def remove() = {
     instructions = instructions filter {
-      case m@MOVE(_, src, dst) => equals(m)
+      case m@MOVE(_, src, dst) => src != dst
       case _ => true
     }
   }
@@ -139,6 +139,8 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
 
     rename()
     remove()
+
+    color.foreach { case (t,c) => println(s"$t\t$c") }
 
     (instructions, frame)
   }
@@ -332,7 +334,7 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
   def freeze(): Unit = {
     val u = freezeWorklist.head
     freezeWorklist -= u
-    simplfiyWorklist + u
+    simplfiyWorklist += u
     freezeMoves(u)
   }
 

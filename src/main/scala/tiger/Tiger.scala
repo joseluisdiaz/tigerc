@@ -2,7 +2,10 @@ package tiger
 
 import java.io.File
 import java.io.FileInputStream
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 import com.gilt.handlebars.scala.Handlebars
+import com.gilt.handlebars.scala.helper.Helper
 import tiger.Frame.{PROC,STRING}
 import tiger.Tree.Stm
 import tiger.parser.{TigerScanner, TigerParser}
@@ -23,18 +26,13 @@ object Tiger {
     override val canon = new MyCanon()
   }
 
-  case class Function(name:String, asm: List[String])
+  case class RoData(name:String, content:String, length:Int, size: Int, mod:Int )
 
+    //burn it and make again :D
   def main(args: Array[String]) {
 
-    val stream = if (args.length == 1) {
-
-      println(s"->${args(0)}")
-
-      new FileInputStream(new File(args(0)))
-    } else {
-      System.in
-    }
+    val stream = if (args.length == 1) new FileInputStream(new File(args(0)))
+    else System.in
 
     val cp = new TigerParser()
     val prog = cp.parse(stream)
@@ -57,7 +55,7 @@ object Tiger {
     println("======= Canonized intermediate code ==========\n\n")
 
     // reemplazar por estrucutras mutables
-    var strings:List[(Temp.Label, String)] = List()
+    var strings:List[RoData] = List()
     var procs:List[(List[Stm], Frame)] = List()
     var frames: Map[Temp.Label, Frame] = Map.empty
 
@@ -82,39 +80,46 @@ object Tiger {
       }
 
       case f@STRING(l, s) => {
-        strings ::= (l, s)
-
-        println(s"$l: $s\n")
+        val size = s.size + Frame.WS + 1
+        val r = size % 4
+        strings ::= RoData(l, s, s.size, size + r , r)
       }
     }
 
-
+    val label = Temp.newLabel()
 
     val p = procs map {
       case (stms,frame) => {
-        val v = CodeGen(frames, stms)
+        val (v,d) = CodeGen(frames, stms)
+
         println("Frame--->")
-        frame.formals.foreach(x => println(x.exp))
+        frame.formals.foreach(x => println(x.caller(Frame.FP)))
         println(s"${frame.name}")
         v foreach { x => println(x.code) }
-        (v, frame)
+        (v, d, frame)
       }
     } map {
-      case (asm, frame) => {
+      case (asm, d, frame) => {
         println(s"------ ${frame.name} ------")
 
-        RegisterAllocation(asm, frame).get()
+        val (a1,a2) = RegisterAllocation(frame.procEntryExit2(asm), frame).get()
+
+        (a1, d, a2)
       }
     } map {
-      case (asm, frame) =>
-        Function( frame.name,  asm map { _.code } )
+      case (asm, d, frame) =>
+
+        val data = if (d.ls.isEmpty) List() else List("", ".align	2", s".${d.l}:") ++ d.ls.map ( x => s".word\t\t${{x}}" )
+
+        Map("name" -> frame.name, "asm" -> (asm.map { _.code } ++ data) )
+
     }
 
-    val data = Map( "filename" -> args(0), "functions" -> p)
+    val data = Map( "filename" -> args(0), "functions" -> p, "strings" -> strings, "label" -> label )
     val template = Handlebars(new File("src/main/hbs/asm.hbs"))
 
-    println(template(data))
 
+    Files.write(Paths.get("output/test.s"), template(data).getBytes(StandardCharsets.UTF_8));
 
 //    val eval = new Interpeter(procs, strings)
 //

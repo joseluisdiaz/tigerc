@@ -1,7 +1,8 @@
 let
-	var i:=0
+	var i:=33
+	var a:=10
 	function f():int = 10
-	function g(a:int):int = f() + a
+	function g(a:int):int = f() + a + i
 in
 	i:=g(64);
 	print(chr(i));

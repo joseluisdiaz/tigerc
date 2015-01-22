@@ -13,8 +13,8 @@ import tiger.Tree.BINOP
  * |    arg2        |  fp+16
  * |    arg1        |  fp+12
  * |  fp level(sl)  |  fp+8
- * |  retorno       |  fp+4
- * |   fp ant       |  fp
+ * |  fp ant        |  fp+4
+ * |   retorno      |  fp
  * ------------------  fp
  * |   local1       |  fp-4
  * |   local2       |  fp-8
@@ -57,6 +57,9 @@ trait Frame extends Constants {
 
   def procEntryExit3(instructions: List[Asm.Instr]): (String, List[Asm.Instr], String)
 
+  def actualLocal(): Int
+  def actualArg(): Int
+
 }
 
 
@@ -64,12 +67,12 @@ trait ArmConstants extends Constants {
 
   val WS = 4
   /* Word Size */
-  val SL = 2 * WS /* Static link location */
+  val SL = 4 /* Static link location */
 
-  val localOffsetInitial = WS
+  val localOffsetInitial = -2*WS
   val localIncrement = -1
 
-  val argsOffsetInitial = 2 * WS
+  val argsOffsetInitial = 0
   val argsIncrement = 1
 
   val regIncrement = 1
@@ -82,7 +85,7 @@ trait ArmConstants extends Constants {
   override val LR = "lr"
 
 
-  override val calleeSaves = List("r4", "r5", "r6", "r7", "r8", "r9", "r10", FP)
+  override val calleeSaves = List("r4", "r5", "r6", "r7", "r8", "r9", "r10")
   override val callerSaves = List("r0", "r1", "r2", "r3")
   override val registers = List("r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", LR, FP, SP)
   override val asignableRegisters = List("r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9")
@@ -95,7 +98,6 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 
   var actualArg = 0
   var actualReg = 0
-
   var actualLocal = 0
 
   val _formals = scala.collection.mutable.ListBuffer.empty[Access]
@@ -106,8 +108,9 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 
   override def allocLocal(esc: Boolean) = {
     if (esc) {
-      val ret = InFrame((actualLocal * WS) - localOffsetInitial)
-      actualLocal = actualLocal + localIncrement
+      val ret = InFrame(localOffsetInitial - (actualLocal * WS))
+      actualLocal = actualLocal + 1
+
       ret
     } else {
       InReg(Temp.newTemp())
@@ -116,7 +119,7 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 
   override def allocFormal(esc: Boolean) = {
     val formal = if (esc || actualArg >= argsRegisters.size) {
-      val ret = InFrame((actualArg * WS) + argsOffsetInitial)
+      val ret = InFrame(actualArg)
       actualArg += argsIncrement
       ret
     } else {
@@ -148,22 +151,27 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
    * Una instrucción trucha al principio por cada registro callee save, defini'endolo, y otra instr. al final, us'andolos.
    */
   override def procEntryExit2(instructions: List[Asm.Instr]): List[Asm.Instr] = {
-    val begin = Asm.OPER(asm = "; begin", src = List(), dst = calleeSaves)
-    val end = Asm.OPER(asm = "; end", src = RV :: calleeSaves, dst = List())
+//    val begin = Asm.OPER(asm = "@ begin", src = List(), dst = calleeSaves)
+//    val end = Asm.OPER(asm = "@ end", src = RV :: calleeSaves, dst = List())
 
-    begin +: instructions :+ end
+    val begin = calleeSaves map { x => Asm.OPER(asm = "@ begin", src = List(), dst = List(x)) }
+    val end = ( RV :: calleeSaves ) map { x => Asm.OPER(asm = "@ end", src = List(x) , dst = List()) }
+
+    begin ++ instructions ++ end
   }
 
   override def procEntryExit3(instructions: List[Asm.Instr]): (String, List[Asm.Instr], String) = {
-    val prolog = List(Asm.OPER(asm = "stmfd     'd0!, {'s0, 's1}", src = List(FP, LR), dst = List(SP)),
-      Asm.OPER(asm = "add       'd0, 's0, #4", src = List(SP), dst = List(FP)))
+    val prolog = List(
+      Asm.OPER(asm = "stmfd     'd0!, {'s0, 's1}", src = List(FP, LR), dst = List(SP)),
+      Asm.OPER(asm = "add       'd0, 's0, #4", src = List(SP), dst = List(FP))
+    )
 
-    val epilog = List(Asm.OPER(asm = "add       'd0, 's0, #4", src = List(FP), dst = List(SP)),
+    val epilog = List(Asm.OPER(asm = "sub       'd0, 's0, #4", src = List(FP), dst = List(SP)),
       Asm.OPER(asm = "ldmfd     'd0!, {'d1, 'd2}", src = List(), dst = List(SP, FP, LR)),
       Asm.OPER(asm = "bx         lr", src = List(), dst = List()))
 
     val padding = if (actualLocal != 0) {
-      List(Asm.OPER(asm = s"sub     'd0, 's0, ${actualLocal * WS}", src = List(SP), dst = List(SP)))
+      List(Asm.OPER(asm = s"sub     'd0, 's0, #${Math.abs(actualLocal) * WS}", src = List(SP), dst = List(SP)))
     }
     else {
       List()
@@ -201,18 +209,27 @@ object Frame extends ArmConstants {
   def externalCall(name: String, args: List[Expr]) = CALL(NAME(Temp.namedLabel(name)), args.toList)
 
   sealed abstract class Access {
-    def exp(): Expr
+    def caller(t: Temp.Temp): Expr
+    def inside(t: Temp.Temp): Expr
+
+    def exp(t: Temp.Temp = Frame.FP): Expr
   }
 
   case class InFrame(i: Int) extends Access {
-    def exp() = {
-      var oper = if (i >= 0) PLUS else MINUS
-      MEM(BINOP(oper, TEMP(Frame.FP), CONST(Math.abs(i))))
-    }
+    def caller(t: Temp.Temp = Frame.FP) = MEM(BINOP(MINUS, CONST(1) , CONST(2)))
+    def inside(t: Temp.Temp = Frame.SP) = MEM(BINOP(MINUS, CONST(100) , CONST(200)))
+
+    def exp(t: Temp.Temp = Frame.FP) = if (i < 0) MEM(BINOP(MINUS, TEMP(t), CONST(Math.abs(i))))
+    else MEM(BINOP(PLUS, TEMP(t), CONST(i)))
+
   }
 
   case class InReg(l: Temp.Label) extends Access {
-    def exp() = TEMP(l)
+    def caller(t: Temp.Temp = "") = TEMP(l)
+    def inside(t: Temp.Temp = "") = TEMP(l)
+
+    def exp(t: Temp.Temp = "") = TEMP(l)
   }
+
 
 }

@@ -1,0 +1,7 @@
+let
+	var i:=100
+	var j:=101
+    function f(): int = 0 /*i + j*/
+in
+	f()
+end

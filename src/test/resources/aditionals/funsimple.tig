@@ -1,0 +1,9 @@
+let
+	var i:=100
+	var j:=101
+	function f(): int = i + j
+in
+	i := 200;
+	j := 300;
+	i + j
+end

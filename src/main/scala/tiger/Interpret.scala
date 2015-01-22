@@ -167,7 +167,7 @@ class Interpeter(procs:List[(List[Stm], Frame)], string:List[(Temp.Label, String
     storeTemp(Frame.FP, fpPrev-1024*1024)
 
     /* Poner argumentos donde la función los espera */
-    val formals = frame.formals.map(_.exp)
+    val formals = frame.formals.map(_.caller(Frame.FP))
 
     val formalsValues = formals zip args
 
