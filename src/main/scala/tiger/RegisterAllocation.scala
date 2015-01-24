@@ -19,10 +19,10 @@ trait MultiSet[A, T] extends mutable.Map[A, T] {
 }
 
 object RegisterAllocation {
-  def apply(i: List[Instr], f:Frame) = new RegisterAllocation(i,f)
+  def apply(i: List[Instr], f: Frame) = new RegisterAllocation(i, f)
 }
 
-class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
+class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
 
   /* Amount of registers */
   val K: Int = frame.registers.length
@@ -35,13 +35,13 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
   val precolored = mutable.HashSet[Temp.Temp](frame.registers: _*)
 
   val _initial = for {
-    i <- instructions ; x = FlowNode(i)
+    i <- instructions; x = FlowNode(i)
     s <- x.defs() ++ x.uses()
     if !precolored.contains(s)
   } yield s
 
   /* Temporary registers, not precolored and not yet procesed. */
-  val initial = mutable.HashSet[Temp.Temp]( _initial.toArray :_*)
+  val initial = mutable.HashSet[Temp.Temp](_initial.toArray: _*)
 
   /*  list of low-dregree non-move-related nodes */
   val simplfiyWorklist = mutable.HashSet.empty[Temp.Temp]
@@ -113,11 +113,16 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
 
   def rename() = {
 
-    def c(t:Temp.Temp) = if (precolored.contains(t)) t else frame.registers(color(t))
+    def c(t: Temp.Temp) =
+      if (precolored.contains(t)) t
+      else {
+        val c = color(t)
+        frame.registers(c)
+      }
 
     instructions = instructions map {
       case OPER(asm, src, dst, jump) => OPER(asm, src map c, dst map c, jump)
-      case MOVE(asm, src, dst) => MOVE(asm, c(src) , c(dst))
+      case MOVE(asm, src, dst) => MOVE(asm, c(src), c(dst))
       case a => a
     }
 
@@ -140,7 +145,7 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
     rename()
     remove()
 
-    color.foreach { case (t,c) => println(s"$t\t$c") }
+    color.foreach { case (t, c) => println(s"$t\t$c")}
 
     (instructions, frame)
   }
@@ -214,7 +219,7 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
 
     }
 
-    precolored.foreach { x => degree.setCount(x, Int.MaxValue) }
+    precolored.foreach { x => degree.setCount(x, Int.MaxValue)}
 
     Util.printgraph(this, "Inference")
 
@@ -256,9 +261,9 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
   def adjacent(n: Temp.Temp) = adjList.getOrElse(n, mutable.Set.empty[Temp.Temp]) -- (coalescedNodes | selectStack.toSet)
 
   def moveNodes(n: Temp.Temp) = if (moveList.contains(n))
-      moveList(n) & (activeMoves | workListMoves)
+    moveList(n) & (activeMoves | workListMoves)
   else
-      mutable.Set.empty[Asm.MOVE]
+    mutable.Set.empty[Asm.MOVE]
 
   def moveRelated(n: Temp.Temp) = moveNodes(n).nonEmpty
 
@@ -400,7 +405,7 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
   def assignColors(): Unit = {
 
     color.clear()
-    frame.registers.zipWithIndex.foreach { case (r,c) => color.put(r,c) }
+    frame.registers.zipWithIndex.foreach { case (r, c) => color.put(r, c)}
 
     while (selectStack.nonEmpty) {
       val n = selectStack.pop()
@@ -422,9 +427,18 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
       }
     }
 
-    for (n <- coalescedNodes) {
-      color.put(n, color(getAlias(n)))
+    var i = 1000
+    def f: Int = {
+      i += 1; i
     }
+    for (n <- coalescedNodes) {
+      color.put(n, color.getOrElseUpdate(getAlias(n), f))
+    }
+
+    println("Spilled")
+    println(spilledNodes)
+    color.foreach { case (k,v) => if (v > 999 ) println(k)}
+
   }
 
   def rewriteProgram(): Unit = {
@@ -432,12 +446,14 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
      * ldr r1, [r0 + n]   /* r1 ← (*r0 + n) */
      * str r1, [r0 + n]   /* (*r0 + n) ← r1 */
      */
-
-    def alloc = frame.allocLocal(esc = true) match {
+    def aux = frame.allocLocal(esc = true) match {
       case InFrame(i) => i
       case _ => throw new Error("cuanak")
     }
 
+    val allocated = spilledNodes map { reg => reg -> aux} toMap
+
+    // spill -> dst
     val newTemps = mutable.HashSet.empty[Temp.Temp]
 
     def newTemp = {
@@ -446,52 +462,77 @@ class RegisterAllocation(var instructions: List[Instr], frame:Frame) {
       t
     }
 
-    def storeGen(t: Temp.Temp, offset: Int) = OPER(asm = s"str    's0, ['s1 + $offset]\n", dst = List(), src = List(t, Frame.FP))
+    def storeGen(t: Temp.Temp, offset: Int) = OPER(asm = s"str     's0, [fp, #$offset]\n", dst = List(), src = List(t))
 
-    def fetchGen(t: Temp.Temp, offset: Int) = OPER(asm = s"ldr    'd0, ['s0 + $offset]\n", dst = List(t), src = List(Frame.FP))
+    def fetchGen(t: Temp.Temp, offset: Int) = OPER(asm = s"ldr     'd0, [fp, #$offset]\n", dst = List(t), src = List())
+
+
+    def convert(genFunction: (Temp.Temp, Int) => Instr): Temp.Temp => (Temp.Temp, Option[Instr]) = { x =>
+      if (spilledNodes.contains(x)) {
+        val t = newTemp
+        (t, Some(genFunction(t, allocated(x))))
+      }
+      else (x, None)
+    }
 
     def rewrite(instr: List[Instr]): List[Instr] = instr match {
+      // Insert a fetch before each use
+      // Insert a store after each definition
 
-      case MOVE(asm, src, dst) :: tl if spilledNodes.contains(src) => {
-        val t = newTemp
+      case MOVE(asm, src, dst) :: tl => {
+        val (newDst, store) = convert(storeGen)(dst)
 
-        fetchGen(t, alloc) :: MOVE(asm = asm, src = t, dst = dst) :: rewrite(tl)
+        val (newSrc, fetch) = convert(fetchGen)(src)
+
+        val head = List(fetch, Some(MOVE(asm = asm, src = newSrc, dst = newDst)), store)
+
+        (head flatten) ++ rewrite(tl)
       }
 
-      case MOVE(asm, src, dst) :: tl if spilledNodes.contains(dst) => {
-        val t = newTemp
 
-        MOVE(asm = asm, src, t) :: storeGen(t, alloc) :: rewrite(tl)
-      }
+      case OPER(asm, src, dst, None) :: tl => {
+        val (newDst, stores) = dst map convert(storeGen) unzip
 
-      case OPER(asm, src, dst, None) :: tl if spilledNodes.exists(src.contains(_)) => {
-        val t = newTemp
+        val (newSrc, fetchs) = src map convert(fetchGen) unzip
 
-        val newSrc = src.map { x => if (spilledNodes.contains(x)) t else x}
 
-        fetchGen(t, alloc) :: OPER(asm = asm, src = newSrc, dst = dst, jump = None) :: rewrite(tl)
-      }
+        val head = fetchs ++ List(Some(OPER(asm = asm, src = newSrc, dst = newDst, jump = None))) ++ stores
 
-      case OPER(asm, src , dst, None) :: tl if spilledNodes.exists(dst.contains(_)) => {
-        val t = newTemp
-
-        val newDst = dst.map { x => if (spilledNodes.contains(x)) t else x}
-
-        OPER(asm = asm, src = src, dst = newDst, jump = None) :: storeGen(t, alloc) :: rewrite(tl)
+        (head flatten) ++ rewrite(tl)
       }
 
       case x :: xs => x :: rewrite(xs)
+
       case Nil => Nil
     }
 
 
-    instructions = rewrite(instructions)
-    spilledNodes.clear()
+    val i = rewrite(instructions)
+    instructions = i
+
     initial.clear()
     initial ++= (coloredNodes | coalescedNodes | newTemps)
-    coloredNodes.clear()
-    coalescedNodes.clear()
 
+    simplfiyWorklist.clear()
+    freezeWorklist.clear()
+    spillWorkList.clear()
+    spilledNodes.clear()
+    coalescedNodes.clear()
+    coloredNodes.clear()
+    selectStack.clear()
+
+    coalescedMoves.clear()
+    constrainedMoves.clear()
+    frozenMoves.clear()
+    workListMoves.clear()
+    activeMoves.clear()
+
+    adjSet.clear()
+    adjList.clear()
+    degree.clear()
+    moveList.clear()
+    alias.clear()
+    color.clear()
   }
 
 }

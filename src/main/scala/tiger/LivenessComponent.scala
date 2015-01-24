@@ -7,14 +7,14 @@ object LivenessComponent {
   case class FlowNode(i: Instr) {
 
     def defs(): Set[Temp.Temp] = i match {
-      case OPER(_, _, dst, _) => dst.toSet
-      case MOVE(_, _, dst) => Set(dst)
+      case OPER(_, _, dst, _) => dst.toSet -- Frame.notAsignables
+      case MOVE(_, _, dst) => Set(dst) -- Frame.notAsignables
       case _ => Set()
     }
 
     def uses(): Set[Temp.Temp] = i match {
-      case OPER(_, src, _, _) => src.toSet
-      case MOVE(_, src, _) => Set(src)
+      case OPER(_, src, _, _) => src.toSet -- Frame.notAsignables
+      case MOVE(_, src, _) => Set(src) -- Frame.notAsignables
       case _ => Set()
     }
 

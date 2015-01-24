@@ -248,7 +248,7 @@ trait SemanComponent {
           error("type error: if")
         }
 
-        ExpTy(translate.ifThenExp(testTr.exp, testTr.exp), UNIT())
+        ExpTy(translate.ifThenExp(testTr.exp, thenTr.exp), UNIT())
 
       }
 

@@ -17,7 +17,9 @@ object Tree {
 
   sealed abstract class Stm extends TREE
 
-  case class MOVE(d: Expr, s: Expr) extends Stm
+  case class MOVE(d: Expr, s: Expr) extends Stm {
+    override def toString = s"MOVE( d = $d, s = $s )"
+  }
   case class EXP(e: Expr) extends Stm
   case class JUMP(e: Expr, labs: List[Temp.Label]) extends Stm
   case class CJUMP(o: Relop, e1: Expr, e2: Expr, t: Temp.Label, f: Temp.Label) extends Stm

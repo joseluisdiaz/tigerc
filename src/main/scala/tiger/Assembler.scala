@@ -55,6 +55,8 @@ object Asm {
 
     override def code = f("s", List(src), f("d", List(dst), asm))
 
+    override def toString = s"MOVE( '$asm' // src: $src // dst: $dst )"
+
   }
 
 }
@@ -94,22 +96,29 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
     }
 
     // casos con offset
-    case T.MOVE(e1, T.MEM(T.BINOP(T.PLUS, T.CONST(offset), e2))) => {
-      emit(A.OPER(asm = s"ldr     's0, ['s1, #$offset]", src = List(munchExpr(e1), munchExpr(e2)), dst = List()))
+    case T.MOVE(e1, T.MEM(T.BINOP(T.PLUS, T.TEMP(Frame.FP), T.CONST(offset)))) => {
+      emit(A.OPER(asm = s"ldr     'd0, [fp, #$offset]", src = List(), dst = List(munchExpr(e1))))
     }
 
     case T.MOVE(e1, T.MEM(T.BINOP(T.PLUS, e2, T.CONST(offset)))) => {
-      emit(A.OPER(asm = s"ldr    's0, ['s1, #$offset]", src = List(munchExpr(e1), munchExpr(e2)), dst = List()))
+      emit(A.OPER(asm = s"ldr    'd0, ['s0, #$offset]", src = List(munchExpr(e2)), dst = List(munchExpr(e1))))
     }
 
-    case T.MOVE(e1, T.MEM(T.BINOP(T.MINUS, T.CONST(offset), e2))) => {
-      emit(A.OPER(asm = s"ldr     's0, ['s1, #-$offset]", src = List(munchExpr(e1), munchExpr(e2)), dst = List()))
+    case T.MOVE(e1, T.MEM(T.BINOP(T.MINUS, T.TEMP(Frame.FP), T.CONST(offset)))) => {
+      emit(A.OPER(asm = s"ldr     'd0, [fp, #-$offset]", src = List(), dst = List(munchExpr(e1))))
     }
 
     case T.MOVE(e1, T.MEM(T.BINOP(T.MINUS, e2, T.CONST(offset)))) => {
-      emit(A.OPER(asm = s"ldr    's0, ['s1, #-$offset]", src = List(munchExpr(e1), munchExpr(e2)), dst = List()))
+      emit(A.OPER(asm = s"ldr    'd0, ['s0, #-$offset]", src = List( munchExpr(e2)), dst = List(munchExpr(e1))))
     }
 
+    case T.MOVE(T.MEM(T.BINOP(T.MINUS, T.TEMP(Frame.FP), T.CONST(offset))), e2) => {
+      emit(A.OPER(asm = s"str    's0, [fp, #-$offset]", src = List(munchExpr(e2)), dst = List()))
+    }
+
+    case T.MOVE(T.MEM(T.BINOP(T.MINUS, e1, T.CONST(offset))), e2) => {
+      emit(A.OPER(asm = s"str    's1, ['s0, #-$offset]", src = List(munchExpr(e1), munchExpr(e2)), dst = List()))
+    }
 
     // mem to mem
     case T.MOVE(T.MEM(e1), T.MEM(e2)) => {
@@ -132,6 +141,11 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
 
     case T.MOVE(T.TEMP(t), T.CONST(n)) => {
       emit(A.OPER(asm = s"mov    'd0, #$n", src = List(), dst = List(t)))
+    }
+
+    case T.MOVE(T.TEMP(t), BINOP(MINUS,TEMP(Frame.FP),CONST(offset))) => {
+
+      emit(A.OPER(asm = s"sub     'd0, fp, #${offset}", src = List(), dst = List(t)))
     }
 
     case T.MOVE(T.TEMP(t), e) => {
@@ -165,12 +179,13 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
       val te2 = munchExpr(e2)
 
       emit(A.OPER(asm = s"cmp     's0, 's1", src = List(te1, te2), dst = List()))
-      emit(A.OPER(asm = s"${toAsm(relop)}     $f", jump = List(t, f)))
+      emit(A.OPER(asm = s"${toAsm(relop)}     .$f", jump = List(t, f)))
     }
 
     case T.EXP(T.CALL(T.NAME(f), args)) => {
 
-      val amount = frames(f).actualArg() * Frame.WS
+
+      val amount =  frames(f).actualArg() * Frame.WS
 
 
       if (amount != 0) emit(A.OPER(asm = s"sub     sp, sp, #$amount", src = List(), dst = List()))
@@ -220,14 +235,12 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
       case BINOP(T.OR, left, right) =>
         result(r => emit(A.OPER(asm = s"orr     'd0, 's0, 's1", src = List(munchExpr(left), munchExpr(right)), dst = List(r))))
 
-      case MEM(BINOP(oper,TEMP(t),CONST(offset))) => {
+      case MEM(BINOP(_,TEMP(Frame.FP),CONST(offset))) => result { r =>
+        emit(A.OPER(asm = s"ldr     'd0, [fp, #$offset]", src = List(), dst = List(r), jump = None))
+      }
 
-        val sign = if (oper == MINUS) "-" else ""
-
-        result { r =>
-          emit(A.OPER(asm = s"ldr     'd0, ['s0, #${sign}$offset]", src = List(t), dst = List(r), jump = None))
-        }
-
+      case MEM(BINOP(_,TEMP(t),CONST(offset))) => result { r =>
+        emit(A.OPER(asm = s"ldr     'd0, ['s0, #$offset]", src = List(t), dst = List(r), jump = None))
       }
 
       case MEM(e) => result(r => emit(A.MOVE(asm = "mov     'd0, 's0", src = munchExpr(e), dst = r)))
@@ -284,10 +297,13 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
   def munchArgsStack(offset: Int, exp: T.Expr): List[Temp.Temp] = {
     val e = munchExpr(exp)
 
-    val asm = if (offset == 0) s"str     's0, [sp]" else s"str     's0, [sp, #$offset]"
+    val (s0,r) = if (e == Frame.FP) ("fp", List()) else ("'s0", List(e))
 
-    emit(A.OPER(asm = asm, src = List(e), dst = List(), jump = None))
-    List(e)
+    val asm = if (offset == 0) s"str     ${s0}, [sp]" else s"str     's0, [sp, #$offset]"
+
+    emit(A.OPER(asm = asm, src = r, dst = List(), jump = None))
+    r
+
   }
 
 

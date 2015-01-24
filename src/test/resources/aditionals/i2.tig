@@ -1,7 +1,7 @@
 let
 	var i:=10
 	var j:=11
-	var k:=i>j & i<j
+	var k:=12
 in
-	if i>j | i<j then print("hola") else print("chau")
+	if i>j | i<j then print("hola\n"); 0
 end

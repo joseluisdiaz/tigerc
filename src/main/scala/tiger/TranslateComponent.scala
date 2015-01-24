@@ -385,12 +385,20 @@ trait TranslateComponent {
       val f = Temp.newLabel()
       val t = Temp.newLabel()
 
-      Nx(
-        seq(
-          unCx(test)(t, f),
-          LABEL(t),
-          unNx(then),
-          LABEL(f)))
+      val d = seq(
+        unCx(test)(t, f),
+        LABEL(t),
+        unNx(then),
+        LABEL(f))
+
+      Nx(d)
+
+      //      Nx(
+//        seq(
+//          unCx(test)(t, f),
+//          LABEL(t),
+//          unNx(then),
+//          LABEL(f)))
 
     }
 
@@ -400,17 +408,18 @@ trait TranslateComponent {
       val end = Temp.newLabel()
       val rt = Temp.newTemp()
 
+      val uncx = unCx(test)(t, f)
+      val unExThen = unEx(then)
+      val unExElsa = unEx(elsa)
+
       Ex(
         ESEQ(
-          seq(
-            unCx(test)(t, f),
-            LABEL(t),
-            MOVE(rt, unEx(then)),
-            JUMP(NAME(end), List(end)),
-            LABEL(f),
-            MOVE(rt, unEx(elsa)),
-            LABEL(end))
-
+          SEQ(uncx,
+            SEQ(LABEL(t),
+            SEQ(MOVE(rt, unExThen),
+            SEQ(JUMP(NAME(end), List(end)),
+            SEQ(LABEL(f),
+            SEQ(MOVE(rt, unExElsa),LABEL(end)))))))
             , rt))
     }
 
@@ -432,7 +441,7 @@ trait TranslateComponent {
 
         ESEQ(
           seq(
-            MOVE(TEMP(t), MEM(BINOP(PLUS, CONST(Frame.SL), Frame.FP))),
+            MOVE(TEMP(t), MEM(BINOP(PLUS, Frame.FP, CONST(Frame.SL)))),
             offset.toList),
 
           t)

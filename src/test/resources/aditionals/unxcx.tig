@@ -1,6 +1,6 @@
 let
-	function f():int=(print("uno!\n"); 0)
-	function g():int=(print("dos!\n"); 0)
+	function f():int=(print("uno!"); 0)
+	function g():int=(print("dos!"); 0)
 in
-	f()<g(); print("chau!\n"); 0
+	f()<g(); print("chau!"); 0
 end

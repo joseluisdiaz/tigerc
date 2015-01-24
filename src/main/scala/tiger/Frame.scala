@@ -87,7 +87,7 @@ trait ArmConstants extends Constants {
 
   override val calleeSaves = List("r4", "r5", "r6", "r7", "r8", "r9", "r10")
   override val callerSaves = List("r0", "r1", "r2", "r3")
-  override val registers = List("r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", LR, FP, SP)
+  override val registers = List("r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10")
   override val asignableRegisters = List("r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9")
 
 }
@@ -138,12 +138,18 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 
     val iterator = argsRegisters.iterator
 
+    val zip = calleeSaves map { x => (x, Temp.newTemp()) }
+
+    val begin = zip map { case(r,t) => MOVE(TEMP(t),TEMP(r))}
+    val end =   zip map { case(r,t) => MOVE(TEMP(r),TEMP(t)) }
+
+
     val moves = _formals.map {
       case InFrame(_) => None
       case InReg(t) => Some(MOVE(d = TEMP(t), s = TEMP(iterator.next())))
     } flatten
 
-    seq(moves.toList :+ body)
+    seq(begin ++ (moves.toList :+ body) ++ end)
   }
 
 
@@ -151,27 +157,26 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
    * Una instrucción trucha al principio por cada registro callee save, defini'endolo, y otra instr. al final, us'andolos.
    */
   override def procEntryExit2(instructions: List[Asm.Instr]): List[Asm.Instr] = {
-//    val begin = Asm.OPER(asm = "@ begin", src = List(), dst = calleeSaves)
-//    val end = Asm.OPER(asm = "@ end", src = RV :: calleeSaves, dst = List())
+    val end = Asm.OPER(asm = "@ end", src = RV :: calleeSaves, dst = List())
 
-    val begin = calleeSaves map { x => Asm.OPER(asm = "@ begin", src = List(), dst = List(x)) }
-    val end = ( RV :: calleeSaves ) map { x => Asm.OPER(asm = "@ end", src = List(x) , dst = List()) }
+//    val begin = calleeSaves map { x => Asm.OPER(asm = "@ begin", src = List(), dst = List(x)) }
+//    val end = ( RV :: calleeSaves ) map { x => Asm.OPER(asm = "@ end", src = List(x) , dst = List()) }
 
-    begin ++ instructions ++ end
+    instructions :+ end
   }
 
   override def procEntryExit3(instructions: List[Asm.Instr]): (String, List[Asm.Instr], String) = {
     val prolog = List(
-      Asm.OPER(asm = "stmfd     'd0!, {'s0, 's1}", src = List(FP, LR), dst = List(SP)),
-      Asm.OPER(asm = "add       'd0, 's0, #4", src = List(SP), dst = List(FP))
+      Asm.OPER(asm = "stmfd     sp!, {fp, lr}", src = List(), dst = List()),
+      Asm.OPER(asm = "add       fp, sp, #4", src = List(), dst = List())
     )
 
-    val epilog = List(Asm.OPER(asm = "sub       'd0, 's0, #4", src = List(FP), dst = List(SP)),
-      Asm.OPER(asm = "ldmfd     'd0!, {'d1, 'd2}", src = List(), dst = List(SP, FP, LR)),
+    val epilog = List(Asm.OPER(asm = "sub       sp, fp, #4", src = List(), dst = List()),
+      Asm.OPER(asm = "ldmfd     sp!, {fp, lr}", src = List(), dst = List()),
       Asm.OPER(asm = "bx         lr", src = List(), dst = List()))
 
     val padding = if (actualLocal != 0) {
-      List(Asm.OPER(asm = s"sub     'd0, 's0, #${Math.abs(actualLocal) * WS}", src = List(SP), dst = List(SP)))
+      List(Asm.OPER(asm = s"sub     sp, sp, #${Math.abs(actualLocal) * WS}", src = List(), dst = List()))
     }
     else {
       List()
@@ -192,6 +197,8 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 }
 
 object Frame extends ArmConstants {
+  def notAsignables: Set[Temp.Temp] = Set(Frame.SP, Frame.FP)
+
   def apply(name: Temp.Label, formals: List[Boolean]) = new ArmFrame(name, formals)
 
   sealed class Frag
@@ -209,25 +216,16 @@ object Frame extends ArmConstants {
   def externalCall(name: String, args: List[Expr]) = CALL(NAME(Temp.namedLabel(name)), args.toList)
 
   sealed abstract class Access {
-    def caller(t: Temp.Temp): Expr
-    def inside(t: Temp.Temp): Expr
-
     def exp(t: Temp.Temp = Frame.FP): Expr
   }
 
   case class InFrame(i: Int) extends Access {
-    def caller(t: Temp.Temp = Frame.FP) = MEM(BINOP(MINUS, CONST(1) , CONST(2)))
-    def inside(t: Temp.Temp = Frame.SP) = MEM(BINOP(MINUS, CONST(100) , CONST(200)))
-
     def exp(t: Temp.Temp = Frame.FP) = if (i < 0) MEM(BINOP(MINUS, TEMP(t), CONST(Math.abs(i))))
     else MEM(BINOP(PLUS, TEMP(t), CONST(i)))
 
   }
 
   case class InReg(l: Temp.Label) extends Access {
-    def caller(t: Temp.Temp = "") = TEMP(l)
-    def inside(t: Temp.Temp = "") = TEMP(l)
-
     def exp(t: Temp.Temp = "") = TEMP(l)
   }
 

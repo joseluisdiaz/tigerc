@@ -3,8 +3,8 @@ let
 	var j:=11
 	var k:=1 & 0
 in
-	if i | j then print("hola\n") else print("chau\n");
-	if i & j then print("hola\n") else print("chau\n");
-	if 0 | j then print("hola\n") else print("chau\n");
-	if 0 & j then print("hola\n") else print("chau\n")
+	if i | j then print("hola") else print("chau");
+	if i & j then print("hola") else print("chau");
+	if 0 | j then print("hola") else print("chau");
+	if 0 & j then print("hola") else print("chau")
 end

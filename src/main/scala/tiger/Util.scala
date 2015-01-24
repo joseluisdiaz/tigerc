@@ -37,10 +37,6 @@ object Util {
 
     println(s"graph $name {")
 
-    for ( (n, color) <- r.color )
-      println(s"$n [style=filled, fillcolor=${c(color)}]")
-
-
 
     def remove(l:mutable.HashSet[(Temp.Temp, Temp.Temp)]) = l.map {
       case (i, j) if i > j => (j, i)
