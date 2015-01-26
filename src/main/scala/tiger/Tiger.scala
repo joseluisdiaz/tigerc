@@ -65,6 +65,10 @@ object Tiger {
 
     frames += "_checkIndexArray" -> Frame("_checkIndexArray", List(false, false))
 
+    frames += "_allocRecord" -> Frame("_allocRecord", List(false, false))
+    frames += "_checkNil" -> Frame("_checkNil", List(false))
+
+
 
     ComponentRegistry.translate.fragments().foreach {
       case PROC(stm, frame) => {
@@ -132,7 +136,13 @@ object Tiger {
     val data = Map("filename" -> args(0), "functions" -> p, "strings" -> strings, "label" -> label)
     val template = Handlebars(new File("src/main/hbs/asm.hbs"))
 
+    {
+      import sys.process._
+      "rm output/test*" !
 
+      "rm output/a.out" !
+
+    }
     Files.write(Paths.get("output/test.s"), template(data).getBytes(StandardCharsets.UTF_8));
 
     //    val eval = new Interpeter(procs, strings)

@@ -71,7 +71,7 @@ trait TranslateComponent {
 
     def ifThenElseExp(test: Expression, then: Expression, elsa: Expression): Expression
 
-    def forExp(lo: Expression, hi: Expression, v: Expression, body: Expression): Expression
+    def forExp(lo: Expression, hi: Expression, v: Expression, body: Expression, currentLevel: Level): Expression
 
     def callExp(name: Temp.Label, params: List[Expression], caller: Level, callee:Level, isProc: Boolean, extern: Boolean): Expression
 
@@ -278,7 +278,7 @@ trait TranslateComponent {
       Ex(
         ESEQ(seq(
           MOVE(recordTemp, unEx(record)),
-          EXP(externalCall("_checkRecord", recordTemp))),
+          EXP(externalCall("_checkNil", recordTemp))),
 
           MEM(BINOP(PLUS, recordTemp, offset * Frame.WS))))
 
@@ -334,7 +334,7 @@ trait TranslateComponent {
       Ex(
         ESEQ(
           seq(
-            EXP(externalCall("_newRecord", expressions.length)),
+            EXP(externalCall("_allocRecord", expressions.length)),
             MOVE(rt, Frame.RV),
             values),
 
@@ -423,7 +423,23 @@ trait TranslateComponent {
             , rt))
     }
 
-    override def forExp(lo: InteropExp, hi: InteropExp, v: InteropExp, body: InteropExp): InteropExp = ???
+    override def forExp(lo: InteropExp, hi: InteropExp, v: InteropExp, body: InteropExp, currentLevel: MyLevelImpl): InteropExp = {
+      val max = Temp.newTemp()
+      val loopVar = unEx(v)
+      val loop = Temp.newLabel()
+      val end = currentLevel.labels.head
+
+      Nx (seq(
+          MOVE(loopVar, unEx(lo)),
+          MOVE(TEMP(max), unEx(hi)),
+          CJUMP (GT, loopVar, TEMP(max),end,loop),
+          LABEL(loop),
+          unNx(body),
+          MOVE (loopVar, BINOP(PLUS, loopVar, CONST(1))),
+          CJUMP (GT,loopVar,TEMP(max),end,loop),
+          LABEL(end)))
+
+    }
 
     override def callExp(name: Label, params: List[InteropExp], caller: MyLevelImpl, callee:MyLevelImpl, isProc: Boolean, extern: Boolean): InteropExp = {
 

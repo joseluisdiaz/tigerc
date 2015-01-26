@@ -58,6 +58,7 @@ trait Frame extends Constants {
   def procEntryExit3(instructions: List[Asm.Instr]): (String, List[Asm.Instr], String)
 
   def actualLocal(): Int
+
   def actualArg(): Int
 
 }
@@ -69,7 +70,7 @@ trait ArmConstants extends Constants {
   /* Word Size */
   val SL = 4 /* Static link location */
 
-  val localOffsetInitial = -2*WS
+  val localOffsetInitial = -2 * WS
   val localIncrement = -1
 
   val argsOffsetInitial = 0
@@ -138,10 +139,10 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
 
     val iterator = argsRegisters.iterator
 
-    val zip = calleeSaves map { x => (x, Temp.newTemp()) }
+    val zip = calleeSaves map { x => (x, Temp.newTemp())}
 
-    val begin = zip map { case(r,t) => MOVE(TEMP(t),TEMP(r))}
-    val end =   zip map { case(r,t) => MOVE(TEMP(r),TEMP(t)) }
+    val begin = zip map { case (r, t) => MOVE(TEMP(t), TEMP(r))}
+    val end = zip map { case (r, t) => MOVE(TEMP(r), TEMP(t))}
 
 
     val moves = _formals.map {
@@ -159,8 +160,8 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
   override def procEntryExit2(instructions: List[Asm.Instr]): List[Asm.Instr] = {
     val end = Asm.OPER(asm = "@ end", src = RV :: calleeSaves, dst = List())
 
-//    val begin = calleeSaves map { x => Asm.OPER(asm = "@ begin", src = List(), dst = List(x)) }
-//    val end = ( RV :: calleeSaves ) map { x => Asm.OPER(asm = "@ end", src = List(x) , dst = List()) }
+    //    val begin = calleeSaves map { x => Asm.OPER(asm = "@ begin", src = List(), dst = List(x)) }
+    //    val end = ( RV :: calleeSaves ) map { x => Asm.OPER(asm = "@ end", src = List(x) , dst = List()) }
 
     instructions :+ end
   }
@@ -168,6 +169,8 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
   override def procEntryExit3(instructions: List[Asm.Instr]): (String, List[Asm.Instr], String) = {
     val prolog = List(
       Asm.OPER(asm = "stmfd     sp!, {fp, lr}", src = List(), dst = List()),
+      Asm.OPER(asm = ".save {fp, lr}", src = List(), dst = List()),
+      Asm.OPER(asm = ".setfp fp, sp, #4", src = List(), dst = List()),
       Asm.OPER(asm = "add       fp, sp, #4", src = List(), dst = List())
     )
 
@@ -176,7 +179,9 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
       Asm.OPER(asm = "bx         lr", src = List(), dst = List()))
 
     val padding = if (actualLocal != 0) {
-      List(Asm.OPER(asm = s"sub     sp, sp, #${Math.abs(actualLocal) * WS}", src = List(), dst = List()))
+      List(
+        Asm.OPER(asm = s".pad #${actualLocal * WS}", src = List(), dst = List()),
+        Asm.OPER(asm = s"sub     sp, sp, #${actualLocal * WS}", src = List(), dst = List()))
     }
     else {
       List()

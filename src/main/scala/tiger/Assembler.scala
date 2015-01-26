@@ -235,12 +235,14 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
       case BINOP(T.OR, left, right) =>
         result(r => emit(A.OPER(asm = s"orr     'd0, 's0, 's1", src = List(munchExpr(left), munchExpr(right)), dst = List(r))))
 
-      case MEM(BINOP(_,TEMP(Frame.FP),CONST(offset))) => result { r =>
-        emit(A.OPER(asm = s"ldr     'd0, [fp, #$offset]", src = List(), dst = List(r), jump = None))
+      case MEM(BINOP(oper,TEMP(Frame.FP),CONST(offset))) => result { r =>
+        val sign = if (oper == MINUS) "-" else ""
+        emit(A.OPER(asm = s"ldr     'd0, [fp, #${sign}$offset]", src = List(), dst = List(r), jump = None))
       }
 
-      case MEM(BINOP(_,TEMP(t),CONST(offset))) => result { r =>
-        emit(A.OPER(asm = s"ldr     'd0, ['s0, #$offset]", src = List(t), dst = List(r), jump = None))
+      case MEM(BINOP(oper,TEMP(t),CONST(offset))) => result { r =>
+        val sign = if (oper == MINUS) "-" else ""
+        emit(A.OPER(asm = s"ldr     'd0, ['s0, #${sign}$offset]", src = List(t), dst = List(r), jump = None))
       }
 
       case MEM(e) => result(r => emit(A.MOVE(asm = "mov     'd0, 's0", src = munchExpr(e), dst = r)))

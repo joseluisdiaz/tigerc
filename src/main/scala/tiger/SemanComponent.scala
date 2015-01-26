@@ -276,45 +276,26 @@ trait SemanComponent {
 
         ExpTy(exp, UNIT())
 
-      /*
-       * ForExp => WhileExp
-       *
-       *                      =>        let var i:= lo
-       * for i := lo to hi    =>            var limit := hi
-       *   do body            =>        in while ( i <= limit )
-       *                      =>          do (body; i := i + 1)
-       *                      =>        end
-       */
       case ForExp(variable, escape, lo, hi, body, position) => {
+        level.preLoop()
         val loTr = transExp(varsEnv, typesEnv, level, lo)
         val hiTr = transExp(varsEnv, typesEnv, level, hi)
 
         if (loTr.ty != INT()) error("type error: for: lo must be int")
         if (hiTr.ty != INT()) error("type error: for: hi must be int")
 
-        val limit = "_limit" /* revisar con que caracter no pueden arrancar los identificadores) */
+        val access = translate.allocLocal(level, escape)
+        val varsEnv2 = (varsEnv + (variable -> env.VarEntry(access, INT.readOnly)))
 
-        val i = SimpleVar(variable)
+        val bodyTr = transExp(varsEnv2, typesEnv, level, body)
 
-        // i:= lo
-        val varI = VarDec(variable, escape, Some("_int_ro"), lo, -1)
+        val varExp = transExp(varsEnv2, typesEnv, level, VarExp(SimpleVar(variable), position))
 
-        // i:= hi
-        val varLimit = VarDec(limit, escape = false, Some("_int_ro"), hi, -1)
+        val exp = translate.forExp(loTr.exp, hiTr.exp, varExp.exp,bodyTr.exp, level)
 
-        // i <= limit
-        val test = OpExp(VarExp(i, -1), LeOp, VarExp(SimpleVar(limit), -1), -1)
+        level.postLoop()
 
-        // i := i + 1 (omitiendo el checkeo de i como read only)
-        val inc = AssignExp(i, OpExp(VarExp(i, -1), PlusOp, IntExp(1, -1), -1), -1, checkRO = false)
-        /*
-         * in while ( i <= limit )
-         *   do (body; i := i + 1)
-         */
-        val whileAst = WhileExp(test, SeqExp(List(body, inc), -1), -1)
-
-        // toda la transformación :D
-        transExp(varsEnv, typesEnv, level, LetExp(List(varI, varLimit), whileAst, -1))
+        ExpTy(exp, UNIT())
       }
 
       case LetExp(decs, body, position) => {
