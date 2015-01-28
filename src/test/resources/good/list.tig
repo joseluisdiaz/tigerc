@@ -1,0 +1,9 @@
+let
+  /* define a list */
+  type strlist = {hd : string, tl : strlist}
+
+  var lis1 : strlist := strlist { hd = "chau", tl = strlist { hd = "hola", tl = nil } }
+
+in
+  print(lis1.tl.hd);0
+end

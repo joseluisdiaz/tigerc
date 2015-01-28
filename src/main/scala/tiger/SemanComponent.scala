@@ -75,7 +75,7 @@ trait SemanComponent {
       case FieldVar(leftValue, id) => {
         val recordExp = transVar(varsEnv, typesEnv, level, leftValue)
 
-        val recordTy = recordExp.ty match {
+        val recordTy = unpack(recordExp.ty) match {
           case RECORD(records) => records
           case found@_ => error("type error: found " + found + " RECORD" + " required")
         }
