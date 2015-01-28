@@ -45,7 +45,10 @@ object Tiger {
     println("======= Intermediate code ==========\n\n")
 
     ComponentRegistry.translate.fragments().foreach {
-      case PROC(stm, frame) => Files.write(Paths.get(s"output/test.s.${frame.name}.inter"), stm.treeString.getBytes(StandardCharsets.UTF_8))
+      case PROC(stm, frame) => {
+
+        Files.write(Paths.get(s"output/test.s.${frame.name}.inter"), Util.printsmt(stm).getBytes(StandardCharsets.UTF_8))
+      }
       case f@STRING(l, s) => ()
     }
 
@@ -76,7 +79,6 @@ object Tiger {
         procs ::=(c, frame)
 
         frames += frame.name -> frame
-
 
         val output = c mkString "\n"
         Files.write(Paths.get(s"output/test.s.${frame.name}.cannon"), output.getBytes(StandardCharsets.UTF_8))
@@ -121,11 +123,7 @@ object Tiger {
       case (asm, d, frame) =>
 
         val data = if (d.ls.isEmpty) List()
-        else List("", ".align	2", s".${d.l}:") ++ d.ls.map(x => s".word\t\t${
-          {
-            x
-          }
-        }")
+        else List("", ".align	2", s".${d.l}:") ++ d.ls.map(x => s".word\t\t${x}")
 
         Map("name" -> frame.name, "asm" -> (asm.map {
           _.code
@@ -136,13 +134,6 @@ object Tiger {
     val data = Map("filename" -> args(0), "functions" -> p, "strings" -> strings, "label" -> label)
     val template = Handlebars(new File("src/main/hbs/asm.hbs"))
 
-    {
-      import sys.process._
-      "rm output/test*" !
-
-      "rm output/a.out" !
-
-    }
     Files.write(Paths.get("output/test.s"), template(data).getBytes(StandardCharsets.UTF_8));
 
     //    val eval = new Interpeter(procs, strings)

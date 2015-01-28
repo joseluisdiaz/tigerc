@@ -56,23 +56,41 @@ trait CanonComponent {
 
     def doStm(stm: Stm): Stm = stm match {
       /* Seq */
-      case SEQ(s1, s2) => doStm(s1) % doStm(s2)
+      case SEQ(s1, s2) => {
+        doStm(s1) % doStm(s2)
+      }
 
       /* Jump */
-      case JUMP(e, labs) => reorderStm(List(e), { case List(x) => JUMP(x, labs)})
+      case JUMP(e, labs) => {
+        reorderStm(List(e), { case List(x) => JUMP(x, labs)})
+      }
 
       /* CJump */
-      case CJUMP(o, e1, e2, t, f) => reorderStm(List(e1, e2), { case List(x1, x2) => CJUMP(o, x1, x2, t, f)})
+      case CJUMP(o, e1, e2, t, f) => {
+        reorderStm(List(e1, e2), { case List(x1, x2) => CJUMP(o, x1, x2, t, f)})
+      }
 
       /* Move */
-      case MOVE(TEMP(t), CALL(e, el)) => reorderStm(e :: el, { case x :: xs => MOVE(TEMP(t), CALL(x, xs))})
-      case MOVE(TEMP(t), b) => reorderStm(List(b), { case List(x) => MOVE(TEMP(t), x)})
-      case MOVE(MEM(e), b) => reorderStm(List(e, b), { case List(x1, x2) => MOVE(MEM(x1), x2)})
-      case MOVE(ESEQ(s, e), b) => doStm(SEQ(s, MOVE(e, b)))
+      case MOVE(TEMP(t), CALL(e, el)) => {
+        reorderStm(e :: el, { case x :: xs => MOVE(TEMP(t), CALL(x, xs))})
+      }
+      case MOVE(TEMP(t), b) => {
+        reorderStm(List(b), { case List(x) => MOVE(TEMP(t), x)})
+      }
+      case MOVE(MEM(e), b) => {
+        reorderStm(List(e, b), { case List(x1, x2) => MOVE(MEM(x1), x2)})
+      }
+      case MOVE(ESEQ(s, e), b) => {
+        doStm(SEQ(s, MOVE(e, b)))
+      }
 
       /* Exp */
-      case EXP(CALL(e, el)) => reorderStm(e :: el, { case x :: xs => EXP(CALL(x, xs))})
-      case EXP(e) => reorderStm(List(e), { case List(x) => EXP(x)})
+      case EXP(CALL(e, el)) => {
+        reorderStm(e :: el, { case x :: xs => EXP(CALL(x, xs))})
+      }
+      case EXP(e) => {
+        reorderStm(List(e), { case List(x) => EXP(x)})
+      }
 
       /* Default */
       case _ => reorderStm (List(), _ => stm)

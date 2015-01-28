@@ -1,5 +1,7 @@
 package tiger
 
+import tiger.Tree._
+
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.{Success, Failure, Try}
@@ -30,6 +32,127 @@ object Util {
   }
 
   var nro = 0
+
+  def printsmt(stm:Stm): String = {
+
+    var i = 0
+
+    val links = mutable.ListBuffer.empty[(String, String)]
+
+    val strings = mutable.ListBuffer.empty[String]
+
+
+    def node(label:String): String = {
+      i += 1
+      val node = s"node$i"
+      strings += s"""\t$node[label = "$label"]"""
+      node
+    }
+
+
+    def exp(parent:String, ex:Expr):Unit = ex match {
+      case BINOP(o, l, r) => {
+
+        val currentNode = node(s"BINOP $o")
+
+        links += parent -> currentNode
+
+        exp(currentNode, l)
+        exp(currentNode, r)
+
+      }
+      case MEM(e) => {
+        val currentNode = node("MEM")
+
+        links += parent -> currentNode
+
+        exp(currentNode, e)
+      }
+      case CALL(NAME(n), args) => {
+        val currentNode = node(s"CALL($n)")
+
+        links += parent -> currentNode
+        args foreach { exp(currentNode, _) }
+
+      }
+      case ESEQ(s, e) => {
+
+        val currentNode = node("ESEQ")
+
+        links += parent -> currentNode
+
+        exp(currentNode, e)
+        doit(currentNode, s)
+      }
+
+      case _ => {
+
+        val currentNode = node(ex.toString)
+        links += parent -> currentNode
+      }
+
+    }
+
+
+    def doit(parent:String, ast:Stm):Unit = ast match {
+      case MOVE(d, s) => {
+        val currentNode = node("MOVE")
+
+        links += parent -> currentNode
+
+        exp(currentNode, d)
+        exp(currentNode, s)
+      }
+      case EXP(e) => {
+        val currentNode = node("EXP")
+
+        links += parent -> currentNode
+        exp(currentNode, e)
+      }
+      case JUMP(e, labs) => {
+        val currentNode = node(s"JUMP( $e | $labs)")
+
+        links += parent -> currentNode
+
+      }
+      case CJUMP(o, e1, e2, t, f) => {
+
+        val currentNode = node(s"CJUMP($o f:$f t:$t)")
+
+        links += parent -> currentNode
+
+        exp(currentNode, e1)
+        exp(currentNode, e2)
+
+      }
+      case SEQ(s1, s2) => {
+        val currentNode = node("SEQ")
+
+        links += parent -> currentNode
+
+        doit(currentNode, s1)
+        doit(currentNode, s2)
+      }
+      case LABEL(n) => {
+
+        val currentNode = node(s"LABEL($n)")
+
+        links += parent -> currentNode
+      }
+    }
+
+    strings += "digraph g {"
+    strings += "\troot"
+    doit("root", stm)
+
+
+    links foreach { case(s,d) => strings += s"$s -> $d" }
+
+    strings += "}"
+
+    strings mkString "\n"
+
+  }
 
   def printgraph(r: RegisterAllocation, name:String): Unit = {
 

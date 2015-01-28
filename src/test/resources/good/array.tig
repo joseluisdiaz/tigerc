@@ -1,15 +1,14 @@
+/* A program to solve the 8-queens problem */
+
 let
-    var N := 8
+    var N := 66
 
-    type intArray = array of int
+    function printboard () = (print(chr(N)); print("\n"))
 
-    var row := intArray [ N ] of 0
-
-    function printy() = (for j := 0 to N - 1
-                       	      do print (if row[j]=1 then " O" else " ."))
-
-
-in printy();0
-
+    function try (c : int) = (
+     if c=4 then printboard () else (
+     print(chr(N+c)); print("\n");
+     try(c+1)
+     ))
+ in try (1);0
 end
-

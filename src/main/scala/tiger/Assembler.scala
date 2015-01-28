@@ -69,7 +69,7 @@ object CodeGen {
   def apply(frames: Map[Temp.Label, Frame], l: List[Stm]) = {
     val gen = new CodeGen(frames)
     l foreach gen.munchStm
-    (gen.instr.toList, Data(gen.label, gen.seenLabels.keys.toList))
+    (gen.instr.toList, Data(gen.label, gen.seenLabels.toList.sortBy {  case (k,v) => v } .map {  case (k,v) => k }  ))
   }
 }
 
@@ -82,9 +82,15 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
 
   val instr = ListBuffer.empty[Instr]
   val label = Temp.newLabel()
-  val seenLabels = mutable.Map.empty[String, String]
+  val seenLabels = mutable.Map.empty[String, Int]
 
-  def labels(s:String) = seenLabels.getOrElseUpdate(s, s"${label}+${seenLabels.size * Frame.WS}")
+  def labels(s:String) = {
+    val offset = seenLabels.getOrElseUpdate(s, seenLabels.size * Frame.WS)
+
+    if ( offset == 0 ) s"${label}"
+    else s"${label}+${offset}"
+  }
+
 
   def emit(i: A.Instr): Unit = instr += i
 
@@ -245,7 +251,9 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
         emit(A.OPER(asm = s"ldr     'd0, ['s0, #${sign}$offset]", src = List(t), dst = List(r), jump = None))
       }
 
-      case MEM(e) => result(r => emit(A.MOVE(asm = "mov     'd0, 's0", src = munchExpr(e), dst = r)))
+      case MEM(e) => {
+        result(r => emit(A.OPER(asm = "ldr     'd0, ['s0]", src = List(munchExpr(e)), dst = List(r))))
+      }
 
       case ESEQ(s, e) => {
         munchStm(s)

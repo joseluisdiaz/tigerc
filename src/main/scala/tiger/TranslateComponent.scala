@@ -163,11 +163,11 @@ trait TranslateComponent {
         val f = Temp.newLabel()
 
         ESEQ(
-          seq(MOVE(TEMP(r), CONST(1)),
+          seq(MOVE(TEMP(r), CONST(0)),
             genstm(t, f),
-            LABEL(f),
-            MOVE(TEMP(r), CONST(0)),
-            LABEL(t)),
+            LABEL(t),
+            MOVE(TEMP(r), CONST(1)),
+            LABEL(f)),
           TEMP(r))
     }
 
@@ -236,11 +236,11 @@ trait TranslateComponent {
           val n = currentLevel.countTop() - level.countTop()
 
           if (n != 0) {
-            val offset = 1 to (n - 1) map { x => MOVE(t, MEM(BINOP(MINUS, t, CONST(Frame.SL))))}
+            val offset = 1 to (n - 1) map { x => MOVE(t, MEM(BINOP(PLUS, t, CONST(Frame.SL))))}
 
             ESEQ(
               seq(
-                MOVE(TEMP(t), MEM(BINOP(MINUS, Frame.FP, CONST(Frame.SL)))),
+                MOVE(TEMP(t), MEM(BINOP(PLUS, Frame.FP, CONST(Frame.SL)))),
                 offset.toList),
 
               MEM(BINOP(MINUS, t, CONST(Math.abs(i)))))
@@ -414,12 +414,14 @@ trait TranslateComponent {
 
       Ex(
         ESEQ(
-          SEQ(uncx,
-            SEQ(LABEL(t),
-            SEQ(MOVE(rt, unExThen),
-            SEQ(JUMP(NAME(end), List(end)),
-            SEQ(LABEL(f),
-            SEQ(MOVE(rt, unExElsa),LABEL(end)))))))
+          seq(
+            uncx,
+            LABEL(t),
+            MOVE(rt, unExThen),
+            JUMP(NAME(end), List(end)),
+            LABEL(f),
+            MOVE(rt, unExElsa),
+            LABEL(end))
             , rt))
     }
 
@@ -432,7 +434,7 @@ trait TranslateComponent {
       Nx (seq(
           MOVE(loopVar, unEx(lo)),
           MOVE(TEMP(max), unEx(hi)),
-          CJUMP (GT, loopVar, TEMP(max),end,loop),
+          CJUMP (LE, loopVar, TEMP(max),loop, end),
           LABEL(loop),
           unNx(body),
           MOVE (loopVar, BINOP(PLUS, loopVar, CONST(1))),
@@ -453,7 +455,7 @@ trait TranslateComponent {
 
         val t = Temp.newTemp()
 
-        val offset = (1 to n) map { x:Int => MOVE(t, MEM(BINOP(PLUS, CONST(8), t ))) }
+        val offset = (1 to n) map { x:Int => MOVE(t, MEM(BINOP(PLUS, CONST(Frame.SL), t ))) }
 
         ESEQ(
           seq(
@@ -465,10 +467,10 @@ trait TranslateComponent {
       } else if (lcaller == lcallee) {
         // SL -> SL
 
-        MEM(BINOP(PLUS, Frame.FP, CONST(8)))
+        MEM(BINOP(PLUS, Frame.FP, CONST(Frame.SL)))
 
       } else {
-        // FP -> SL
+        // SL -> FP
 
         TEMP(Frame.FP)
       }
