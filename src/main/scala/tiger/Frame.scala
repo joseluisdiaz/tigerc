@@ -73,7 +73,7 @@ trait ArmConstants extends Constants {
   val localOffsetInitial = -2 * WS
   val localIncrement = -1
 
-  val argsOffsetInitial = 0
+  val argsOffsetInitial = 4
   val argsIncrement = 1
 
   val regIncrement = 1
@@ -119,8 +119,8 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
   }
 
   override def allocFormal(esc: Boolean) = {
-    val formal = if (esc || actualArg >= argsRegisters.size) {
-      val ret = InFrame(actualArg)
+    val formal = if (esc || actualReg >= argsRegisters.size) {
+      val ret = InFrame(argsOffsetInitial + (actualArg* WS))
       actualArg += argsIncrement
       ret
     } else {

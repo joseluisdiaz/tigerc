@@ -1,0 +1,6 @@
+/* an array type and an array variable */
+let
+  function add(i1:int, i2:int, i3:int, i4:int, i5:int) : int = (i1 + i2 + i3 + i4 + i5)
+in
+  print(chr(add(10,20,30,15,3)));0
+end
