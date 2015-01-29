@@ -1,4 +1,20 @@
 tigerc
 ======
 
-Just a try to build a tiger compiler in scala
+Recreate the parser
+
+```
+./parse.sh
+
+```
+
+Build the compiler
+
+```
+$ sbt package
+
+```
+
+```
+./tiger program.tig
+```

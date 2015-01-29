@@ -69,12 +69,16 @@ object CodeGen {
   def apply(frames: Map[Temp.Label, Frame], l: List[Stm]) = {
     val gen = new CodeGen(frames)
     l foreach gen.munchStm
-    (gen.instr.toList, Data(gen.label, gen.seenLabels.toList.sortBy {  case (k,v) => v } .map {  case (k,v) => k }  ))
+    val strings = Data(gen.label, gen.seenLabels.toList.sortBy {  case (k,v) => v } .map {  case (k,v) => k }  )
+    val intpool = Data(gen.intLabel, gen.seenInts.toList.sortBy {  case (k,v) => v } .map {  case (k,v) => s"$k" }  )
+
+
+    (gen.instr.toList, strings, intpool)
 
   }
 }
 
-case class Data(l:Temp.Label, ls:List[Temp.Label])
+case class Data(l:Temp.Label, ls:List[String])
 
 class CodeGen(frames: Map[Temp.Label, Frame]) {
 
@@ -146,9 +150,7 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
       emit(A.OPER(asm = s"str    's1, ['s0]", src = List(te1, te2), dst = List()))
     }
 
-    case T.MOVE(T.TEMP(t), T.CONST(n)) => {
-      emit(A.OPER(asm = s"mov    'd0, #$n", src = List(), dst = List(t)))
-    }
+    case T.MOVE(T.TEMP(t), T.CONST(n)) => emitConst(n, t)
 
     case T.MOVE(T.TEMP(t), BINOP(MINUS,TEMP(Frame.FP),CONST(offset))) => {
 
@@ -215,9 +217,60 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
     r
   }
 
+
+  lazy val intLabel = Temp.newLabel()
+  val seenInts= mutable.HashMap.empty[Int,Int]
+
+  def ints(i:Int) = {
+    val offset = seenInts.getOrElseUpdate(i, seenInts.size * Frame.WS)
+
+    if ( offset == 0 ) s"${intLabel}"
+    else s"${intLabel}+${offset}"
+  }
+
+
+  def isDirectMove(n:Int):Boolean = {
+    if (0 <= n  && n <= 255)
+      return true
+    var nn = n
+
+    while(nn % 2 == 0) {
+      nn /= 2
+      if (0 <= nn && nn <= 255)
+        return true
+    }
+
+    if ((( n & 0xFF) == (n & 0xff0000)) && ( ( n & 0xff00) == 0  ) && (n & 0xFF000000) == 0 ) return true
+
+    if ((( n & 0xFF00) == (n & 0xff000000)) && ( ( n & 0xff) == 0  ) && (n & 0xFF0000) == 0 ) return true
+
+
+    return false
+
+    false
+  }
+
+  def emitConst(n:Int, t:Temp.Temp):Unit = {
+    val negate = ~n & 0xffffffff
+
+    if (isDirectMove(n)) {
+      emit(A.OPER(asm = s"mov    'd0, #$n", src = List(), dst = List(t)))
+    }
+    else if (isDirectMove(negate)) {
+      emit(A.OPER(asm = s"mvn    'd0, #$negate", src = List(), dst = List(t)))
+    }
+    else {
+      emit(A.OPER(asm = s"ldr    'd0, .${ints(n)}", src = List(), dst = List(t)))
+    }
+  }
+
   def munchExpr(expr: T.Expr): Temp.Temp = {
     expr match {
-      case CONST(n) => result(r => emit(A.OPER(asm = s"mov    'd0, #$n", src = List(), dst = List(r))))
+
+        //	ldr	r3, .L3+4
+
+      case CONST(n) => result { r => emitConst(n, r) }
+
       case NAME(l) => result(r => emit(A.OPER(asm = s"ldr    'd0, .${labels(l)}", src = List(), dst = List(r))))
 
       case TEMP(t) => t
@@ -289,8 +342,8 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
   }
 
    def munchArgsReg(reg: Temp.Temp, exp: T.Expr): List[Temp.Temp] = exp match {
-    case CONST(c) => {
-      emit(A.OPER(asm = s"mov     'd0, #$c ", src = List(), dst = List(reg), jump =None))
+    case CONST(n) => {
+      emitConst(n, reg)
       List(reg)
     }
     case T.TEMP(t) => {

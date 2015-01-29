@@ -289,7 +289,10 @@ trait TranslateComponent {
 
     override def nilExp(): InteropExp = Ex(0)
 
-    override def intExp(n: Int): InteropExp = Ex(n)
+    override def intExp(n: Int): InteropExp = {
+
+      Ex(n)
+    }
 
     override def relOpExp(op: Oper, ty: Types.Ty, left: InteropExp, rigth: InteropExp): InteropExp = ty match {
       case STRING() =>

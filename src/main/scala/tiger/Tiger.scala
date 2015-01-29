@@ -104,33 +104,37 @@ object Tiger {
 
     val p = procs map {
       case (stms, frame) => {
-        val (v, d) = CodeGen(frames, stms)
+        val (v, s, i) = CodeGen(frames, stms)
 
         val formals = frame.formals.map(x => x.exp(Frame.FP))
 
+        //TODO MOVE TO ASM
         val output = (formals ++ List("", "") ++ v) mkString "\n"
         Files.write(Paths.get(s"${outputFile}_${frame.name}.code"), output.getBytes(StandardCharsets.UTF_8))
 
-        (v, d, frame)
+        (v, (s, i), frame)
       }
     } map {
-      case (asm, d, frame) => {
+      case (asm, (s, i), frame) => {
         println(s"------ ${frame.name} ------")
 
 
         val (a1, a2) = RegisterAllocation(frame.procEntryExit2(asm), frame).get()
 
-        (a1, d, a2)
+        (a1, (s, i), a2)
       }
     } map {
-      case (asm, d, frame) =>
+      case (asm, (s, i), frame) =>
 
-        val data = if (d.ls.isEmpty) List()
-        else List("", ".align	2", s".${d.l}:") ++ d.ls.map(x => s".word\t\t${x}")
+        val dataString = if (s.ls.isEmpty) List()
+        else List("", ".align	2", s".${s.l}:") ++ s.ls.map(x => s".word\t\t${x}")
+
+        val dataInts = if (i.ls.isEmpty) List()
+        else List("", ".align	2", s".${i.l}:") ++ i.ls.map(x => s".word\t\t${x}")
 
         Map("name" -> frame.name, "asm" -> (asm.map {
           _.code
-        } ++ data))
+        } ++ dataString ++ dataInts))
 
     }
 

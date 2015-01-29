@@ -1,0 +1,8 @@
+let
+    type a = array of int
+    var a := a[0] of 0
+in
+    while 1 do
+        a := a[1000000] of 0;
+        0
+end
