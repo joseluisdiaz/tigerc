@@ -136,14 +136,20 @@ class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
   }
 
   def get(): (List[Instr], Frame) = {
+
+    val t = Temp.newTemp()
+
     loop()
+    println(s"TEMP---> $t <--> ${Temp.newTemp()}")
+
+
+    rename()
+    remove()
 
     val (epilog, x, prolog) = frame.procEntryExit3(instructions)
 
     instructions = x
 
-    rename()
-    remove()
 
     color.foreach { case (t, c) => println(s"$t\t$c")}
 
@@ -190,6 +196,17 @@ class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
     out
   }
 
+//  def buildDistanceMap() = {
+//    val nodes = instructions map { FlowNode } zipWithIndex
+//    val definesAt = nodes map { case (n, i) => n.defs() map { x => x -> i} } flatten
+//    val definesAtMap = definesAt toMap
+//    val distances = nodes map { case (n, i) => n.uses() map { x => x -> ( i - definesAtMap.getOrElse(x, 10000) ) } } flatten
+//
+//    distances filter { case (_, d) => d >= 0 } toMap
+//  }
+//
+//
+//  var distanceMap = Map.empty[Temp.Temp, Int]
 
   def build(): Unit = {
 
@@ -219,7 +236,9 @@ class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
 
     }
 
-    precolored.foreach { x => degree.setCount(x, Int.MaxValue)}
+//    distanceMap = buildDistanceMap()
+
+    precolored.foreach { x => degree.setCount(x, Int.MaxValue) }
 
     Util.printgraph(this, "Inference")
 
@@ -394,8 +413,9 @@ class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
   }
 
   def selectSpill(): Unit = {
-    val m = spillWorkList.head // Debería usar alguna herustica
+//    val list = spillWorkList.toList.sortBy(distanceMap)
 
+    val m = spillWorkList.head
     spillWorkList -= m
     simplfiyWorklist += m
 
@@ -462,9 +482,9 @@ class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
       t
     }
 
-    def storeGen(t: Temp.Temp, offset: Int) = OPER(asm = s"str     's0, [fp, #$offset]\n", dst = List(), src = List(t))
+    def storeGen(t: Temp.Temp, offset: Int) = OPER(asm = s"str     's0, [fp, #$offset]", dst = List(), src = List(t))
 
-    def fetchGen(t: Temp.Temp, offset: Int) = OPER(asm = s"ldr     'd0, [fp, #$offset]\n", dst = List(t), src = List())
+    def fetchGen(t: Temp.Temp, offset: Int) = OPER(asm = s"ldr     'd0, [fp, #$offset]", dst = List(t), src = List())
 
 
     def convert(genFunction: (Temp.Temp, Int) => Instr): Temp.Temp => (Temp.Temp, Option[Instr]) = { x =>
@@ -510,15 +530,16 @@ class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
     val i = rewrite(instructions)
     instructions = i
 
+    spilledNodes.clear()
     initial.clear()
     initial ++= (coloredNodes | coalescedNodes | newTemps)
+
+    coloredNodes.clear()
+    coalescedNodes.clear()
 
     simplfiyWorklist.clear()
     freezeWorklist.clear()
     spillWorkList.clear()
-    spilledNodes.clear()
-    coalescedNodes.clear()
-    coloredNodes.clear()
     selectStack.clear()
 
     coalescedMoves.clear()

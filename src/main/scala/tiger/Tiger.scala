@@ -30,8 +30,16 @@ object Tiger {
   //burn it and make again :D
   def main(args: Array[String]) {
 
-    val stream = if (args.length == 1) new FileInputStream(new File(args(0)))
-    else System.in
+
+    if (args.length < 1) {
+      println("requieres a file name at least")
+      System.exit(-1)
+    }
+    val filename = args(0)
+
+    val outputFile = if (args.length >= 2) args(1) else filename.replaceAll("\\.[^.]*$", "") + ".s"
+
+    val stream = new FileInputStream(new File(filename))
 
     val cp = new TigerParser()
     val prog = cp.parse(stream)
@@ -47,7 +55,7 @@ object Tiger {
     ComponentRegistry.translate.fragments().foreach {
       case PROC(stm, frame) => {
 
-        Files.write(Paths.get(s"output/test.s.${frame.name}.inter"), Util.printsmt(stm).getBytes(StandardCharsets.UTF_8))
+        Files.write(Paths.get(s"${outputFile}_${frame.name}.inter"), Util.printsmt(stm).getBytes(StandardCharsets.UTF_8))
       }
       case f@STRING(l, s) => ()
     }
@@ -70,6 +78,7 @@ object Tiger {
 
     frames += "_allocRecord" -> Frame("_allocRecord", List(false, false))
     frames += "_checkNil" -> Frame("_checkNil", List(false))
+    frames += "_stringCompare" -> Frame("_stringCompare", List(false))
 
 
 
@@ -79,13 +88,11 @@ object Tiger {
         procs ::=(c, frame)
 
         frames += frame.name -> frame
-
-        val output = c mkString "\n"
-        Files.write(Paths.get(s"output/test.s.${frame.name}.cannon"), output.getBytes(StandardCharsets.UTF_8))
+        Files.write(Paths.get(s"${outputFile}_${frame.name}.cannon"), (c mkString "\n").getBytes(StandardCharsets.UTF_8))
       }
 
       case f@STRING(l, s) => {
-        def escapa(s:String) = s flatMap { x => if (x.isControl) f"\\$x%03o" else x.toString }
+        def escapa(s: String) = s flatMap { x => if (x.isControl) f"\\$x%03o" else x.toString}
 
         val size = s.size + Frame.WS + 1
         val r = size % 4
@@ -99,21 +106,17 @@ object Tiger {
       case (stms, frame) => {
         val (v, d) = CodeGen(frames, stms)
 
+        val formals = frame.formals.map(x => x.exp(Frame.FP))
 
-        println("Frame--->")
-        frame.formals.foreach(x => println(x.exp(Frame.FP)))
-
-          println(s"${frame.name}")
-
-        val output = v mkString "\n"
-        Files.write(Paths.get(s"output/test.s.${frame.name}.code"), output.getBytes(StandardCharsets.UTF_8))
-
+        val output = (formals ++ List("", "") ++ v) mkString "\n"
+        Files.write(Paths.get(s"${outputFile}_${frame.name}.code"), output.getBytes(StandardCharsets.UTF_8))
 
         (v, d, frame)
       }
     } map {
       case (asm, d, frame) => {
         println(s"------ ${frame.name} ------")
+
 
         val (a1, a2) = RegisterAllocation(frame.procEntryExit2(asm), frame).get()
 
@@ -134,7 +137,7 @@ object Tiger {
     val data = Map("filename" -> args(0), "functions" -> p, "strings" -> strings, "label" -> label)
     val template = Handlebars(new File("src/main/hbs/asm.hbs"))
 
-    Files.write(Paths.get("output/test.s"), template(data).getBytes(StandardCharsets.UTF_8));
+    Files.write(Paths.get(s"$outputFile"), template(data).getBytes(StandardCharsets.UTF_8));
 
     //    val eval = new Interpeter(procs, strings)
     //

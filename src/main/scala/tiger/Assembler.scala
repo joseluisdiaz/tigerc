@@ -70,6 +70,7 @@ object CodeGen {
     val gen = new CodeGen(frames)
     l foreach gen.munchStm
     (gen.instr.toList, Data(gen.label, gen.seenLabels.toList.sortBy {  case (k,v) => v } .map {  case (k,v) => k }  ))
+
   }
 }
 
@@ -274,15 +275,15 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
     val argsRegisters = frame.argsRegisters.iterator
     var i = 0
 
-    val regs = formalsValues map {
-      case (T.TEMP(t), exp) => munchArgsReg(argsRegisters.next(), exp)
+    val regs = formalsValues flatMap {
+      case (T.TEMP(t), exp) => Some((argsRegisters.next(), exp))
       case (T.MEM(_), exp) => {
-        val r = munchArgsStack(i, exp)
+        munchArgsStack(i, exp)
         i += 4
-        r
+        None
       }
       case _ => sys.error("exploto munchArgs")
-    }
+    } map { case (r, exp) => munchArgsReg(r, exp) }
 
     regs.flatten.distinct
   }
@@ -304,7 +305,7 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
     }
   }
 
-  def munchArgsStack(offset: Int, exp: T.Expr): List[Temp.Temp] = {
+  def munchArgsStack(offset: Int, exp: T.Expr) = {
     val e = munchExpr(exp)
 
     val (s0,r) = if (e == Frame.FP) ("fp", List()) else ("'s0", List(e))
@@ -312,8 +313,6 @@ class CodeGen(frames: Map[Temp.Label, Frame]) {
     val asm = if (offset == 0) s"str     ${s0}, [sp]" else s"str     's0, [sp, #$offset]"
 
     emit(A.OPER(asm = asm, src = r, dst = List(), jump = None))
-    r
-
   }
 
 

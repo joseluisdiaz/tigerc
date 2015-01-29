@@ -1,5 +1,6 @@
 package tiger
 
+import tiger.LivenessComponent.FlowNode
 import tiger.Tree._
 import tiger.Tree.MEM
 import tiger.Tree.CALL
@@ -28,7 +29,6 @@ trait Constants {
   val callerSaves: List[Temp.Temp]
   val argsRegisters: List[Temp.Temp]
   val registers: List[Temp.Temp]
-  val asignableRegisters: List[Temp.Temp]
 
   val FP: Temp.Temp
   val RV: Temp.Temp
@@ -89,7 +89,6 @@ trait ArmConstants extends Constants {
   override val calleeSaves = List("r4", "r5", "r6", "r7", "r8", "r9", "r10")
   override val callerSaves = List("r0", "r1", "r2", "r3")
   override val registers = List("r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10")
-  override val asignableRegisters = List("r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9")
 
 }
 
@@ -136,7 +135,7 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
   }
 
   override def procEntryExit1(body: Tree.Stm): Tree.Stm = {
-
+//
     val iterator = argsRegisters.iterator
 
     val zip = calleeSaves map { x => (x, Temp.newTemp())}
@@ -151,6 +150,8 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
     } flatten
 
     seq(begin ++ (moves.toList :+ body) ++ end)
+
+//    body
   }
 
 
@@ -158,18 +159,35 @@ class ArmFrame(n: Temp.Label, f: List[Boolean]) extends Frame with ArmConstants 
    * Una instrucción trucha al principio por cada registro callee save, defini'endolo, y otra instr. al final, us'andolos.
    */
   override def procEntryExit2(instructions: List[Asm.Instr]): List[Asm.Instr] = {
-    val end = Asm.OPER(asm = "@ end", src = RV :: calleeSaves, dst = List())
+//    val begin = Asm.OPER(asm = "@ begin", src = List(), dst = calleeSaves)
+    val end = Asm.OPER(asm = "@ end", src = RV :: calleeSaves , dst = List())
 
     //    val begin = calleeSaves map { x => Asm.OPER(asm = "@ begin", src = List(), dst = List(x)) }
-    //    val end = ( RV :: calleeSaves ) map { x => Asm.OPER(asm = "@ end", src = List(x) , dst = List()) }
+//        val end = ( RV :: calleeSaves ) map { x => Asm.OPER(asm = "@ end", src = List(x) , dst = List()) }
 
+//    begin +: instructions :+ end
     instructions :+ end
   }
 
+
   override def procEntryExit3(instructions: List[Asm.Instr]): (String, List[Asm.Instr], String) = {
+
+//    def aux(i:Asm.Instr) = i match {
+//      case Asm.OPER(_, _, dsts, _) => dsts
+//      case Asm.MOVE(_, _, dst) => List(dst)
+//      case _ => List()
+//    }
+
+//    val used = instructions flatMap aux filter {calleeSaves.contains}
+
     val prolog = List(
       Asm.OPER(asm = "stmfd     sp!, {fp, lr}", src = List(), dst = List()),
       Asm.OPER(asm = ".save {fp, lr}", src = List(), dst = List()),
+
+//      Asm.OPER(asm = "stmfd     sp!, {r4}", src = List(), dst = List()),
+//      Asm.OPER(asm = ".save {r4}", src = List(), dst = List()),
+
+
       Asm.OPER(asm = ".setfp fp, sp, #4", src = List(), dst = List()),
       Asm.OPER(asm = "add       fp, sp, #4", src = List(), dst = List())
     )

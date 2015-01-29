@@ -1,0 +1,10 @@
+prefix=/home/jose/src/arm/Sourcery_G++_Lite
+exec_prefix=${prefix}
+top_builddir=/home/jose/Code/tigerc/runtime/gc/libatomic_ops
+top_srcdir=/home/jose/Code/tigerc/runtime/gc/libatomic_ops
+
+Name: The atomic_ops library (uninstalled)
+Description: Atomic memory update operations
+Version: 7.4.0
+Libs: ${top_builddir}/src/libatomic_ops.la
+Cflags: -I${top_builddir}/src -I${top_srcdir}/src

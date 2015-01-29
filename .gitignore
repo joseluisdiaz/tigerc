@@ -22,3 +22,8 @@ project/plugins/project/
 # ENSIME!
 .ensime
 .ensime_lucene
+
+# C
+*.o
+*.s
+.libs
