@@ -1,8 +1,0 @@
-let
-	type A = array of int
-	var a:= A[10] of 0
-        var i:= 3
-in
- a[i] := 65;
- print(chr(a[i]))
-end
