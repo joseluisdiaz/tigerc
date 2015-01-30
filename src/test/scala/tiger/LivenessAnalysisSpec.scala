@@ -58,9 +58,7 @@ class LivenessAnalysisSpec extends FlatSpec with Matchers {
     val asm = fixture.asm3
 
     val f = Frame(Temp.namedTemp("function"), List(true, false, false))
-    val r = RegisterAllocation(asm, f)
-
-    val (colored, frame) =  r.get()
+    val colored = RegisterAllocation(asm, f)
 
     val registers = colored.map {
       case Asm.OPER(_, s, d, _) => s ::: d
@@ -68,7 +66,7 @@ class LivenessAnalysisSpec extends FlatSpec with Matchers {
       case _ => List()
     }.flatten.distinct
 
-    (registers sorted) should be(frame.registers sorted)
+    (registers sorted) should be(f.registers sorted)
 
   }
 

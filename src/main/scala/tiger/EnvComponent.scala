@@ -49,6 +49,22 @@ trait EnvComponent {
       "exit" -> FuncEntry(mainLevel, "exit", List(INT()), UNIT(), extern = true)
     ) withDefault error
 
+
+
+    val _baseFrames:Map[String, Frame] = baseVenv.flatMap {
+      case (_, FuncEntry(_, name, formals, _, _)) => Some(name -> Frame(name, formals map (_ => false)))
+      case _ => None
+    }
+
+    val _innerFunctions = Map("_allocArray" -> Frame("_allocArray", List(false, false)),
+      "_checkIndexArray" -> Frame("_checkIndexArray", List(false, false)),
+      "_allocRecord" -> Frame("_allocRecord", List(false, false)),
+      "_checkNil" -> Frame("_checkNil", List(false)),
+      "_stringCompare" -> Frame("_stringCompare", List(false)))
+
+
+    val baseFrames = _baseFrames ++ _innerFunctions
+
   }
 
 }

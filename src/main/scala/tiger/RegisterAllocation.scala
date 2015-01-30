@@ -19,7 +19,7 @@ trait MultiSet[A, T] extends mutable.Map[A, T] {
 }
 
 object RegisterAllocation {
-  def apply(i: List[Instr], f: Frame) = new RegisterAllocation(i, f)
+  def apply(i: List[Instr], f: Frame) = new RegisterAllocation(i, f).get()
 }
 
 class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
@@ -135,13 +135,12 @@ class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
     }
   }
 
-  def get(): (List[Instr], Frame) = {
+  // this mutate the state of Frame
+  private def get(): List[Instr] = {
 
     val t = Temp.newTemp()
 
     loop()
-    println(s"TEMP---> $t <--> ${Temp.newTemp()}")
-
 
     rename()
     remove()
@@ -151,9 +150,7 @@ class RegisterAllocation(var instructions: List[Instr], frame: Frame) {
     instructions = x
 
 
-    color.foreach { case (t, c) => println(s"$t\t$c")}
-
-    (instructions, frame)
+    instructions
   }
 
 
