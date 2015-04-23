@@ -14,30 +14,30 @@ Grammar
     7    | l_value .
     8    | l_value DOSPIG exp .
     9    | PI exp . PCOMA explist PD
-   10    | exp PIPE exp .
-   11    | exp AMPER exp .
-   12    | exp IGUAL exp .
-   13    | exp MENOR exp .
-   14    | exp MENIG exp .
-   15    | exp MAYOR exp .
-   16    | exp MAYIG exp .
-   17    | exp DIST exp .
-   18    | exp MAS exp .
-   19    | exp MENOS exp .
-   20    | exp POR exp .
-   21    | exp DIV exp .
-   22    | MENOS exp .
-   23    | PI exp . PD
-   24    | id . PI args PD
-   25    | IF exp THEN exp .
-   26    | IF exp THEN exp ELSE exp .
-   27    | WHILE exp DO exp .
-   28    | FOR id DOSPIG exp TO exp DO exp .
+   10    | FOR id DOSPIG exp TO exp DO exp .
+   11    | exp PIPE exp .
+   12    | exp AMPER exp .
+   13    | exp IGUAL exp .
+   14    | exp MENOR exp .
+   15    | exp MENIG exp .
+   16    | exp MAYOR exp .
+   17    | exp MAYIG exp .
+   18    | exp DIST exp .
+   19    | exp MAS exp .
+   20    | exp MENOS exp .
+   21    | exp POR exp .
+   22    | exp DIV exp .
+   23    | MENOS exp .
+   24    | PI exp . PD
+   25    | id . PI args PD
+   26    | IF exp THEN exp .
+   27    | IF exp THEN exp ELSE exp .
+   28    | WHILE exp DO exp .
    29    | LET decs IN . END
    30    | LET decs IN exp . END
    31    | LET decs IN exp . PCOMA explist END
-   32    | l_value CI exp CD OF exp .
-   33    | id . LI rec_fields LD
+   32    | id . LI rec_fields LD
+   33    | l_value CI exp CD OF exp .
 
    34 explist: exp . PCOMA explist
    35        | exp .
@@ -85,17 +85,17 @@ state 0 ( based on state 0 )
     _: ⊢ . prog
     prog: . exp YYEOF
 
-    NIL	announce rule prog: exp YYEOF
-    BREAK	announce rule prog: exp YYEOF
-    WHILE	announce rule prog: exp YYEOF
-    LET	announce rule prog: exp YYEOF
     ID	announce rule prog: exp YYEOF
-    IF	announce rule prog: exp YYEOF
-    PI	announce rule prog: exp YYEOF
+    LET	announce rule prog: exp YYEOF
+    BREAK	announce rule prog: exp YYEOF
     LITERAL	announce rule prog: exp YYEOF
     NRO	announce rule prog: exp YYEOF
-    FOR	announce rule prog: exp YYEOF
     MENOS	announce rule prog: exp YYEOF
+    FOR	announce rule prog: exp YYEOF
+    IF	announce rule prog: exp YYEOF
+    WHILE	announce rule prog: exp YYEOF
+    PI	announce rule prog: exp YYEOF
+    NIL	announce rule prog: exp YYEOF
 
     prog	go to state 1
 
@@ -110,2569 +110,2605 @@ state 1 ( based on state 12 )
 state 2 ( based on state 0 )
 
     _: ⊢ . exp
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    id: . ID
+    exp: . NRO
+    exp: . PI PD
+    l_value: . l_value CI exp CD
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
+    id	go to state 13
+    l_value	go to state 14
     exp	go to state 62
-    id	go to state 16
-    l_value	go to state 17
 
 
-state 3 ( based on state 6 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: WHILE . exp DO exp
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 59
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 4 ( based on state 4 )
+state 3 ( based on state 4 )
 
     exp: LET . decs IN exp PCOMA explist END
-    decs: .
-    decs: . dec decs
-    exp: LET . decs IN exp END
     exp: LET . decs IN END
+    decs: .
+    exp: LET . decs IN exp END
+    decs: . dec decs
 
-    FUNCTION	announce rule decs: dec decs
     TYPE	announce rule decs: dec decs
     VAR	announce rule decs: dec decs
+    FUNCTION	announce rule decs: dec decs
     $default	announce rule decs: /* empty */
 
-    decs	go to state 5
+    decs	go to state 4
 
 
-state 5 ( based on state 19 )
+state 4 ( based on state 19 )
 
-    exp: LET decs . IN exp PCOMA explist END
-    exp: LET decs . IN exp END
     exp: LET decs . IN END
+    exp: LET decs . IN exp END
+    exp: LET decs . IN exp PCOMA explist END
 
-    IN	shift, and go to 6
+    IN	shift, and go to 5
 
 
-state 6 ( based on state 51 )
+state 5 ( based on state 51 )
 
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: LET decs IN . exp END
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: LET decs IN . exp PCOMA explist END
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value CI exp CD OF exp
+    exp: LET decs IN . exp PCOMA explist END
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: LET decs IN . exp END
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
     exp: LET decs IN . END
+    exp: . exp MAYOR exp
+    l_value: . id
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . BREAK
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
     END	announce rule exp: LET decs IN END
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 58
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 61
 
 
-state 7 ( based on state 5 )
+state 6 ( based on state 10 )
 
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: IF . exp THEN exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: MENOS . exp
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
-    exp: IF . exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . BREAK
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 53
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 8 ( based on state 9 )
-
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
     exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: PI . PD
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: PI . exp PD
-    exp: PI . exp PCOMA explist PD
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . BREAK
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    PD	announce rule exp: PI PD
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 52
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 60
 
 
-state 9 ( based on state 7 )
+state 7 ( based on state 7 )
 
     exp: FOR . id DOSPIG exp TO exp DO exp
     id: . ID
 
     ID	announce rule id: ID
 
-    id	go to state 10
+    id	go to state 8
 
 
-state 10 ( based on state 25 )
+state 8 ( based on state 25 )
 
     exp: FOR id . DOSPIG exp TO exp DO exp
 
-    DOSPIG	shift, and go to 11
+    DOSPIG	shift, and go to 9
 
 
-state 11 ( based on state 55 )
+state 9 ( based on state 55 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
     exp: FOR id DOSPIG . exp TO exp DO exp
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
     exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
     exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 55
+
+
+state 10 ( based on state 5 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: IF . exp THEN exp ELSE exp
+    exp: IF . exp THEN exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 50
+
+
+state 11 ( based on state 6 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: WHILE . exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
     exp	go to state 47
-    id	go to state 16
-    l_value	go to state 17
 
 
-state 12 ( based on state 10 )
+state 12 ( based on state 9 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: MENOS . exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: PI . exp PCOMA explist PD
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: PI . PD
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 13
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 13 ( based on state 28 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: MENOS exp .
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIV	shift, and go to 14
-    POR	shift, and go to 22
-    $default	announce rule exp: MENOS exp
-
-
-state 14 ( based on state 42 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: exp DIV . exp
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
     exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: PI . exp PD
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
+    PD	announce rule exp: PI PD
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 15
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 15 ( based on state 69 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp DIV exp .
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    $default	announce rule exp: exp DIV exp
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 46
 
 
-state 16 ( based on state 14 )
+state 13 ( based on state 14 )
 
     exp: id . PI args PD
     l_value: id .
     exp: id . LI rec_fields LD
 
-    LI	announce rule exp: id LI rec_fields LD
     PI	announce rule exp: id PI args PD
+    LI	announce rule exp: id LI rec_fields LD
     $default	announce rule l_value: id
 
 
-state 17 ( based on state 15 )
+state 14 ( based on state 15 )
 
     l_value: l_value . CI exp CD
-    l_value: l_value . PTO id
+    exp: l_value . CI exp CD OF exp
     exp: l_value . DOSPIG exp
     exp: l_value .
-    exp: l_value . CI exp CD OF exp
+    l_value: l_value . PTO id
 
     PTO	announce rule l_value: l_value PTO id
-    CI	shift, and go to 18
-    DOSPIG	shift, and go to 45
+    CI	shift, and go to 15
+    DOSPIG	shift, and go to 44
     $default	announce rule exp: l_value
 
 
-state 18 ( based on state 47 )
+state 15 ( based on state 47 )
 
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    l_value: l_value CI . exp CD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
     exp: l_value CI . exp CD OF exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
+    exp: . PI PD
+    exp: . exp DIST exp
+    id: . ID
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . BREAK
+    l_value: l_value CI . exp CD
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 19
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 16
 
 
-state 19 ( based on state 76 )
+state 16 ( based on state 76 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
     l_value: l_value CI exp . CD
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAYOR exp
-    exp: exp . MAS exp
     exp: l_value CI exp . CD OF exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    CD	shift, and go to 30
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-
-
-state 20 ( based on state 38 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: exp DIST . exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 21
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 21 ( based on state 65 )
-
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
     exp: exp . PIPE exp
     exp: exp . POR exp
+    exp: exp . IGUAL exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    CD	shift, and go to 41
+
+
+state 17 ( based on state 37 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: exp MAYIG . exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 18
+
+
+state 18 ( based on state 64 )
+
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp DIST exp .
-    exp: exp . MAYIG exp
+    exp: exp MAYIG exp .
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	error (nonassociative)
     MAYIG	error (nonassociative)
-    DIV	shift, and go to 14
-    MAYOR	error (nonassociative)
-    MENOR	error (nonassociative)
-    POR	shift, and go to 22
     IGUAL	error (nonassociative)
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MENOR	error (nonassociative)
     MENIG	error (nonassociative)
-    $default	announce rule exp: exp DIST exp
+    MAYOR	error (nonassociative)
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    MAS	shift, and go to 25
+    DIST	error (nonassociative)
+    $default	announce rule exp: exp MAYIG exp
 
 
-state 22 ( based on state 41 )
+state 19 ( based on state 40 )
 
-    exp: . BREAK
-    exp: exp POR . exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    exp: exp MENOS . exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 23
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 20
 
 
-state 23 ( based on state 68 )
+state 20 ( based on state 67 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
+    exp: exp MENOS exp .
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    $default	announce rule exp: exp MENOS exp
+
+
+state 21 ( based on state 41 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: exp POR . exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 22
+
+
+state 22 ( based on state 68 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp POR exp .
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
     $default	announce rule exp: exp POR exp
 
 
-state 24 ( based on state 39 )
+state 23 ( based on state 42 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: exp MAS . exp
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: exp DIV . exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 25
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 24
 
 
-state 25 ( based on state 66 )
+state 24 ( based on state 69 )
 
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp DIV exp .
+    exp: exp . DIV exp
     exp: exp . PIPE exp
+    exp: exp . IGUAL exp
     exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    $default	announce rule exp: exp DIV exp
+
+
+state 25 ( based on state 39 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: exp MAS . exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 26
+
+
+state 26 ( based on state 66 )
+
     exp: exp . MENOR exp
     exp: exp . MENOS exp
     exp: exp MAS exp .
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIV	shift, and go to 14
-    POR	shift, and go to 22
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
     $default	announce rule exp: exp MAS exp
 
 
-state 26 ( based on state 40 )
+state 27 ( based on state 33 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: exp MENOS . exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 27
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 27 ( based on state 67 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp MENOS exp .
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIV	shift, and go to 14
-    POR	shift, and go to 22
-    $default	announce rule exp: exp MENOS exp
-
-
-state 28 ( based on state 37 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: exp MAYIG . exp
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 29
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 29 ( based on state 64 )
-
-    exp: exp . PIPE exp
-    exp: exp MAYIG exp .
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	error (nonassociative)
-    MAYIG	error (nonassociative)
-    DIV	shift, and go to 14
-    MAYOR	error (nonassociative)
-    MENOR	error (nonassociative)
-    POR	shift, and go to 22
-    IGUAL	error (nonassociative)
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-    MENIG	error (nonassociative)
-    $default	announce rule exp: exp MAYIG exp
-
-
-state 30 ( based on state 92 )
-
-    l_value: l_value CI exp CD .
-    exp: l_value CI exp CD . OF exp
-
-    OF	shift, and go to 31
-    $default	announce rule l_value: l_value CI exp CD
-
-
-state 31 ( based on state 110 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: l_value CI exp CD OF . exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 32
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 32 ( based on state 122 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-    exp: l_value CI exp CD OF exp .
-
-    $default	announce rule exp: l_value CI exp CD OF exp
-
-
-state 33 ( based on state 33 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
     exp: exp PIPE . exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 34
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 28
 
 
-state 34 ( based on state 60 )
+state 28 ( based on state 60 )
 
-    exp: exp . PIPE exp
-    exp: exp PIPE exp .
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
+    exp: exp PIPE exp .
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    IGUAL	shift, and go to 41
-    POR	shift, and go to 22
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MAYIG	shift, and go to 17
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
     $default	announce rule exp: exp PIPE exp
 
 
-state 35 ( based on state 32 )
+state 29 ( based on state 31 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: exp AMPER . exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 36
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 36 ( based on state 59 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp AMPER exp .
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    DIV	shift, and go to 14
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    IGUAL	shift, and go to 41
-    POR	shift, and go to 22
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-    $default	announce rule exp: exp AMPER exp
-
-
-state 37 ( based on state 36 )
-
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
     exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
     exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
     exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
+    exp: . BREAK
     exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
     exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: exp MAYOR . exp
-    exp: . NRO
-    exp: . exp MENOR exp
-    id: . ID
-    exp: . BREAK
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 38
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 38 ( based on state 63 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp MAYOR exp .
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	error (nonassociative)
-    MAYIG	error (nonassociative)
-    DIV	shift, and go to 14
-    MAYOR	error (nonassociative)
-    MENOR	error (nonassociative)
-    POR	shift, and go to 22
-    IGUAL	error (nonassociative)
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-    MENIG	error (nonassociative)
-    $default	announce rule exp: exp MAYOR exp
-
-
-state 39 ( based on state 34 )
-
-    exp: . BREAK
     exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
     exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: exp MENOR . exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
+    l_value: . l_value CI exp CD
     exp: . NRO
+    exp: . PI PD
     id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 40
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 40 ( based on state 61 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp MENOR exp .
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	error (nonassociative)
-    MAYIG	error (nonassociative)
-    DIV	shift, and go to 14
-    MAYOR	error (nonassociative)
-    MENOR	error (nonassociative)
-    POR	shift, and go to 22
-    IGUAL	error (nonassociative)
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-    MENIG	error (nonassociative)
-    $default	announce rule exp: exp MENOR exp
-
-
-state 41 ( based on state 31 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
     exp: exp IGUAL . exp
-    exp: . exp DIV exp
     exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
     exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 42
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 30
 
 
-state 42 ( based on state 58 )
+state 30 ( based on state 58 )
 
-    exp: exp . PIPE exp
-    exp: exp IGUAL exp .
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
+    exp: exp IGUAL exp .
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	error (nonassociative)
     MAYIG	error (nonassociative)
-    DIV	shift, and go to 14
-    MAYOR	error (nonassociative)
-    MENOR	error (nonassociative)
-    POR	shift, and go to 22
     IGUAL	error (nonassociative)
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MENOR	error (nonassociative)
     MENIG	error (nonassociative)
+    MAYOR	error (nonassociative)
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    MAS	shift, and go to 25
+    DIST	error (nonassociative)
     $default	announce rule exp: exp IGUAL exp
 
 
-state 43 ( based on state 35 )
+state 31 ( based on state 34 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: exp MENIG . exp
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: exp MENOR . exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 44
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 32
 
 
-state 44 ( based on state 62 )
+state 32 ( based on state 61 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
+    exp: exp MENOR exp .
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
-    exp: exp MENIG exp .
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	error (nonassociative)
     MAYIG	error (nonassociative)
-    DIV	shift, and go to 14
-    MAYOR	error (nonassociative)
-    MENOR	error (nonassociative)
-    POR	shift, and go to 22
     IGUAL	error (nonassociative)
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MENOR	error (nonassociative)
     MENIG	error (nonassociative)
+    MAYOR	error (nonassociative)
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    MAS	shift, and go to 25
+    DIST	error (nonassociative)
+    $default	announce rule exp: exp MENOR exp
+
+
+state 33 ( based on state 35 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    exp: exp MENIG . exp
+    exp: . exp DIST exp
+    id: . ID
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 34
+
+
+state 34 ( based on state 62 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: exp MENIG exp .
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	error (nonassociative)
+    IGUAL	error (nonassociative)
+    MENOR	error (nonassociative)
+    MENIG	error (nonassociative)
+    MAYOR	error (nonassociative)
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    MAS	shift, and go to 25
+    DIST	error (nonassociative)
     $default	announce rule exp: exp MENIG exp
 
 
-state 45 ( based on state 46 )
+state 35 ( based on state 36 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
+    exp: exp MAYOR . exp
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: l_value DOSPIG . exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 46
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 36
 
 
-state 46 ( based on state 75 )
+state 36 ( based on state 63 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: l_value DOSPIG exp .
-    exp: exp . MAYIG exp
+    exp: exp MAYOR exp .
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    IGUAL	shift, and go to 41
-    POR	shift, and go to 22
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MAYIG	error (nonassociative)
+    IGUAL	error (nonassociative)
+    MENOR	error (nonassociative)
+    MENIG	error (nonassociative)
+    MAYOR	error (nonassociative)
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    MAS	shift, and go to 25
+    DIST	error (nonassociative)
+    $default	announce rule exp: exp MAYOR exp
+
+
+state 37 ( based on state 32 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: exp AMPER . exp
+    exp: . NRO
+    exp: . PI PD
+    exp: . exp DIST exp
+    id: . ID
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 38
+
+
+state 38 ( based on state 59 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp AMPER exp .
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    $default	announce rule exp: exp AMPER exp
+
+
+state 39 ( based on state 38 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: exp DIST . exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 40
+
+
+state 40 ( based on state 65 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp DIST exp .
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	error (nonassociative)
+    IGUAL	error (nonassociative)
+    MENOR	error (nonassociative)
+    MENIG	error (nonassociative)
+    MAYOR	error (nonassociative)
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    MAS	shift, and go to 25
+    DIST	error (nonassociative)
+    $default	announce rule exp: exp DIST exp
+
+
+state 41 ( based on state 92 )
+
+    exp: l_value CI exp CD . OF exp
+    l_value: l_value CI exp CD .
+
+    OF	shift, and go to 42
+    $default	announce rule l_value: l_value CI exp CD
+
+
+state 42 ( based on state 110 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: l_value CI exp CD OF . exp
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 43
+
+
+state 43 ( based on state 122 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: l_value CI exp CD OF exp .
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    $default	announce rule exp: l_value CI exp CD OF exp
+
+
+state 44 ( based on state 46 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: l_value DOSPIG . exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 45
+
+
+state 45 ( based on state 75 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: l_value DOSPIG exp .
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
     $default	announce rule exp: l_value DOSPIG exp
 
 
-state 47 ( based on state 85 )
+state 46 ( based on state 27 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
-    exp: exp . IGUAL exp
-    exp: FOR id DOSPIG exp . TO exp DO exp
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    TO	shift, and go to 48
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-
-
-state 48 ( based on state 105 )
-
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: FOR id DOSPIG exp TO . exp DO exp
-    exp: . BREAK
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 49
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 49 ( based on state 119 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: FOR id DOSPIG exp TO exp . DO exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	shift, and go to 20
-    DO	shift, and go to 50
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-
-
-state 50 ( based on state 131 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: FOR id DOSPIG exp TO exp DO . exp
-    exp: . exp MAYOR exp
-    exp: . PI exp PD
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 51
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 51 ( based on state 135 )
-
-    exp: exp . PIPE exp
-    exp: FOR id DOSPIG exp TO exp DO exp .
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    $default	announce rule exp: FOR id DOSPIG exp TO exp DO exp
-
-
-state 52 ( based on state 27 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
     exp: PI exp . PCOMA explist PD
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: PI exp . PD
-    exp: exp . MAS exp
     exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PD	announce rule exp: PI exp PD
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    PCOMA	announce rule exp: PI exp PCOMA explist PD
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-
-
-state 53 ( based on state 23 )
-
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
     exp: exp . PIPE exp
-    exp: IF exp . THEN exp
     exp: exp . POR exp
+    exp: exp . IGUAL exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    PD	announce rule exp: PI exp PD
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    PCOMA	announce rule exp: PI exp PCOMA explist PD
+
+
+state 47 ( based on state 24 )
+
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
+    exp: exp . MAS exp
+    exp: WHILE exp . DO exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
     exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    DO	shift, and go to 48
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+
+
+state 48 ( based on state 54 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: WHILE exp DO . exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 49
+
+
+state 49 ( based on state 84 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: WHILE exp DO exp .
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    $default	announce rule exp: WHILE exp DO exp
+
+
+state 50 ( based on state 23 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: IF exp . THEN exp
     exp: IF exp . THEN exp ELSE exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    THEN	shift, and go to 54
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-
-
-state 54 ( based on state 53 )
-
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: IF exp THEN . exp ELSE exp
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: IF exp THEN . exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . BREAK
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 55
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 55 ( based on state 83 )
-
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
     exp: exp . PIPE exp
     exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: IF exp THEN exp .
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: IF exp THEN exp . ELSE exp
-    exp: exp . MAYIG exp
-    exp: exp . MAYOR exp
-    exp: exp . MAS exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
     exp: exp . IGUAL exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    ELSE	shift, and go to 56
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    THEN	shift, and go to 51
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+
+
+state 51 ( based on state 53 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: IF exp THEN . exp
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: IF exp THEN . exp ELSE exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 52
+
+
+state 52 ( based on state 83 )
+
+    exp: exp . MENOR exp
+    exp: IF exp THEN exp . ELSE exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: IF exp THEN exp .
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . POR exp
+    exp: exp . IGUAL exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    ELSE	shift, and go to 53
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
     $default	announce rule exp: IF exp THEN exp
 
 
-state 56 ( based on state 104 )
+state 53 ( based on state 104 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: IF exp THEN exp ELSE . exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 57
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 54
 
 
-state 57 ( based on state 118 )
+state 54 ( based on state 118 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
     exp: IF exp THEN exp ELSE exp .
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    IGUAL	shift, and go to 41
-    POR	shift, and go to 22
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
     $default	announce rule exp: IF exp THEN exp ELSE exp
 
 
-state 58 ( based on state 82 )
+state 55 ( based on state 85 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: LET decs IN exp . END
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAYOR exp
-    exp: exp . MAS exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-    exp: LET decs IN exp . PCOMA explist END
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    END	announce rule exp: LET decs IN exp END
-    PCOMA	announce rule exp: LET decs IN exp PCOMA explist END
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-
-
-state 59 ( based on state 24 )
-
-    exp: exp . PIPE exp
-    exp: WHILE exp . DO exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
+    exp: FOR id DOSPIG exp . TO exp DO exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	shift, and go to 20
-    DO	shift, and go to 60
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    TO	shift, and go to 56
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
 
 
-state 60 ( based on state 54 )
+state 56 ( based on state 105 )
 
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: FOR id DOSPIG exp TO . exp DO exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: WHILE exp DO . exp
-    exp: . NRO
-    exp: . exp MENOR exp
-    id: . ID
-    exp: . BREAK
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 61
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 57
 
 
-state 61 ( based on state 84 )
+state 57 ( based on state 119 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: WHILE exp DO exp .
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: FOR id DOSPIG exp TO exp . DO exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    $default	announce rule exp: WHILE exp DO exp
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    DO	shift, and go to 58
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+
+
+state 58 ( based on state 131 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    exp: FOR id DOSPIG exp TO exp DO . exp
+    exp: . NRO
+    exp: . PI PD
+    l_value: . l_value CI exp CD
+    exp: . exp DIST exp
+    id: . ID
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 59
+
+
+state 59 ( based on state 135 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: FOR id DOSPIG exp TO exp DO exp .
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    $default	announce rule exp: FOR id DOSPIG exp TO exp DO exp
+
+
+state 60 ( based on state 28 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: MENOS exp .
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    $default	announce rule exp: MENOS exp
+
+
+state 61 ( based on state 82 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: LET decs IN exp . END
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: LET decs IN exp . PCOMA explist END
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . POR exp
+    exp: exp . IGUAL exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    END	announce rule exp: LET decs IN exp END
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    PCOMA	announce rule exp: LET decs IN exp PCOMA explist END
 
 
 state 62 ( based on state 13 )
 
     _: ⊢ exp .
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
     YYEOF	accept exp
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
 
 
 state 63 ( based on state 56 )
 
     _: ⊢ . explist
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    explist: . exp PCOMA explist
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    explist: . exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . BREAK
+    explist: . exp
+    exp: . LET decs IN exp END
+    explist: . exp PCOMA explist
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 64
-    id	go to state 16
-    l_value	go to state 17
-    explist	go to state 65
-
-
-state 64 ( based on state 86 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    explist: exp .
-    explist: exp . PCOMA explist
-    exp: exp . MAYIG exp
-    exp: exp . MAYOR exp
-    exp: exp . MAS exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    PCOMA	announce rule explist: exp PCOMA explist
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-    $default	announce rule explist: exp
+    id	go to state 13
+    explist	go to state 64
+    l_value	go to state 14
+    exp	go to state 65
 
 
-state 65 ( based on state 87 )
+state 64 ( based on state 87 )
 
     _: ⊢ explist .
 
-    PD	accept explist
     END	accept explist
+    PD	accept explist
+
+
+state 65 ( based on state 86 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    explist: exp . PCOMA explist
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    explist: exp .
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . POR exp
+    exp: exp . IGUAL exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    PCOMA	announce rule explist: exp PCOMA explist
+    $default	announce rule explist: exp
 
 
 state 66 ( based on state 43 )
 
     _: ⊢ . args
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    args: . exp
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    args: . exp COMA args
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    args: .
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    args: . exp COMA args
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    args: .
+    args: . exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . BREAK
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    PD	announce rule args: /* empty */
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
+    PD	announce rule args: /* empty */
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
     $default	announce rule args: /* empty */
 
-    exp	go to state 67
-    args	go to state 68
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    args	go to state 67
+    exp	go to state 68
 
 
-state 67 ( based on state 70 )
-
-    exp: exp . PIPE exp
-    args: exp . COMA args
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAYOR exp
-    exp: exp . MAS exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-    args: exp .
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    COMA	announce rule args: exp COMA args
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-    $default	announce rule args: exp
-
-
-state 68 ( based on state 71 )
+state 67 ( based on state 71 )
 
     _: ⊢ args .
 
     PD	accept args
+
+
+state 68 ( based on state 70 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    args: exp .
+    exp: exp . PIPE exp
+    exp: exp . POR exp
+    exp: exp . IGUAL exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+    args: exp . COMA args
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    COMA	announce rule args: exp COMA args
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    $default	announce rule args: exp
 
 
 state 69 ( based on state 44 )
@@ -2680,143 +2716,143 @@ state 69 ( based on state 44 )
     _: ⊢ . rec_fields
     rec_fields: . id IGUAL exp
     rec_fields: .
-    rec_fields: . id IGUAL exp COMA rec_fields
     id: . ID
+    rec_fields: . id IGUAL exp COMA rec_fields
 
     ID	announce rule id: ID
     LD	announce rule rec_fields: /* empty */
     $default	announce rule rec_fields: /* empty */
 
-    rec_fields	go to state 70
-    id	go to state 71
+    id	go to state 70
+    rec_fields	go to state 75
 
 
-state 70 ( based on state 72 )
-
-    _: ⊢ rec_fields .
-
-    LD	accept rec_fields
-
-
-state 71 ( based on state 73 )
+state 70 ( based on state 73 )
 
     rec_fields: id . IGUAL exp COMA rec_fields
     rec_fields: id . IGUAL exp
 
-    IGUAL	shift, and go to 72
+    IGUAL	shift, and go to 71
 
 
-state 72 ( based on state 91 )
+state 71 ( based on state 91 )
 
-    exp: . FOR id DOSPIG exp TO exp DO exp
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
+    rec_fields: id IGUAL . exp COMA rec_fields
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
     exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
     l_value: . l_value CI exp CD
+    exp: . NRO
     exp: . PI PD
+    id: . ID
     exp: . exp DIST exp
     rec_fields: id IGUAL . exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
     l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    rec_fields: id IGUAL . exp COMA rec_fields
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
     exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
+    exp: . NIL
     exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . BREAK
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 73
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 72
 
 
-state 73 ( based on state 109 )
+state 72 ( based on state 109 )
 
+    exp: exp . MENOR exp
     rec_fields: id IGUAL exp . COMA rec_fields
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    rec_fields: id IGUAL exp .
+    exp: exp . DIV exp
     exp: exp . PIPE exp
     exp: exp . POR exp
-    rec_fields: id IGUAL exp .
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAYOR exp
-    exp: exp . MAS exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
     exp: exp . IGUAL exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    COMA	shift, and go to 74
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    POR	shift, and go to 22
-    IGUAL	shift, and go to 41
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    POR	shift, and go to 21
+    AMPER	shift, and go to 37
+    DIV	shift, and go to 23
+    COMA	shift, and go to 73
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
     $default	announce rule rec_fields: id IGUAL exp
 
 
-state 74 ( based on state 121 )
+state 73 ( based on state 121 )
 
     rec_fields: id IGUAL exp COMA . rec_fields
     rec_fields: . id IGUAL exp
     rec_fields: .
-    rec_fields: . id IGUAL exp COMA rec_fields
     id: . ID
+    rec_fields: . id IGUAL exp COMA rec_fields
 
     ID	announce rule id: ID
     $default	announce rule rec_fields: /* empty */
 
-    rec_fields	go to state 75
-    id	go to state 71
+    id	go to state 70
+    rec_fields	go to state 74
 
 
-state 75 ( based on state 132 )
+state 74 ( based on state 132 )
 
     rec_fields: id IGUAL exp COMA rec_fields .
 
     $default	announce rule rec_fields: id IGUAL exp COMA rec_fields
+
+
+state 75 ( based on state 72 )
+
+    _: ⊢ rec_fields .
+
+    LD	accept rec_fields
 
 
 state 76 ( based on state 4 )
@@ -2826,17 +2862,17 @@ state 76 ( based on state 4 )
     dec: . TYPE id IGUAL ty
     dec: . vardec
 
-    FUNCTION	announce rule dec: fundec
     TYPE	shift, and go to 77
     VAR	announce rule dec: vardec
+    FUNCTION	announce rule dec: fundec
 
     dec	go to state 84
 
 
 state 77 ( based on state 16 )
 
-    dec: TYPE . id IGUAL ty
     id: . ID
+    dec: TYPE . id IGUAL ty
 
     ID	announce rule id: ID
 
@@ -2852,14 +2888,14 @@ state 78 ( based on state 48 )
 
 state 79 ( based on state 77 )
 
-    ty: . LI tyflds LD
     ty: . ARRAY OF id
+    ty: . LI tyflds LD
     ty: . id
     dec: TYPE id IGUAL . ty
 
+    ID	announce rule ty: id
     ARRAY	shift, and go to 80
     LI	announce rule ty: LI tyflds LD
-    ID	announce rule ty: id
 
     ty	go to state 83
 
@@ -2873,8 +2909,8 @@ state 80 ( based on state 93 )
 
 state 81 ( based on state 111 )
 
-    id: . ID
     ty: ARRAY OF . id
+    id: . ID
 
     ID	announce rule id: ID
 
@@ -2899,9 +2935,9 @@ state 84 ( based on state 20 )
 
     _: ⊢ dec .
 
-    FUNCTION	accept dec
     TYPE	accept dec
     VAR	accept dec
+    FUNCTION	accept dec
     IN	accept dec
 
 
@@ -2911,9 +2947,9 @@ state 85 ( based on state 20 )
     decs: .
     decs: . dec decs
 
-    FUNCTION	announce rule decs: dec decs
     TYPE	announce rule decs: dec decs
     VAR	announce rule decs: dec decs
+    FUNCTION	announce rule decs: dec decs
     IN	announce rule decs: /* empty */
     $default	announce rule decs: /* empty */
 
@@ -2930,8 +2966,8 @@ state 86 ( based on state 52 )
 state 87 ( based on state 4 )
 
     _: ⊢ . vardec
-    vardec: . VAR id DOSP id DOSPIG exp
     vardec: . VAR id DOSPIG exp
+    vardec: . VAR id DOSP id DOSPIG exp
 
     VAR	shift, and go to 88
 
@@ -2941,8 +2977,8 @@ state 87 ( based on state 4 )
 state 88 ( based on state 17 )
 
     vardec: VAR . id DOSPIG exp
-    vardec: VAR . id DOSP id DOSPIG exp
     id: . ID
+    vardec: VAR . id DOSP id DOSPIG exp
 
     ID	announce rule id: ID
 
@@ -2951,221 +2987,221 @@ state 88 ( based on state 17 )
 
 state 89 ( based on state 49 )
 
-    vardec: VAR id . DOSP id DOSPIG exp
     vardec: VAR id . DOSPIG exp
+    vardec: VAR id . DOSP id DOSPIG exp
 
-    DOSPIG	shift, and go to 90
-    DOSP	shift, and go to 92
-
-
-state 90 ( based on state 79 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    vardec: VAR id DOSPIG . exp
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 91
-    id	go to state 16
-    l_value	go to state 17
+    DOSP	shift, and go to 90
+    DOSPIG	shift, and go to 94
 
 
-state 91 ( based on state 98 )
-
-    exp: exp . PIPE exp
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    vardec: VAR id DOSPIG exp .
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    IGUAL	shift, and go to 41
-    POR	shift, and go to 22
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-    $default	announce rule vardec: VAR id DOSPIG exp
-
-
-state 92 ( based on state 78 )
+state 90 ( based on state 78 )
 
     vardec: VAR id DOSP . id DOSPIG exp
     id: . ID
 
     ID	announce rule id: ID
 
-    id	go to state 93
+    id	go to state 91
 
 
-state 93 ( based on state 97 )
+state 91 ( based on state 97 )
 
     vardec: VAR id DOSP id . DOSPIG exp
 
-    DOSPIG	shift, and go to 94
+    DOSPIG	shift, and go to 92
 
 
-state 94 ( based on state 113 )
+state 92 ( based on state 113 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    vardec: VAR id DOSP id DOSPIG . exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
     exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
     exp: . IF exp THEN exp
+    l_value: . l_value PTO id
     exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
     exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    vardec: VAR id DOSP id DOSPIG . exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
-    exp	go to state 95
-    id	go to state 16
-    l_value	go to state 17
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 93
 
 
-state 95 ( based on state 125 )
+state 93 ( based on state 125 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
     exp: exp . DIST exp
-    vardec: VAR id DOSP id DOSPIG exp .
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+    vardec: VAR id DOSP id DOSPIG exp .
 
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    IGUAL	shift, and go to 41
-    POR	shift, and go to 22
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
     $default	announce rule vardec: VAR id DOSP id DOSPIG exp
+
+
+state 94 ( based on state 79 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    vardec: VAR id DOSPIG . exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 95
+
+
+state 95 ( based on state 98 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    vardec: VAR id DOSPIG exp .
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    $default	announce rule vardec: VAR id DOSPIG exp
 
 
 state 96 ( based on state 21 )
 
     _: ⊢ vardec .
 
-    FUNCTION	accept vardec
     TYPE	accept vardec
     VAR	accept vardec
+    FUNCTION	accept vardec
     IN	accept vardec
 
 
 state 97 ( based on state 4 )
 
     _: ⊢ . fundec
-    fundec: . FUNCTION id PI tyflds PD IGUAL exp
     fundec: . FUNCTION id PI tyflds PD DOSP id IGUAL exp
+    fundec: . FUNCTION id PI tyflds PD IGUAL exp
 
     FUNCTION	shift, and go to 98
 
@@ -3185,20 +3221,20 @@ state 98 ( based on state 18 )
 
 state 99 ( based on state 50 )
 
-    fundec: FUNCTION id . PI tyflds PD IGUAL exp
     fundec: FUNCTION id . PI tyflds PD DOSP id IGUAL exp
+    fundec: FUNCTION id . PI tyflds PD IGUAL exp
 
     PI	shift, and go to 100
 
 
 state 100 ( based on state 80 )
 
-    tyfield: . id DOSP id
-    fundec: FUNCTION id PI . tyflds PD IGUAL exp
-    tyflds: . tyfield COMA tyflds
     tyflds: . tyfield
-    tyflds: .
+    tyflds: . tyfield COMA tyflds
     fundec: FUNCTION id PI . tyflds PD DOSP id IGUAL exp
+    tyflds: .
+    fundec: FUNCTION id PI . tyflds PD IGUAL exp
+    tyfield: . id DOSP id
 
     ID	announce rule tyfield: id DOSP id
     $default	announce rule tyflds: /* empty */
@@ -3217,204 +3253,204 @@ state 101 ( based on state 100 )
 
 state 102 ( based on state 115 )
 
-    fundec: FUNCTION id PI tyflds PD . IGUAL exp
     fundec: FUNCTION id PI tyflds PD . DOSP id IGUAL exp
+    fundec: FUNCTION id PI tyflds PD . IGUAL exp
 
-    DOSP	shift, and go to 103
-    IGUAL	shift, and go to 107
+    IGUAL	shift, and go to 103
+    DOSP	shift, and go to 105
 
 
-state 103 ( based on state 127 )
+state 103 ( based on state 128 )
+
+    exp: . PI exp PCOMA explist PD
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
+    fundec: FUNCTION id PI tyflds PD IGUAL . exp
+    exp: . LITERAL
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
+    exp: . WHILE exp DO exp
+    exp: . BREAK
+    exp: . l_value
+    exp: . exp POR exp
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
+    exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
+    exp: . exp MAYIG exp
+    exp: . exp MAS exp
+    exp: . LET decs IN exp END
+
+    ID	announce rule id: ID
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
+    LITERAL	announce rule exp: LITERAL
+    NRO	announce rule exp: NRO
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
+
+    id	go to state 13
+    l_value	go to state 14
+    exp	go to state 104
+
+
+state 104 ( based on state 134 )
+
+    exp: exp . MENOR exp
+    exp: exp . MENOS exp
+    exp: exp . MAS exp
+    fundec: FUNCTION id PI tyflds PD IGUAL exp .
+    exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
+    exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
+
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    $default	announce rule fundec: FUNCTION id PI tyflds PD IGUAL exp
+
+
+state 105 ( based on state 127 )
 
     fundec: FUNCTION id PI tyflds PD DOSP . id IGUAL exp
     id: . ID
 
     ID	announce rule id: ID
 
-    id	go to state 104
+    id	go to state 106
 
 
-state 104 ( based on state 133 )
+state 106 ( based on state 133 )
 
     fundec: FUNCTION id PI tyflds PD DOSP id . IGUAL exp
 
-    IGUAL	shift, and go to 105
+    IGUAL	shift, and go to 107
 
 
-state 105 ( based on state 136 )
+state 107 ( based on state 136 )
 
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
     exp: . PI exp PCOMA explist PD
-    exp: . WHILE exp DO exp
+    exp: . MENOS exp
+    exp: . IF exp THEN exp
+    l_value: . l_value PTO id
+    exp: . LET decs IN END
     exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
+    exp: . exp PIPE exp
+    exp: . PI exp PD
+    exp: . id PI args PD
+    exp: . LET decs IN exp PCOMA explist END
+    exp: . l_value CI exp CD OF exp
+    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . exp AMPER exp
+    exp: . exp MENIG exp
+    exp: . exp MENOR exp
+    exp: . exp DIV exp
     fundec: FUNCTION id PI tyflds PD DOSP id IGUAL . exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
-    exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
-    exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
-    exp: . IF exp THEN exp ELSE exp
-    exp: . exp MAYIG exp
-    exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
-
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
-    ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
-    LITERAL	announce rule exp: LITERAL
-    NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
-
-    exp	go to state 106
-    id	go to state 16
-    l_value	go to state 17
-
-
-state 106 ( based on state 137 )
-
-    exp: exp . PIPE exp
-    fundec: FUNCTION id PI tyflds PD DOSP id IGUAL exp .
-    exp: exp . POR exp
-    exp: exp . MENOR exp
-    exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
-    exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    exp: exp . DIST exp
-    exp: exp . IGUAL exp
-
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    IGUAL	shift, and go to 41
-    POR	shift, and go to 22
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-    $default	announce rule fundec: FUNCTION id PI tyflds PD DOSP id IGUAL exp
-
-
-state 107 ( based on state 128 )
-
-    exp: . BREAK
-    exp: . exp IGUAL exp
-    exp: . id PI args PD
-    exp: . exp DIV exp
-    exp: . NIL
-    exp: . PI exp PCOMA explist PD
     exp: . WHILE exp DO exp
-    exp: . LITERAL
-    l_value: . l_value CI exp CD
-    exp: . PI PD
-    exp: . exp DIST exp
-    fundec: FUNCTION id PI tyflds PD IGUAL . exp
-    exp: . LET decs IN exp END
-    exp: . exp MENIG exp
-    exp: . MENOS exp
-    l_value: . id
-    l_value: . l_value PTO id
-    exp: . l_value CI exp CD OF exp
-    exp: . id LI rec_fields LD
+    exp: . BREAK
     exp: . l_value
-    exp: . exp PIPE exp
-    exp: . exp AMPER exp
-    exp: . PI exp PD
-    exp: . exp MAYOR exp
-    exp: . IF exp THEN exp
-    exp: . LET decs IN END
-    exp: . exp MENOS exp
     exp: . exp POR exp
-    exp: . l_value DOSPIG exp
-    exp: . LET decs IN exp PCOMA explist END
+    exp: . exp IGUAL exp
+    exp: . id LI rec_fields LD
+    l_value: . l_value CI exp CD
+    exp: . NRO
+    exp: . PI PD
+    id: . ID
+    exp: . exp DIST exp
+    l_value: . id
+    exp: . exp MAYOR exp
+    exp: . NIL
+    exp: . exp MENOS exp
     exp: . IF exp THEN exp ELSE exp
+    exp: . l_value DOSPIG exp
     exp: . exp MAYIG exp
     exp: . exp MAS exp
-    exp: . NRO
-    id: . ID
-    exp: . exp MENOR exp
-    exp: . FOR id DOSPIG exp TO exp DO exp
+    exp: . LET decs IN exp END
 
-    NIL	announce rule exp: NIL
-    BREAK	announce rule exp: BREAK
-    WHILE	shift, and go to 3
-    LET	shift, and go to 4
     ID	announce rule id: ID
-    IF	shift, and go to 7
-    PI	shift, and go to 8
+    LET	shift, and go to 3
+    BREAK	announce rule exp: BREAK
     LITERAL	announce rule exp: LITERAL
     NRO	announce rule exp: NRO
-    FOR	shift, and go to 9
-    MENOS	shift, and go to 12
+    MENOS	shift, and go to 6
+    FOR	shift, and go to 7
+    IF	shift, and go to 10
+    WHILE	shift, and go to 11
+    PI	shift, and go to 12
+    NIL	announce rule exp: NIL
 
+    id	go to state 13
+    l_value	go to state 14
     exp	go to state 108
-    id	go to state 16
-    l_value	go to state 17
 
 
-state 108 ( based on state 134 )
+state 108 ( based on state 137 )
 
-    exp: exp . PIPE exp
-    exp: exp . POR exp
     exp: exp . MENOR exp
     exp: exp . MENOS exp
-    exp: exp . DIV exp
-    exp: exp . MAYIG exp
     exp: exp . MAS exp
-    exp: exp . MAYOR exp
-    exp: exp . AMPER exp
-    exp: exp . MENIG exp
-    fundec: FUNCTION id PI tyflds PD IGUAL exp .
+    fundec: FUNCTION id PI tyflds PD DOSP id IGUAL exp .
     exp: exp . DIST exp
+    exp: exp . MAYOR exp
+    exp: exp . MAYIG exp
+    exp: exp . DIV exp
+    exp: exp . PIPE exp
     exp: exp . IGUAL exp
+    exp: exp . POR exp
+    exp: exp . MENIG exp
+    exp: exp . AMPER exp
 
-    DIST	shift, and go to 20
-    MAYIG	shift, and go to 28
-    PIPE	shift, and go to 33
-    DIV	shift, and go to 14
-    AMPER	shift, and go to 35
-    MAYOR	shift, and go to 37
-    MENOR	shift, and go to 39
-    IGUAL	shift, and go to 41
-    POR	shift, and go to 22
-    MENIG	shift, and go to 43
-    MAS	shift, and go to 24
-    MENOS	shift, and go to 26
-    $default	announce rule fundec: FUNCTION id PI tyflds PD IGUAL exp
+    MAYIG	shift, and go to 17
+    PIPE	shift, and go to 27
+    IGUAL	shift, and go to 29
+    MENOR	shift, and go to 31
+    MENIG	shift, and go to 33
+    MAYOR	shift, and go to 35
+    MENOS	shift, and go to 19
+    AMPER	shift, and go to 37
+    POR	shift, and go to 21
+    DIV	shift, and go to 23
+    DIST	shift, and go to 39
+    MAS	shift, and go to 25
+    $default	announce rule fundec: FUNCTION id PI tyflds PD DOSP id IGUAL exp
 
 
 state 109 ( based on state 101 )
@@ -3430,9 +3466,9 @@ state 110 ( based on state 22 )
 
     _: ⊢ fundec .
 
-    FUNCTION	accept fundec
     TYPE	accept fundec
     VAR	accept fundec
+    FUNCTION	accept fundec
     IN	accept fundec
 
 
@@ -3450,49 +3486,49 @@ state 112 ( based on state 96 )
 
     _: ⊢ id .
 
+    MAYIG	accept id
     PTO	accept id
+    TYPE	accept id
+    PIPE	accept id
+    END	accept id
+    IGUAL	accept id
+    MENOR	accept id
+    MENIG	accept id
+    PD	accept id
+    MAYOR	accept id
+    DOSP	accept id
+    LD	accept id
+    CI	accept id
+    TO	accept id
+    ELSE	accept id
+    MENOS	accept id
+    THEN	accept id
+    POR	accept id
+    DO	accept id
+    AMPER	accept id
+    DIV	accept id
+    DOSPIG	accept id
+    COMA	accept id
+    VAR	accept id
     FUNCTION	accept id
     DIST	accept id
-    DO	accept id
-    CI	accept id
-    MAYIG	accept id
-    TYPE	accept id
-    CD	accept id
-    PD	accept id
-    PIPE	accept id
-    DIV	accept id
-    ELSE	accept id
-    DOSPIG	accept id
-    YYEOF	accept id
-    COMA	accept id
-    THEN	accept id
-    VAR	accept id
-    LD	accept id
-    MAYOR	accept id
-    AMPER	accept id
-    END	accept id
-    PCOMA	accept id
-    DOSP	accept id
-    IN	accept id
-    MENOR	accept id
-    POR	accept id
-    IGUAL	accept id
-    MENIG	accept id
     MAS	accept id
-    TO	accept id
-    MENOS	accept id
+    PCOMA	accept id
+    YYEOF	accept id
+    IN	accept id
+    CD	accept id
 
 
 state 113 ( based on state 94 )
 
     _: ⊢ . tyflds
-    tyfield: . id DOSP id
     tyflds: . tyfield
     tyflds: . tyfield COMA tyflds
     tyflds: .
+    tyfield: . id DOSP id
 
-    PD	announce rule tyflds: /* empty */
     ID	announce rule tyfield: id DOSP id
+    PD	announce rule tyflds: /* empty */
     LD	announce rule tyflds: /* empty */
     $default	announce rule tyflds: /* empty */
 

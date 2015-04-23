@@ -9,16 +9,16 @@ object Abs {
     def set(bool:Boolean):Unit
   }
 
-  /* Variables */
-  sealed abstract class Var
-  case class SimpleVar(id:Symbol) extends Var
-  case class FieldVar(leftValue: Var, id:Symbol) extends Var
-  case class SubscriptVar(leftValue: Var, exp: Exp) extends Var
-
-
   trait Position {
     def position: Pos
   }
+
+  /* Variables */
+  sealed abstract class Var extends Position
+  case class SimpleVar(id:Symbol, position: Pos) extends Var
+  case class FieldVar(leftValue: Var, id:Symbol, position: Pos) extends Var
+  case class SubscriptVar(leftValue: Var, exp: Exp, position: Pos) extends Var
+
 
   trait NullPosition extends Position {
     def position: Pos = 0
@@ -75,10 +75,10 @@ object Abs {
   case class FunctionDecs(decs: List[FunctionDec]) extends Dec with NullPosition
 
   /* tipos */
-  sealed abstract class Ty
-  case class NameTy(name: Symbol) extends Ty
-  case class RecordTy(fields: List[Field]) extends Ty
-  case class ArrayTy(name: Symbol) extends Ty
+  sealed abstract class Ty extends Position
+  case class NameTy(name: Symbol, position: Pos) extends Ty
+  case class RecordTy(fields: List[Field], position: Pos) extends Ty
+  case class ArrayTy(name: Symbol, position: Pos) extends Ty
 
   case class Field(name: Symbol, var escape: Boolean, ty: Ty) extends BooleanRef {
     def set(bool: Boolean) { escape = bool }

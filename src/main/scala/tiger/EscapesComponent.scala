@@ -25,14 +25,14 @@ trait EscapesComponent {
 
     private def travVar(v: Var, env: EscEnv, d: Depth): Unit = v match {
 
-      case SimpleVar(id) => env.get(id) match {
+      case SimpleVar(id, _) => env.get(id) match {
         case Some((dd, ref)) if d > dd => ref.set(true)
         case Some(_) => ()
         case None => () // not exist!
       }
 
-      case FieldVar(leftValue, id) => travVar(leftValue, env, d)
-      case SubscriptVar(leftValue, exp) => travVar(leftValue, env, d); travExp(exp, env, d)
+      case FieldVar(leftValue, id, _) => travVar(leftValue, env, d)
+      case SubscriptVar(leftValue, exp, _) => travVar(leftValue, env, d); travExp(exp, env, d)
     }
 
     private def travExp(e: Exp, env: EscEnv, d: Depth): Unit = e match {

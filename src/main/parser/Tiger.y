@@ -102,9 +102,9 @@ dec : TYPE id IGUAL ty                  { $$ = TypeDecs(List(TypeDec($2, $4, lin
     | fundec                            { $$ = $1; }
     ;
 
-ty : id                                 { $$ = NameTy($1); }
-   | LI tyflds LD                       { $$ = RecordTy($2); }
-   | ARRAY OF id                        { $$ = ArrayTy($3); }
+ty : id                                 { $$ = NameTy($1, line); }
+   | LI tyflds LD                       { $$ = RecordTy($2, line); }
+   | ARRAY OF id                        { $$ = ArrayTy($3, line); }
    ;
 
 id : ID                                 { $$ = $1; }
@@ -123,7 +123,7 @@ fundec : FUNCTION id PI tyflds PD IGUAL exp         { $$ = FunctionDecs(List(Fun
        | FUNCTION id PI tyflds PD DOSP id IGUAL exp { $$ = FunctionDecs(List(FunctionDec($2, $4, Some($7), $9, line))); }
        ;
 
-tyfield : id DOSP id                    { $$ = Field($1, false, NameTy($3)); }
+tyfield : id DOSP id                    { $$ = Field($1, false, NameTy($3, line)); }
 	;
 
 args : exp COMA args                    { $$ = $1 :: $3; }
@@ -131,9 +131,9 @@ args : exp COMA args                    { $$ = $1 :: $3; }
      |                                  { $$ = List(); }
      ;
 
-l_value : id                            { $$ = SimpleVar($1); }
-        | l_value PTO id                { $$ = FieldVar($1, $3); }
-        | l_value CI exp CD             { $$ = SubscriptVar($1, $3); }
+l_value : id                            { $$ = SimpleVar($1, line); }
+        | l_value PTO id                { $$ = FieldVar($1, $3, line); }
+        | l_value CI exp CD             { $$ = SubscriptVar($1, $3, line); }
         ;
 
 %%
@@ -145,7 +145,7 @@ l_value : id                            { $$ = SimpleVar($1); }
   }
 
   def nombre(s:Var) = s match {
-    case SimpleVar(x) => x
+    case SimpleVar(x, _) => x
     case _ => throw new Error("Imposible que no sea SimpleVar!")
   }
    

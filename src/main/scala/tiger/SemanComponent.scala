@@ -28,63 +28,47 @@ trait SemanComponent {
 
   class SemanImp extends Seman {
 
-    //TODO: state monad?
-    var currentPosition: Pos = 0
-
-    def position() = currentPosition
-
-    def position(p: Exp): Exp = {
-      currentPosition = p.position
-      p
-    }
-
-    def position(p: Dec): Dec = {
-      currentPosition = p.position
-      p
-    }
-
-
     def transVar(varsEnv: env.venv, typesEnv: env.tenv, level: translate.Level, variable: Var): ExpTy = variable match {
 
-      case SimpleVar(id) => {
+      case SimpleVar(id, _) => {
         val v = varsEnv(id) match {
           case v@env.VarEntry(_, _) => v
-          case found@_ => error("variable expected: " + found)
+          case found@_ => error(s"variable expected: $found", variable)
         }
 
         ExpTy(translate.simpleVar(v.access, level), v.ty)
       }
 
-      case SubscriptVar(lv, exp) => {
+      case SubscriptVar(lv, exp, _) => {
         val leftValue = transVar(varsEnv, typesEnv, level, lv)
 
         val arrayTy = unpack(leftValue.ty) match {
           case ARRAY(ty) => ty
-          case found@_ => error(s"type error: found $found (ARRAY required)")
+          case found@_ => error(s"type error: found $found (ARRAY required)", variable)
         }
 
         val index = transExp(varsEnv, typesEnv, level, exp)
 
         if (index.ty != INT()) {
-          error("type error: found " + index.ty + " INT" + " required")
+          error(s"type error: found ${index.ty} INT required", variable)
         }
 
         ExpTy(translate.subscriptVar(leftValue.exp, index.exp), arrayTy)
       }
 
-      case FieldVar(leftValue, id) => {
+      case FieldVar(leftValue, id, _) => {
         val recordExp = transVar(varsEnv, typesEnv, level, leftValue)
 
         val recordTy = unpack(recordExp.ty) match {
           case RECORD(records) => records
-          case found@_ => error("type error: found " + found + " RECORD" + " required")
+          case found@_ => error(s"type error: found $found RECORD required", variable)
         }
 
         val (ty, offset) = recordTy find {
           _._1 == id
         } match {
           case Some((_, x, y)) => (x, y) //Type
-          case None => error("type error: field not found " + id)
+          case None => error(s"type error: field not found $id", variable)
         }
 
         ExpTy(translate.fieldVar(recordExp.exp, offset), ty)
@@ -94,7 +78,7 @@ trait SemanComponent {
     }
 
     def transTy(typesEnv: env.tenv, ty: Abs.Ty): Types.Ty = ty match {
-      case RecordTy(fields) => {
+      case RecordTy(fields, _) => {
 
         val records = for {
           (f, i) <- fields.zipWithIndex
@@ -103,33 +87,33 @@ trait SemanComponent {
         val idList = records.map(_._1)
 
         if (idList.size != idList.toSet.size) {
-          error("type error: record contain duplicated fields")
+          error("type error: record contain duplicated fields", ty)
         }
 
         RECORD(records)
       }
 
-      case NameTy(name) => ALIAS(name, None)
-      case ArrayTy(name) => ARRAY(ALIAS(name, None))
+      case NameTy(name, _) => ALIAS(name, None)
+      case ArrayTy(name, _) => ARRAY(ALIAS(name, None))
     }
 
-    def transExp(varsEnv: env.venv, typesEnv: env.tenv, level: translate.Level, exp: Exp): ExpTy = position(exp) match {
-      case VarExp(v, position) => transVar(varsEnv, typesEnv, level, v)
+    def transExp(varsEnv: env.venv, typesEnv: env.tenv, level: translate.Level, exp: Exp): ExpTy = exp match {
+      case VarExp(v, _) => transVar(varsEnv, typesEnv, level, v)
 
-      case UnitExp(position) => ExpTy(translate.unitExp(), UNIT())
-      case NilExp(position) => ExpTy(translate.nilExp(), NIL())
-      case IntExp(value, position) => ExpTy(translate.intExp(value), INT())
-      case StringExp(value, position) => ExpTy(translate.stringExp(value), STRING())
+      case UnitExp(_) => ExpTy(translate.unitExp(), UNIT())
+      case NilExp(_) => ExpTy(translate.nilExp(), NIL())
+      case IntExp(value, _) => ExpTy(translate.intExp(value), INT())
+      case StringExp(value, _) => ExpTy(translate.stringExp(value), STRING())
 
       case CallExp(func, args, position) => {
 
         val f = varsEnv(func) match {
           case func@env.FuncEntry(_, _, _, _, _) => func
-          case found@_ => error("function expected: " + found)
+          case found@_ => error(s"function expected: $found", exp)
         }
 
         if (args.size != f.params.size) {
-          throw error("type error: wrong argument size")
+          throw error("type error: wrong argument size", exp)
         }
 
         //                (↓)
@@ -139,7 +123,7 @@ trait SemanComponent {
         val argsExp = evaluedArgs map {
           case (param, ExpTy(paramExp, ty1), ty2) =>
             if (ty1 != ty2) {
-              error(s"type error: param $param not matches $ty2 in function $func")
+              error(s"type error: param $param not matches $ty2 in function $func", exp)
             }
             paramExp
         }
@@ -170,17 +154,17 @@ trait SemanComponent {
           case _ => ()
         }
 
-        error("type error")
+        error("type error", exp)
       }
 
       case RecordExp(fields, typ, position) =>
         val r = typesEnv(typ) match {
           case r@RECORD(_) => r
-          case _ => error("type error: '" + typ + "' not declared")
+          case _ => error(s"type error: ${typ} not declared", exp)
         }
 
         if (r.records.size != fields.size) {
-          throw error("type error: wrong argument size")
+          throw error("type error: wrong argument size", exp)
         }
 
         val tfields = for ((sy, exp) <- fields) yield (sy, transExp(varsEnv, typesEnv, level, exp))
@@ -188,8 +172,8 @@ trait SemanComponent {
         val recordExps = for (
           ((sym1, ExpTy(e, ty1)), (sym2, ty2, _)) <- tfields zip r.records
         ) yield {
-          if (sym1 != sym2) error(s"type error: $sym1 != $sym2")
-          if (ty1 != ty2) error(s"type error: $ty1 !=  $ty2")
+          if (sym1 != sym2) error(s"type error: $sym1 != $sym2", exp)
+          if (ty1 != ty2) error(s"type error: $ty1 !=  $ty2", exp)
           e
         }
 
@@ -202,12 +186,12 @@ trait SemanComponent {
         val arrayTy = unpack(typesEnv(typ))
 
         if (sizeTy.ty != INT())
-          error("type error: array size should be Int")
+          error("type error: array size should be Int", exp)
 
         arrayTy match {
           case ARRAY(ty) if ty == initTy.ty => true
-          case ARRAY(x) => error(s"type error: found ${initTy.ty} required $x")
-          case _ => error("type error: not an array")
+          case ARRAY(x) => error(s"type error: found ${initTy.ty} required $x", exp)
+          case _ => error("type error: not an array", exp)
         }
 
         ExpTy(translate.arrayExp(sizeTy.exp, initTy.exp), arrayTy)
@@ -228,12 +212,12 @@ trait SemanComponent {
 
         // If there's a
         vTr.ty match {
-          case INT(true) if checkRo => error("type error: found read only integer in assign")
+          case INT(true) if checkRo => error("type error: found read only integer in assign", exp)
           case _ => ()
         }
 
         if (vTr.ty != eTr.ty) {
-          error(s"type error: found ${eTr.ty} required ${vTr.ty}")
+          error(s"type error: found ${eTr.ty} required ${vTr.ty}", exp)
         }
 
         ExpTy(translate.assignExp(vTr.exp, eTr.exp), UNIT())
@@ -245,7 +229,7 @@ trait SemanComponent {
         val thenTr = transExp(varsEnv, typesEnv, level, then)
 
         if (testTr.ty != INT() || thenTr.ty != UNIT()) {
-          error("type error: if")
+          error("type error: if", exp)
         }
 
         ExpTy(translate.ifThenExp(testTr.exp, thenTr.exp), UNIT())
@@ -258,7 +242,7 @@ trait SemanComponent {
         val elsaTr = transExp(varsEnv, typesEnv, level, elsa)
 
         if (testTr.ty != INT() || thenTr.ty != elsaTr.ty) {
-          error("type error: if")
+          error("type error: if", exp)
         }
 
         ExpTy(translate.ifThenElseExp(testTr.exp, thenTr.exp, elsaTr.exp), thenTr.ty)
@@ -269,33 +253,33 @@ trait SemanComponent {
         val bodyTr = transExp(varsEnv, typesEnv, level, body)
 
         if (testTr.ty != INT() || bodyTr.ty != UNIT())
-          error("type error: while")
+          error("type error: while", exp)
 
-        val exp = translate.whileExp(testTr.exp, bodyTr.exp, level)
+        val result = translate.whileExp(testTr.exp, bodyTr.exp, level)
         level.postLoop()
 
-        ExpTy(exp, UNIT())
+        ExpTy(result, UNIT())
 
       case ForExp(variable, escape, lo, hi, body, position) => {
         level.preLoop()
         val loTr = transExp(varsEnv, typesEnv, level, lo)
         val hiTr = transExp(varsEnv, typesEnv, level, hi)
 
-        if (loTr.ty != INT()) error("type error: for: lo must be int")
-        if (hiTr.ty != INT()) error("type error: for: hi must be int")
+        if (loTr.ty != INT()) error("type error: for: lo must be int", exp)
+        if (hiTr.ty != INT()) error("type error: for: hi must be int", exp)
 
         val access = translate.allocLocal(level, escape)
         val varsEnv2 = (varsEnv + (variable -> env.VarEntry(access, INT.readOnly)))
 
         val bodyTr = transExp(varsEnv2, typesEnv, level, body)
 
-        val varExp = transExp(varsEnv2, typesEnv, level, VarExp(SimpleVar(variable), position))
+        val varExp = transExp(varsEnv2, typesEnv, level, VarExp(SimpleVar(variable, position), position))
 
-        val exp = translate.forExp(loTr.exp, hiTr.exp, varExp.exp,bodyTr.exp, level)
+        val result = translate.forExp(loTr.exp, hiTr.exp, varExp.exp,bodyTr.exp, level)
 
         level.postLoop()
 
-        ExpTy(exp, UNIT())
+        ExpTy(result, UNIT())
       }
 
       case LetExp(decs, body, position) => {
@@ -315,13 +299,13 @@ trait SemanComponent {
         val result = translate.breakExp(level)
 
         if (result.isEmpty)
-          error("break without a for or a while")
+          error("break without a for or a while", exp)
 
         ExpTy(result.get, UNIT())
 
     }
 
-    def transDec(varsEnv: env.venv, typesEnv: env.tenv, level: translate.Level, dec: Dec) = position(dec) match {
+    def transDec(varsEnv: env.venv, typesEnv: env.tenv, level: translate.Level, dec: Dec) = dec match {
 
       case VarDec(name, escape, ty, init, position) => {
         val initTr = transExp(varsEnv, typesEnv, level, init)
@@ -335,7 +319,7 @@ trait SemanComponent {
         }
 
         if (varDec.isNil) {
-          error("type error: invalid declaration")
+          error("type error: invalid declaration", dec)
         }
 
         // allocación
@@ -370,7 +354,7 @@ trait SemanComponent {
         val envKeyProcOrder = Util.tsort(genDependencyGraph(__tenv.toList))
 
         if (envKeyProcOrder.isFailure) {
-          error("type error: circular type")
+          error("type error: circular type", dec)
         }
 
         // create a pseudo-alias-free enviroment
@@ -399,8 +383,8 @@ trait SemanComponent {
       case FunctionDecs(decs) =>
 
         def transTy(ty: Abs.Ty): Types.Ty = ty match {
-          case NameTy(name) => typesEnv(name)
-          case _ => error("type error: shouln't happend")
+          case NameTy(name, _) => typesEnv(name)
+          case _ => error("type error: shouln't happend", dec)
         }
 
         def functionTrans(f: FunctionDec) = {
@@ -444,7 +428,7 @@ trait SemanComponent {
         // Valido tipos de retorno
         functionsTr foreach {
           case (name, fe, ExpTy(_, ty)) => if (fe.result != UNIT() && fe.result != ty)
-            error(s"type error: function $name: expected ${fe.result} and returns $ty")
+            error(s"type error: function $name: expected ${fe.result} and returns $ty", dec)
         }
 
         // se construye la lista de inicializaciones
@@ -455,8 +439,12 @@ trait SemanComponent {
         (venvWithFunction, typesEnv, results)
     }
 
+    def error(msg: String, exp: Position) = {
+      throw new TypeError(s"$msg @line ${exp.position}")
+    }
+
     def error(msg: String) = {
-      throw new TypeError(s"$msg @line:" + position())
+      throw new TypeError(s"$msg")
     }
 
     def main(e: Exp) = LetExp(

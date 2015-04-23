@@ -6,15 +6,12 @@ import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import com.gilt.handlebars.scala.Handlebars
-import com.gilt.handlebars.scala.helper.Helper
 import tiger.Asm.Instr
 import tiger.Frame.{PROC, STRING}
 import tiger.Tree.Stm
 import tiger.parser.{TigerScanner, TigerParser}
-import sext._
 
 import com.gilt.handlebars.scala.binding.dynamic._
-import com.gilt.handlebars.scala.Handlebars._
 
 
 object Tiger {
@@ -46,7 +43,7 @@ object Tiger {
       // Linearize intermediate code, and separte code fragments
       separteFragments()
 
-      val functionFrames = procs map { case (stms, frame) => frame.name -> frame } toMap
+      val functionFrames = procs map { case (stms, frame) => frame.name -> frame} toMap
 
       val frames = functionFrames ++ env.baseFrames
 
@@ -61,9 +58,6 @@ object Tiger {
 
 
       (functions, strings)
-    }
-
-    def procFunctions(): Unit = {
 
     }
 

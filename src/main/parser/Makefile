@@ -11,7 +11,7 @@
 # who change the visibility from scala 2.9.x to 2.10.x
 #
 ###
-SCALA_HOME=~/src/scala-2.9.2/
+SCALA_HOME=~/src/scala-2.9.3/
 SCALA=${SCALA_HOME}/bin/scala
 SCALA-BISON=lib/scala-bison.jar
 JFLEX=lib/jflex-1.5.0-SNAPSHOT.jar
